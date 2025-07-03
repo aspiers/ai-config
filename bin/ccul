@@ -1,0 +1,3 @@
+#!/bin/bash
+
+ccu blocks --live "$@"

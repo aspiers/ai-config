@@ -1,0 +1,1 @@
+- Never duplicate code without a good reason. Instead always look for opportunities to reuse and improve existing code.

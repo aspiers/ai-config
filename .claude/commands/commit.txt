@@ -1,6 +1,6 @@
 ---
-description: Creating a git commit
-allowed-tools:
+description: Create a git commit
+allowed-tools: Bash(git add:*), Bash(git status:*), Bash(git commit:*)
 ---
 # Creating a git commit
 

@@ -1,6 +1,6 @@
 ---
-description: execute task steps of plan
-allowed-tools:
+description: execute task steps of a given task list
+allowed-tools: Bash(git add:*), Bash(git status:*), Bash(git commit:*)
 ---
 # Task List Management
 

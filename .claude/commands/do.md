@@ -7,9 +7,19 @@ allowed-tools: Bash(git add:*), Bash(git status:*), Bash(git commit:*)
 Guidelines for managing task lists in markdown files to track progress on
 completing a PRP.
 
+## Command Arguments
+
+- `$ARGUMENTS` can be:
+  - `feature_name` - process all sub-tasks sequentially from the beginning
+  - `feature_name subtask_number` - start from specific sub-task number
+  - `feature_name subtask_range` - process specific range (e.g. "3-5" for sub-tasks 3 through 5)
+
+When a specific sub-task number or range is provided, skip to that
+sub-task instead of starting from the beginning of the task list.
+
 ## Task list location
 
-`/.ai/$ARGUMENTS/tasks.md`
+`/.ai/[feature_name]/tasks.md`
 
 ## Task Implementation
 

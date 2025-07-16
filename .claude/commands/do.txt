@@ -38,6 +38,13 @@ completing a PRP.
       add unrelated files or changes.  *Do* include the change to the
       `tasks.md` marking the relevant sub-task as completed.
 
+    - By *default*, ask the user to review the changes and approve by
+      responding either "good" or "vibe", and do *not* proceed to the
+      next step until you receive one of these responses.  However, if
+      the user responds "vibe", then that counts as approval not just
+      this time, but also for any future time in this session - in that
+      case, skip this step in the future.
+
     - Commit to git by following the process in
       `~/.claude/commands/commit.txt`.
 

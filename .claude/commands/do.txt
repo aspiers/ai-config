@@ -7,6 +7,10 @@ allowed-tools:
 Guidelines for managing task lists in markdown files to track progress on
 completing a PRP.
 
+## Task list location
+
+`/.ai/$ARGUMENTS/tasks.md`
+
 ## Task Implementation
 
 - **One sub-task at a time:** Do **NOT** start the next sub‑task until you

@@ -4,6 +4,8 @@ allowed-tools: Bash(git add:*), Bash(git status:*), Bash(git commit:*)
 ---
 # Task List Management
 
+**Follow the below steps EXACTLY!!! NO EXCEPTIONS!!!**
+
 Guidelines for managing task lists in markdown files to track progress on
 completing a PRP.
 
@@ -83,3 +85,5 @@ When you finish a sub‑task:
 
 Stop after each sub‑task and wait for the user's go‑ahead for the next
 one.
+
+**Follow the above steps EXACTLY!!! NO EXCEPTIONS!!!**

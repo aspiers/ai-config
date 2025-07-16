@@ -1,6 +1,7 @@
 Open Build Service (OBS) project management commands for home:aspiers
 
-This command helps manage packages in the OBS home directory at /home/adam/OBS/home/aspiers
+This command helps manage packages in the OBS home directory at
+/home/adam/OBS/home/aspiers
 
 ## Setup and Basic Commands
 

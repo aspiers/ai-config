@@ -12,67 +12,70 @@ completing a PRP.
 - `$ARGUMENTS` can be:
   - `feature_name` - process all sub-tasks sequentially from the beginning
   - `feature_name subtask_number` - start from specific sub-task number
-  - `feature_name subtask_range` - process specific range (e.g. "3-5" for sub-tasks 3 through 5)
 
-When a specific sub-task number or range is provided, skip to that
-sub-task instead of starting from the beginning of the task list.
+When a specific sub-task number is provided, skip to that sub-task
+instead of starting from the beginning of the task list.
 
 ## Task list location
 
 `/.ai/[feature_name]/tasks.md`
 
-## Task Implementation
+## Sub-task iteration (IMPORTANT)
 
-- **One sub-task at a time:** Do **NOT** start the next sub‑task until you
-  ask the user for permission and they say "yes" or "y".
+**ONLY DO ONE SUB-TASK AT A TIME:**
 
-- **Completion protocol:**
+  - Only ever include one sub-task on your internal TODO list.
+    **This is VERY IMPORTANT!**
 
-  When you finish a sub‑task:
+  - Do **NOT** start or even consider the next sub‑task until you
+    ask the user for permission and they say "yes" or "y".
 
-    - **Clean up**: Remove any temporary files and temporary code if
-      necessary.
+## Sub-task implementation
 
-    - **Test / lint**: Run all appropriate tests, linters
-      etc. according to the provided guidelines for this repository
-      (typically in `.ai-rules` or `AGENTS.md` or `AGENT.md` or
-      `CLAUDE.md` or `GEMINI.md` or similar).  If these guidelines are
-      missing or unclear then stop and ask for them.
+- Update the task list as you work.
 
-    - If any the above checks fail, try to fix them.  Do **not**
-      proceed further until they all pass.
+- Add new tasks as they emerge.
 
-    - Mark the sub-task as completed by changing it `[ ]` to `[x]`.
+- Also update the corresponding `prp.txt` as appropriate, although
+  this should happen less frequently.
 
-    - Stage relevant changes via `git add`, taking great care not to
-      add unrelated files or changes.  *Do* include the change to the
-      `tasks.md` marking the relevant sub-task as completed.
-
-    - By *default*, ask the user to review the changes and approve by
-      responding either "good" or "vibe", and do *not* proceed to the
-      next step until you receive one of these responses.  However, if
-      the user responds "vibe", then that counts as approval not just
-      this time, but also for any future time in this session - in that
-      case, skip this step in the future.
-
-    - Commit to git by following the process in
-      `~/.claude/commands/commit.txt`.
-
-  3. Once all the subtasks are marked completed and changes have been
-     committed, mark the **parent task** as completed.
-
-- Stop after each sub‑task and wait for the user's go‑ahead.
-
-## Task List Maintenance
-
-1. **Update the task list as you work:**
-
-   - Mark tasks and subtasks as completed (`[x]`) per the protocol
-     above.
-   - Add new tasks as they emerge.
-   - Also update the corresponding `prp.txt` as appropriate, although
-     this should happen less frequently.
-
-2. **Maintain the "Relevant Files" section:**
+- Maintain the "Relevant Files" section:
    - List every file created or modified.
    - Give each file a one‑line description of its purpose.
+
+## Sub-task completion protocol (IMPORTANT)
+
+When you finish a sub‑task:
+
+  - **Clean up**: Remove any temporary files and temporary code if
+    necessary.
+
+  - **Test / lint**: Run all appropriate tests, linters etc. according
+    to the provided guidelines for this repository (typically in
+    `.ai-rules` or `AGENTS.md` or `AGENT.md` or `CLAUDE.md` or
+    `GEMINI.md` or similar).  If these guidelines are missing or
+    unclear then stop and ask for them.
+
+  - If any the above checks fail, try to fix them.  Do **not**
+    proceed further until they all pass.
+
+  - Mark the sub-task as completed by changing it `[ ]` to `[x]`.  If
+    all the subtasks under a parent task are marked completed then
+    also mark the **parent task** as completed.
+
+  - Stage relevant changes via `git add`, taking great care not to add
+    unrelated files or changes.  *Do* include the change to the
+    `tasks.md` marking the relevant sub-task as completed.
+
+  - By *default*, ask the user to review the changes and approve by
+    responding either "good" or "vibe", and do *not* proceed to the
+    next step until you receive one of these responses.  However, if
+    the user responds "vibe", then that counts as approval not just
+    this time, but also for any future time in this session - in that
+    case, skip this step in the future.
+
+  - Commit to git by following the process in
+    `~/.claude/commands/commit.txt`.
+
+Stop after each sub‑task and wait for the user's go‑ahead for the next
+one.

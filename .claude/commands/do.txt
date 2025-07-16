@@ -34,8 +34,8 @@ completing a PRP.
       add unrelated files or changes.  *Do* include the change to the
       `tasks.md` marking the relevant sub-task as completed.
 
-    - Commit to git by following the process in `commit.txt` in the
-      same directory as this file.
+    - Commit to git by following the process in
+      `~/.claude/commands/commit.txt`.
 
   3. Once all the subtasks are marked completed and changes have been
      committed, mark the **parent task** as completed.

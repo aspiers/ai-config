@@ -1,0 +1,28 @@
+---
+description: Creating a git commit
+allowed-tools:
+---
+# Creating a git commit
+
+Commit to git using a descriptive commit message that:
+
+- Uses conventional commit format (`feat:`, `fix:`, `refactor:`, etc.)
+
+- Roughly follows this template (wrap the body at 78 columns):
+
+      ```txt
+      feat: <what changed, keep under 75 characters>
+
+      Without this patch, ... <describe the status quo relevant
+      to this change>
+
+      This is a problem because ... <describe *why* the change
+      is needed>
+
+      This patch solves the problem by ... <describe *how* the
+      solution works>
+      ```
+
+- Lists key changes and additions
+
+- References the task number and the task file it came from.

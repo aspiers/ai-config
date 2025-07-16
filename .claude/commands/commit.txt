@@ -26,3 +26,7 @@ Commit to git using a descriptive commit message that:
 - Lists key changes and additions
 
 - References the task number and the task file it came from.
+
+- Adds a "Co-authored-by:" footer which clarifies which AI agent
+  helped create this commit, using an appropriate `noreply@...`
+  email address.

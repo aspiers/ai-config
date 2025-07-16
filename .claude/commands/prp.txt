@@ -7,15 +7,27 @@ allowed-tools:
 ## Goal
 
 To guide an AI assistant in creating a detailed Product Requirements
-Prompt (PRP) in Markdown format, based on an initial user prompt. The
+Prompt (PRP) in Markdown format, based on an initial user prompt.  The
 PRP should be clear, actionable, and suitable for a junior developer
-to understand and implement the feature.
+to understand and implement the feature.  Also wrap lines at 78
+columns.
 
 ## Process
 
-1.  **Receive Initial Prompt:** The user provides a brief description or request for a new feature or functionality.
-2.  **Ask Clarifying Questions:** Before writing the PRP, the AI *must* ask clarifying questions to gather sufficient detail. The goal is to understand the "what" and "why" of the feature, not necessarily the "how" (which the developer will figure out). Make sure to provide options in letter/number lists so I can respond easily with my selections.
-3.  **Generate PRP:** Based on the initial prompt and the user's answers to the clarifying questions, generate a PRP using the structure outlined below.
+1.  **Receive Initial Prompt:** The user provides a brief description
+    or request for a new feature or functionality.
+
+2.  **Ask Clarifying Questions:** Before writing the PRP, the AI
+    *must* ask clarifying questions to gather sufficient detail. The goal
+    is to understand the "what" and "why" of the feature, not
+    necessarily the "how" (which the developer will figure out). Make
+    sure to provide options in letter/number lists so I can respond
+    easily with my selections.
+
+3.  **Generate PRP:** Based on the initial prompt and the user's answers
+    to the clarifying questions, generate a PRP using the structure
+    outlined below.
+
 4.  **Save PRP:** Save the generated document as `/.ai/[feature-name]/prp.md`.
 
 ## Clarifying Questions (Examples)
@@ -57,8 +69,7 @@ understand the feature's purpose and core logic.
 ## Output
 
 *   **Format:** Markdown (`.md`)
-*   **Location:** `/.ai/[feature-name]/`
-*   **Filename:** `prp.md`
+*   **Location:** `/.ai/[feature-name]/prp.md`
 
 ## Final instructions
 

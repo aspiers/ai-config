@@ -2,7 +2,6 @@
   "$schema": "https://opencode.ai/config.json",
   "keybinds": {
     "leader": "ctrl+x",
-    "help": "<leader>h",
     "editor_open": "<leader>e",
     "session_new": "<leader>n",
     "session_list": "<leader>l",
@@ -17,8 +16,6 @@
     "input_paste": "ctrl+v",
     "input_submit": "enter",
     "input_newline": "shift+enter,ctrl+j",
-    "history_previous": "up",
-    "history_next": "down",
     "messages_page_up": "ctrl+alt+p",
     "messages_page_down": "ctrl+alt+n",
     "messages_half_page_up": "ctrl+alt+u",

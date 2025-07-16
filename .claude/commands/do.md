@@ -10,7 +10,11 @@ completing a PRP.
 ## Command Arguments
 
 - `$ARGUMENTS` can be:
-  - `feature_name` - process all sub-tasks sequentially from the beginning
+  - `feature_name` - this allows location of the relevant task list
+    at `/.ai/[feature_name]/tasks.md`.  If it's not provided, run
+    `ls .ai/*/tasks.md` and ask the user to pick one of the matching
+    feature names.
+
   - `feature_name subtask_number` - start from specific sub-task number
 
 When a specific sub-task number is provided, skip to that sub-task

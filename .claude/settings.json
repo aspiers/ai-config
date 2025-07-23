@@ -2,12 +2,31 @@
   "permissions": {
     "allow": [
       "Bash(find:*)",
-      "Bash(git status:*)",
-      "Bash(git grep:*)",
-      "Bash(git ls-files:*)",
       "Bash(git add:*)",
+      "Bash(git grep:*)",
+      "Bash(git log:*)",
+      "Bash(git ls-files:*)",
+      "Bash(git status:*)",
+      "Bash(gh issue list:*)",
+      "Bash(gh issue status:*)",
+      "Bash(gh issue view:*)",
+      "Bash(gh pr list:*)",
+      "Bash(gh pr status:*)",
       "Bash(ls:*)"
     ],
     "deny": []
+  },
+  "hooks": {
+    "Notification": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "mplayer /usr/share/sounds/Oxygen-Sys-App-Positive.ogg"
+          }
+        ]
+      }
+    ]
   }
 }

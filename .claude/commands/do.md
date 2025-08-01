@@ -53,35 +53,36 @@ instead of starting from the beginning of the task list.
 
 When you finish a sub‑task:
 
-  - **Clean up**: Remove any temporary files and temporary code if
-    necessary.
+1. **Clean up**: Remove any temporary files and temporary code if
+   necessary.
 
-  - **Test / lint**: Run all appropriate tests, linters etc. according
-    to the provided guidelines for this repository (typically in
-    `.ai-rules` or `AGENTS.md` or `AGENT.md` or `CLAUDE.md` or
-    `GEMINI.md` or similar).  If these guidelines are missing or
-    unclear then stop and ask for them.
+2. Run the `/lint` slash command to run all appropriate linters
+   according to repository guidelines.
 
-  - If any the above checks fail, try to fix them.  Do **not**
-    proceed further until they all pass.
+3. Run the `/test` slash commands to run all appropriate tests
+   according to repository guidelines.
 
-  - Mark the sub-task as completed by changing it `[ ]` to `[x]`.  If
-    all the subtasks under a parent task are marked completed then
+4. If any of the above checks fail, try to fix them.  Do **not**
+   proceed further until both linters and tests are all passing.
+
+5. Mark the sub-task as completed by changing it `[ ]` to `[x]`.  If
+   all the subtasks under a parent task are marked completed then
     also mark the **parent task** as completed.
 
-  - Stage relevant changes via `git add`, taking great care not to add
-    unrelated files or changes.  *Do* include the change to the
-    `tasks.md` marking the relevant sub-task as completed.
+6. Use `/stage` slash command to stage relevant changes via `git add`,
+   taking great care not to add unrelated files or changes.  *Do*
+    include the change to the `tasks.md` marking the relevant sub-task
+    as completed.
 
-  - By *default*, ask the user to review the changes and approve by
-    responding either "good" or "vibe", and do *not* proceed to the
-    next step until you receive one of these responses.  However, if
-    the user responds "vibe", then that counts as approval not just
-    this time, but also for any future time in this session - in that
-    case, skip this step in the future.
+7. By *default*, ask the user to review the changes and approve by
+   responding either "good" or "vibe", and do *not* proceed to the
+   next step until you receive one of these responses.  However, if
+   the user responds "vibe", then that counts as approval not just
+   this time, but also for any future time in this session - in that
+   case, skip this step in the future.
 
-  - Commit to git by following the process in
-    `~/.claude/commands/commit.txt`.
+8. ONLY AFTER getting a review in step 7, use `/commit` slash command
+   to commit to git with a proper commit message.
 
 Stop after each sub‑task and wait for the user's go‑ahead for the next
 one.

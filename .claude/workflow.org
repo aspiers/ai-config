@@ -1,0 +1,12 @@
+* /prp generates a PRP in =.ai/[feature-name]/prp.md=
+* /tasks generates a task list in =.ai/[feature-name]/tasks.md=
+* [future] loop over =tasks.md=
+  for each task:
+*** /do implements one task, calls a chain of subagents:
+***** implementer subagent
+***** linter subagent
+***** tester subagent
+***** git-stager subagent
+***** [future] AI reviewer
+***** human review
+***** git-committer subagent

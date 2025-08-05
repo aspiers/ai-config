@@ -11,9 +11,14 @@ unrelated files or changes.
 
 - First check whether anything is already staged, and if so, ask
   the user how to proceed before doing anything else.
+
 - Only stage files that are directly related to the current task.
-- Include the change to `tasks.md` marking the relevant sub-task as completed.
+
+- Include the change to `tasks.md` marking the relevant sub-task as
+  completed.
+
 - Use `git status` to review what will be staged.
+
 - Use selective staging (`git add <specific-files>`) rather than `git add .`
 
 ## Process

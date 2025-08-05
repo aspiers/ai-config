@@ -1,65 +1,41 @@
 ---
-description: execute task steps of a given task list
-allowed-tools: Bash(git add:*), Bash(git status:*), Bash(git commit:*)
+description: execute a single sub-task from a given task list
+argument-hint: [feature_name [subtask_number]]
 ---
-# Task List Management
+# Sub-task implementation
 
 **Follow the below steps EXACTLY!!! NO EXCEPTIONS!!!**
 
-Guidelines for managing task lists in markdown files to track progress on
-completing a PRP.
+Process for completing a sub-task from a task list whilst
+adhering to strict quality controls.
 
 ## Command Arguments
 
-- `$ARGUMENTS` can be:
-  - `feature_name` - this allows location of the relevant task list
-    at `/.ai/[feature_name]/tasks.md`.  If it's not provided, run
-    `ls .ai/*/tasks.md` and ask the user to pick one of the matching
-    feature names.
+- `$ARGUMENTS` are:
+  1. `feature_name` - this allows location of the relevant task list
+     at `/.ai/[feature_name]/tasks.md`.  If it's not provided, run
+     `ls .ai/*/tasks.md` and ask the user to pick one of the matching
+     feature names.
 
-  - `feature_name subtask_number` - start from specific sub-task number
-
-When a specific sub-task number is provided, skip to that sub-task
-instead of starting from the beginning of the task list.
+  2. `subtask_number` - the number of the specific sub-task to implement.
+     If it's not provided, show the user all unimplemented sub-tasks and
+     ask them to pick one.
 
 ## Task list location
 
 `/.ai/[feature_name]/tasks.md`
 
-## Sub-task iteration (IMPORTANT)
-
-**ONLY DO ONE SUB-TASK AT A TIME:**
-
-  - Only ever include one sub-task on your internal TODO list.
-    **This is VERY IMPORTANT!**
-
-  - Do **NOT** start or even consider the next sub‑task until you
-    ask the user for permission and they say "yes" or "y".
-
-## Sub-task implementation
-
-- Update the task list as you work.
-
-- Add new tasks as they emerge.
-
-- Also update the corresponding `prp.txt` as appropriate, although
-  this should happen less frequently.
-
-- Maintain the "Relevant Files" section:
-   - List every file created or modified.
-   - Give each file a one‑line description of its purpose.
-
 ## Sub-task completion protocol (IMPORTANT)
 
-When you finish a sub‑task:
+**Follow the below steps EXACTLY!!! NO EXCEPTIONS!!!**
 
-1. **Clean up**: Remove any temporary files and temporary code if
-   necessary.
+1. Use the task-implementer sub-agent to implement the selected
+   subtask.
 
-2. Run the `/lint` slash command to run all appropriate linters
+2. Use the code-linter sub-agent to run all appropriate linters
    according to repository guidelines.
 
-3. Run the `/test` slash commands to run all appropriate tests
+3. Use the test-runner sub-agent to run all appropriate tests
    according to repository guidelines.
 
 4. If any of the above checks fail, try to fix them.  Do **not**
@@ -67,12 +43,12 @@ When you finish a sub‑task:
 
 5. Mark the sub-task as completed by changing it `[ ]` to `[x]`.  If
    all the subtasks under a parent task are marked completed then
-    also mark the **parent task** as completed.
+   also mark the **parent task** as completed.
 
 6. Use `/stage` slash command to stage relevant changes via `git add`,
    taking great care not to add unrelated files or changes.  *Do*
-    include the change to the `tasks.md` marking the relevant sub-task
-    as completed.
+   include the change to the `tasks.md` marking the relevant sub-task
+   as completed.
 
 7. By *default*, ask the user to review the changes and approve by
    responding either "good" or "vibe", and do *not* proceed to the
@@ -81,10 +57,7 @@ When you finish a sub‑task:
    this time, but also for any future time in this session - in that
    case, skip this step in the future.
 
-8. ONLY AFTER getting a review in step 7, use `/commit` slash command
-   to commit to git with a proper commit message.
-
-Stop after each sub‑task and wait for the user's go‑ahead for the next
-one.
+8. ONLY AFTER getting a review in step 7, use the git-committer
+   sub-agent to commit to git with a proper commit message.
 
 **Follow the above steps EXACTLY!!! NO EXCEPTIONS!!!**

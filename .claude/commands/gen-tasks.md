@@ -14,7 +14,7 @@ task list should guide a developer through implementation.
 ## Output
 
 - **Format:** Markdown (`.md`)
-- **Location:** `/.ai/[feature-name]/tasks.md`
+- **Location:** `.ai/[feature-name]/tasks.md` in the repository root
 
 ## Process
 

@@ -13,17 +13,20 @@ adhering to strict quality controls.
 
 - `$ARGUMENTS` are:
   1. `feature_name` - this allows location of the relevant task list
-     at `/.ai/[feature_name]/tasks.md`.  If it's not provided, run
-     `ls .ai/*/tasks.md` and ask the user to pick one of the matching
-     feature names.
+     at `.ai/[feature_name]/tasks.md`.  If it's not provided, run `ls
+     .ai/*/tasks.md`, show the feature names as a numbered list, and
+     ask the user to pick one to work on, excluding ones which are
+     already complete.
 
-  2. `subtask_number` - the number of the specific sub-task to implement.
-     If it's not provided, show the user all unimplemented sub-tasks and
-     ask them to pick one.
+  2. `subtask_number` - the number of the specific sub-task to
+     implement.  If it's not provided, show the user all unimplemented
+     sub-tasks, then say which is the first unimplemented one and ask
+     if they'd like to implement that one, and if not, which other one
+     to do.
 
 ## Task list location
 
-`/.ai/[feature_name]/tasks.md`
+`.ai/[feature_name]/tasks.md`
 
 ## Sub-task completion protocol (IMPORTANT)
 

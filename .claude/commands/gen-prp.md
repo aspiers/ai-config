@@ -29,7 +29,7 @@ columns.
     to the clarifying questions, generate a PRP using the structure
     outlined below.
 
-4.  **Save PRP:** Save the generated document as `/.ai/[feature-name]/prp.md`.
+4.  **Save PRP:** Save the generated document as `.ai/[feature-name]/prp.md`.
 
 ## Clarifying Questions (Examples)
 
@@ -70,7 +70,7 @@ understand the feature's purpose and core logic.
 ## Output
 
 *   **Format:** Markdown (`.md`)
-*   **Location:** `/.ai/[feature-name]/prp.md`
+*   **Location:** `.ai/[feature-name]/prp.md` in the repository root
 
 ## Final instructions
 

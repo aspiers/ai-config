@@ -1,5 +1,6 @@
 ---
 description: Generate tasks from a PRP
+argument-hint: [feature_name]
 allowed-tools:
 ---
 # Generating a Task List from a PRP

@@ -1,5 +1,6 @@
 ---
 description: Generate a PRP
+argument-hint: [feature_name]
 allowed-tools:
 ---
 # Rule: Generating a Product Requirements Prompt (PRP)

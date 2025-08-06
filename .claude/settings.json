@@ -23,6 +23,7 @@
     ],
     "deny": []
   },
+  "model": "sonnet",
   "hooks": {
     "Notification": [
       {
@@ -38,6 +39,5 @@
   },
   "feedbackSurveyState": {
     "lastShownTime": 1754076415986
-  },
-  "model": "sonnet"
+  }
 }

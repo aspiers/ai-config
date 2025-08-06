@@ -17,6 +17,7 @@
       "Bash(npm search:*)",
       "Bash(npm info:*)",
       "Bash(ls:*)",
+      "Bash(tree:*)",
       "WebFetch(domain:github.com)",
       "WebFetch(domain:anthropic.com)"
     ],

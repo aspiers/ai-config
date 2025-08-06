@@ -19,7 +19,8 @@ Create well-formatted commits with the conventional commits style.
 
 1. Check which files are staged with `git status`.  Do NOT attempt
    to change what is staged, now or at any later point in this
-   6-step process!
+   6-step process!  If nothing is staged, STOP and ask the user
+   what to do.
 
 2. Check historical commits to learn style and tone (`git log --oneline -40`).
 

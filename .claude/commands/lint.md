@@ -1,6 +1,6 @@
 ---
 description: Run linters according to repository guidelines
-allowed-tools: Bash(*lint*), Bash(npm run lint), Bash(ruff), Bash(pylint), Bash(flake8), Bash(shellcheck), Bash(make lint)
+allowed-tools: Bash(npm run lint:*), Bash(yarn run lint:*), Bash(pnpm run lint:*), Bash(npm run format:*), Bash(yarn run format:*), Bash(pnpm run format:*), Bash(ruff), Bash(pylint), Bash(flake8), Bash(shellcheck), Bash(make lint)
 ---
 # Running Linters
 

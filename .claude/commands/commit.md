@@ -1,6 +1,6 @@
 ---
 description: Create well-formatted commits using the conventional commits style
-allowed-tools: Bash(git add:*), Bash(git status:*), Bash(git commit:*), Bash(git diff:*), Bash(git log:*)
+allowed-tools: Bash(git status:*), Bash(git commit:*), Bash(git diff:*), Bash(git log:*)
 ---
 # Creating a git commit
 
@@ -17,18 +17,20 @@ Create well-formatted commits with the conventional commits style.
 
 ## Process
 
-1. Check which files are staged with `git status`.
+1. Check which files are staged with `git status`.  Do NOT attempt
+   to change what is staged, now or at any later point in this
+   6-step process!
 
 2. Check historical commits to learn style and tone (`git log --oneline -40`).
 
 3. Analyze the diff to determine if multiple distinct logical changes
    are present.
 
-4. If multiple distinct changes are detected, stop and ask the user whether to
-   break the commit into multiple smaller commits.
+4. If multiple distinct changes are detected, stop and ask the user
+   whether to break the commit into multiple smaller commits.
 
-5. Use the output of `git diff` to understand what actual changes are being
-   committed
+5. Use the output of `git diff` to understand what actual changes are
+   being committed.
 
 6. Commit to git using a descriptive commit message that:
 

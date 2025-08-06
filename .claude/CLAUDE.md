@@ -1,3 +1,7 @@
+# Context
+
+- Editorconfig: @.editorconfig
+
 # Rules
 
 - Be concise and direct
@@ -23,3 +27,4 @@
 - If you spot anything odd that is not related with the current request, raise it up
 - Iterate on one off scripts when you need to learn more about schemas, datasets, patterns, ...
 - Never duplicate code without a good reason. Instead always look for opportunities to reuse and improve existing code.
+- *ALWAYS* respect `.editorconfig`, if present.

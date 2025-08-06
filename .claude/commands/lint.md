@@ -5,15 +5,16 @@ allowed-tools: Bash(*lint*), Bash(npm run lint), Bash(ruff), Bash(pylint), Bash(
 # Running Linters
 
 Run all appropriate linters according to the provided guidelines for
-this repository (typically in `.ai-rules`, `AGENTS.md`, `AGENT.md`,
-`CLAUDE.md`, `GEMINI.md`, or similar).
+this repository.
 
 ## Linter Discovery
 
-Look for linting commands in:
+First look for linting commands in the following order:
 
-- Repository documentation (README, AGENTS.md, etc.)
-- Package configuration (package.json, Makefile, etc.)
+- Directives to AI agents (`CLAUDE.md`, `.cursorrules`, `.ai-rules`,
+  `AGENTS.md`, `AGENT.md`, `GEMINI.md`, and similar)
+- Repository documentation (`README.md`, `docs/`, etc.)
+- Package configuration (`package.json`, `Makefile`, etc.)
 - Standard linter patterns
 
 If no linting guidelines are found or they are unclear, ask the user

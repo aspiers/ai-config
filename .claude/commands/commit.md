@@ -2,6 +2,25 @@
 description: Create well-formatted commits using the conventional commits style
 allowed-tools: Bash(git status:*), Bash(git commit:*), Bash(git diff:*), Bash(git log:*)
 ---
+
+# ⚠️ CRITICAL RULE ⚠️
+
+**NEVER STAGE OR UNSTAGE FILES WITHOUT EXPLICIT PERMISSION**
+
+Do NOT run any of these commands WITHOUT user permission:
+
+- `git add`
+- `git stage`
+- `git reset`
+- `git restore --staged`
+- Any command that modifies the staging area
+
+Default behavior: Only work with files that are ALREADY staged by the
+user.
+
+Exception: Only stage files if the user gives explicit permission when
+asked.
+
 # Creating a git commit
 
 ## Goal
@@ -17,12 +36,33 @@ Create well-formatted commits with the conventional commits style.
 
 ## Process
 
-1. Check which files are staged with `git status`.  Do NOT attempt
-   to change what is staged, now or at any later point in this
-   6-step process!  If nothing is staged, STOP and ask the user
-   what to do.
+1. **FIRST**: Check which files are staged with `git status`.
 
-2. Check historical commits to learn style and tone (`git log --oneline -40`).
+   🚨 **ABSOLUTE REQUIREMENT**: Do NOT attempt to change what is
+   staged, now or at any later point in this 6-step process!
+
+   🚨 **FORBIDDEN COMMANDS**: `git add`, `git stage`, `git reset`,
+   `git restore --staged`, or ANY staging commands WITHOUT explicit
+   user permission!
+
+   🛑 **IF NOTHING IS STAGED**: STOP immediately and ask the user: "No
+   files are staged for commit. Would you like me to stage all
+   modified files, or would you prefer to stage specific files
+   yourself? If you want me to stage files, please give explicit
+   permission."
+
+   🛑 **IF FILES ARE UNSTAGED**: STOP immediately and ask the user:
+   "There are unstaged changes in addition to staged files. Would you
+   like me to stage the unstaged changes as well, or commit only the
+   currently staged files? If you want me to stage additional files,
+   please give explicit permission."
+
+   ✅ **ONLY STAGE IF**: The user explicitly gives permission with
+   phrases like "yes, stage them", "go ahead and stage", "stage all
+   files", etc.
+
+2. Check historical commits to learn style and tone
+   `git log --oneline -40`.
 
 3. Analyze the diff to determine if multiple distinct logical changes
    are present.

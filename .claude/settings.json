@@ -17,7 +17,8 @@
       "Bash(npm search:*)",
       "Bash(npm info:*)",
       "Bash(ls:*)",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:anthropic.com)"
     ],
     "deny": []
   },

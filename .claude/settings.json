@@ -8,6 +8,7 @@
       "Bash(git grep:*)",
       "Bash(git log:*)",
       "Bash(git ls-files:*)",
+      "Bash(git ls-tree:*)",
       "Bash(git status:*)",
       "Bash(gh issue list:*)",
       "Bash(gh issue status:*)",

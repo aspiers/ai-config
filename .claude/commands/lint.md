@@ -24,10 +24,9 @@ for clarification.
 
 For each linter found:
 
-1. Run it.
+1. If it has an auto-fix mode (e.g. `prettier`, `eslint`, and `rubocop`
+   all have auto-fix modes), then run that.
 
-2. If any issues are found which can be fixed either by running the
-   linter in auto-fix mode (e.g. `prettier`, `eslint`, and `rubocop`
-   all have auto-fix modes), then attempt to fix it.
+2. Run the linter in check mode to see if there are any remaining issues.
 
 3. If issues can't be fixed, stop and ask the user what to do next.

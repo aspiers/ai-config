@@ -33,6 +33,10 @@
           {
             "type": "command",
             "command": "mplayer /usr/share/sounds/Oxygen-Sys-App-Positive.ogg"
+          },
+          {
+            "type": "command",
+            "command": "notify-send 'Claude Code finished'"
           }
         ]
       }

@@ -28,3 +28,4 @@
 - Iterate on one off scripts when you need to learn more about schemas, datasets, patterns, ...
 - Never duplicate code without a good reason. Instead always look for opportunities to reuse and improve existing code.
 - *ALWAYS* respect `.editorconfig`, if present.
+- *NEVER* add trailing whitespace to blank lines

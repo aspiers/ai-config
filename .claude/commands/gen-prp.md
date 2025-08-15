@@ -5,6 +5,12 @@ allowed-tools:
 ---
 # Rule: Generating a Product Requirements Prompt (PRP)
 
+## IMPORTANT: Initial Response Rule
+
+**When this command is invoked, ALWAYS start by asking the user to
+describe their feature. DO NOT jump to clarifying questions until
+they have provided an initial description.**
+
 ## Goal
 
 To guide an AI assistant in creating a detailed Product Requirements
@@ -15,21 +21,29 @@ columns.
 
 ## Process
 
-1.  **Receive Initial Prompt:** The user provides a brief description
-    or request for a new feature or functionality.
+**CRITICAL: Follow this process EXACTLY in sequence. DO NOT SKIP AHEAD!**
 
-2.  **Ask Clarifying Questions:** Before writing the PRP, the AI
-    *must* ask clarifying questions to gather sufficient detail. The goal
-    is to understand the "what" and "why" of the feature, not
-    necessarily the "how" (which the developer will figure out). Make
-    sure to provide options in letter/number lists so I can respond
-    easily with my selections.
+1.  **WAIT for Initial Feature Description:**
+    - **STOP AND WAIT** for the user to describe the feature they want
+    - The user MUST provide at least a brief description FIRST
+    - DO NOT ask any questions until the user has provided this initial description
+    - Simply acknowledge you're ready and ask: "What feature would you like to create a PRP for?"
 
-3.  **Generate PRP:** Based on the initial prompt and the user's answers
-    to the clarifying questions, generate a PRP using the structure
-    outlined below.
+2.  **Ask Clarifying Questions:**
+    - **ONLY AFTER** the user has provided their feature description in step 1
+    - Ask 3-5 FOCUSED clarifying questions based on what's unclear from their description
+    - DO NOT ask all possible questions - only what's needed based on their input
+    - Provide options in letter/number lists for easy selection
+    - Goal: understand the "what" and "why", not the "how"
 
-4.  **Save PRP:** Save the generated document as `.ai/[feature-name]/prp.md`.
+3.  **Generate PRP:**
+    - Based on the initial description AND the user's answers to clarifying questions
+    - Generate a PRP using the structure outlined below
+    - Ensure it's suitable for a junior developer to understand
+
+4.  **Save PRP:**
+    - Save the generated document as `.ai/[feature-name]/prp.md`
+    - Confirm with the user that the PRP has been saved
 
 ## Clarifying Questions (Examples)
 

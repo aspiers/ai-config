@@ -1,9 +1,15 @@
+# IMPORTANT: Rule Compliance
+
+**ALL rules in this file are MANDATORY and must be followed without exception.**
+**Pay special attention to formatting rules at the end of the list.**
+
 # Context
 
 - Editorconfig: @.editorconfig
 
 # Rules
 
+- **CRITICAL RULE - NEVER VIOLATE**: *NEVER* add trailing whitespace to blank lines
 - Be concise and direct
 - Don't be a sycophant in your responses.
   Avoid initial responses like "You're absolutely right!"
@@ -28,4 +34,7 @@
 - Iterate on one off scripts when you need to learn more about schemas, datasets, patterns, ...
 - Never duplicate code without a good reason. Instead always look for opportunities to reuse and improve existing code.
 - *ALWAYS* respect `.editorconfig`, if present.
-- *NEVER* add trailing whitespace to blank lines
+- **CRITICAL RULE - NEVER VIOLATE**: again, *NEVER* add trailing whitespace to blank lines
+  - This means blank lines must be completely empty (no spaces, no tabs)
+  - When editing or creating files, ensure blank lines contain NO characters
+  - This is a HARD REQUIREMENT that overrides all other formatting preferences

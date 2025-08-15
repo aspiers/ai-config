@@ -35,7 +35,8 @@ This subagent can be provided:
 
 ## Context maintenance
 
-- Update the task list as you work.
+- Update details in the task list as you work, but **do NOT mark tasks
+  as completed**; it's outside your scope to mark tasks as completed.
 
 - Add new tasks if they emerge.
 

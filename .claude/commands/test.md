@@ -10,10 +10,10 @@ this repository (typically in `.ai-rules`, `AGENTS.md`, `AGENT.md`,
 
 ## Test Discovery
 
-Look for test commands in:
+Run tests according to repository guidelines. Look for test commands in:
 
-- Repository documentation (README, AGENTS.md, etc.)
-- Package configuration (package.json, Makefile, etc.)
+- Repository documentation (`README`, `CLAUDE.md`, `AGENTS.md`, etc.)
+- Package configuration (`package.json`, `Makefile`, etc.)
 - Standard test patterns
 
 If no test guidelines are found or they are unclear, ask the user for

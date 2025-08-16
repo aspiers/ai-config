@@ -59,25 +59,33 @@ This subagent can be provided:
 
 1. Implement the sub-task according to your best judgement.
 
-2. Run linters according to repository guidelines. First look for linting commands in the following order:
-   - Directives to AI agents (`CLAUDE.md`, `.cursorrules`, `.ai-rules`, `AGENTS.md`, `AGENT.md`, `GEMINI.md`, and similar)
+2. Make sure you added test coverage according to repository guidelines.
+
+3. Run linters according to repository guidelines. First look for linting
+   commands in the following order:
+   - Directives to AI agents (`CLAUDE.md`, `.cursorrules`, `.ai-rules`,
+     `AGENTS.md`, `AGENT.md`, `GEMINI.md`, and similar)
    - Repository documentation (`README.md`, `docs/`, etc.)
    - Package configuration (`package.json`, `Makefile`, etc.)
    - Standard linter patterns
 
    For each linter found:
-   a. If it has an auto-fix mode (e.g. `prettier`, `eslint`, and `rubocop` all have auto-fix modes), then run that.
+
+   a. If it has an auto-fix mode (e.g. `prettier`, `eslint`, and `rubocop`
+      all have auto-fix modes), then run that.
    b. Run the linter in check mode to see if there are any remaining issues.
    c. If issues can't be fixed, stop and ask the user what to do next.
 
    If not passing, go back to step 1.
 
-3. Run tests according to repository guidelines. Look for test commands in:
+4. Run tests according to repository guidelines. Look for test commands in:
+
    - Repository documentation (README, AGENTS.md, etc.)
    - Package configuration (package.json, Makefile, etc.)
    - Standard test patterns
 
    For each test command found:
+
    a. Run it.
    b. If any issues are found which can be fixed, attempt to fix them.
    c. If issues can't be fixed, stop and ask the user what to do next.

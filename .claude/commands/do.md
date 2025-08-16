@@ -63,4 +63,7 @@ adhering to strict quality controls.
 8. ONLY AFTER getting a review in step 7, use the git-committer
    sub-agent to commit to git with a proper commit message.
 
+9. Select the first incomplete sub-task from `tasks.md`, and repeat
+   from step 1 until all steps are done.
+
 **Follow the above steps EXACTLY!!! NO EXCEPTIONS!!!**

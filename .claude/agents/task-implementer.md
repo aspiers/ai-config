@@ -53,8 +53,9 @@ This subagent can be provided:
 
 1. Implement the sub-task according to your best judgement.
 
-2. Run the `/lint` custom slash command to check that any code
-   has valid formatting.  If not, go back to step 1.
+2. Run the Claude custom slash command `/lint` (this is **NOT** a bash
+   command!) to check that any code has valid formatting.  If not, go back to
+   step 1.
 
-3. Run the `/test` custom slash command to ensure that all tests
-   pass.  If not, go back to step 1.
+3. Run the Claude custom slash command `/test` (this is **NOT** a bash
+   command!) to ensure that all tests pass.  If not, go back to step 1.

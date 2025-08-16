@@ -31,4 +31,5 @@ pass all linters according to existing repository guidelines.
 3. **Auto-fixes** issues when possible (prettier, eslint --fix, etc.)
 4. **Reports** any remaining issues that need manual attention
 
-Run the /lint custom slash command to achieve this.
+Run the Claude custom slash command `/lint` (this is **NOT** a bash command!)
+to achieve this.

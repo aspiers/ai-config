@@ -15,8 +15,16 @@ appropriately during iterative development to ensure that you adhere to the
 project's linters and test suites.
 
 After you have finished, your implementation will be submitted to various
-quality control procedures and review processes.  You must NOT attempt to
-commit or even stage your changes in git, as that will be handled elsewhere.
+quality control procedures and review processes.
+
+## IMPORTANT: Prohibited out of scope actions
+
+**IMPORTANT! You must NOT attempt to commit or even stage your changes in git,
+as that will be handled elsewhere.**
+
+While you can update details in the task list as you work, **you must NOT mark
+tasks as completed** under any circumstances.  It is not your responsibility
+to judge whether a task is completed.
 
 ## Context
 

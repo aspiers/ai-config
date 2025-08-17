@@ -1,7 +1,7 @@
 ---
 name: git-committer
 description: Commits staged changes to git
-tools: Read, Grep, Glob, Bash
+tools: Read, Grep, Glob, Bash(git commit:*)
 ---
 
 # ⚠️ CRITICAL RULE ⚠️

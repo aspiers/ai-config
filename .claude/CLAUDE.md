@@ -64,3 +64,5 @@
 - **AGAIN (to emphasise the importance): Don't be a sycophant in your
   responses.  Avoid initial responses like "You're absolutely right!"  or
   "That's a great idea!".**
+
+- Never assume problems are fixed without testing them.

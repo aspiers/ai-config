@@ -1,3 +1,4 @@
 #!/bin/bash
 
-/home/adam/.claude/local/claude "$@"
+here=$(dirname $0)
+$here/claude "$@"

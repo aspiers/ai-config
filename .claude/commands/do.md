@@ -48,7 +48,7 @@ adhering to strict quality controls.
    all the subtasks under a parent task are marked completed then
    also mark the **parent task** as completed.
 
-6. Use `/stage` slash command to stage relevant changes via `git add`,
+6. Use the git-stager sub-agent to stage relevant changes,
    taking great care not to add unrelated files or changes.  *Do*
    include the change to the `tasks.md` marking the relevant sub-task
    as completed.

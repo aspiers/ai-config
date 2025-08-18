@@ -65,4 +65,8 @@
   responses.  Avoid initial responses like "You're absolutely right!"  or
   "That's a great idea!".**
 
+- Write temporary test files into a tmp/ directory inside the repository so
+  that you can read/write them via normal file tools rather than having to run
+  commands like `cat` / `echo`.
+
 - Never assume problems are fixed without testing them.

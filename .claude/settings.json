@@ -20,6 +20,7 @@
       "Bash(npm info:*)",
       "Bash(ls:*)",
       "Bash(tree:*)",
+      "Bash(true)",
       "WebFetch",
       "WebSearch"
     ],

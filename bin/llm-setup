@@ -1,0 +1,4 @@
+#!/bin/bash
+
+uv tool upgrade llm
+llm install llm-{gpt4all,anthropic,gemini,openrouter,deepseek}

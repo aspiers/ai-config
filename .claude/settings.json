@@ -33,7 +33,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "mplayer /usr/share/sounds/Oxygen-Sys-App-Positive.ogg"
+            "command": "mplayer -volume 50 /usr/share/sounds/Oxygen-Sys-App-Positive.ogg"
           },
           {
             "type": "command",

@@ -1,7 +1,8 @@
 # AI configuration files and utilities
 
-Adam's collection of configuration files and command-line utilities for
-working with AI agents such as Claude Code and opencode.
+Adam's collection of configuration files and command-line utilities designed
+to streamline common development tasks and improve productivity when working
+with AI tools and configurations.
 
 ## Installation
 
@@ -11,7 +12,13 @@ home directory:
 
 ```bash
 git clone https://github.com/adamspiers/ai-config.git
-stow -t ~ ai-config
+stow -d . -t ~ ai-config
+```
+
+To remove:
+
+```bash
+stow -d . -t ~ -D ai-config
 ```
 
 Alternatively, you can manually copy individual files to your desired
@@ -41,21 +48,26 @@ Application configuration files:
 
 ### Scripts (`bin/`)
 
-#### `bin/ccu`
+- **`ccu`** - Runs the latest version of `ccusage` to monitor Claude Code usage statistics
+- **`ccul`** - Live monitoring of Claude Code usage with automatic refresh every 5 seconds using blocks display format
+- **`cl`** and **`claude`** - Wrappers for running the local Claude Code installation at `/home/adam/.claude/local/claude`
 
-Runs the latest version of `ccusage` to monitor Claude Code usage statistics.
-
-#### `bin/ccul`
-
-Live monitoring of Claude Code usage with automatic refresh every 5 seconds
-using blocks display format.
-
-#### `bin/cl` and `bin/claude`
-
-Wrappers for running the local Claude Code installation at
-`/home/adam/.claude/local/claude`.
-
-#### `.shared_rc.d/`
+### `.shared_rc.d/`
 
 Shared shell configuration fragments for common environment setup.
 These are loaded by <https://github.com/aspiers/shell-env/blob/master/.shared_rc>.
+
+## Requirements
+
+- Bash shell
+- Node.js/npm (for ccusage functionality)
+- GNU Stow (for deployment)
+
+## License
+
+This project is licensed under the GNU General Public License v3.0 - see the
+[LICENSE](LICENSE) file for details.
+
+## Author
+
+Adam Spiers

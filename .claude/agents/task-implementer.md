@@ -31,7 +31,7 @@ to judge whether a task is completed.
 This subagent can be provided:
 
   1. `feature_name` - this allows location of the relevant task list
-     at `/.ai/[feature_name]/tasks.md`.  If it's not provided, run
+     at `.ai/[feature_name]/tasks.md`.  If it's not provided, run
      `ls .ai/*/tasks.md` and ask the user to pick one of the matching
      feature names.
 

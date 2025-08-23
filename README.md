@@ -43,8 +43,8 @@ Claude Code configuration containing:
 
 Application configuration files:
 
-- `opencode/opencode.json` - OpenCode AI editor configuration with custom
-  keybindings and local LM Studio provider setup
+- `opencode/` - OpenCode AI editor configuration with custom commands,
+  agents, plugins, and local LM Studio provider setup
 
 ### Scripts (`bin/`)
 

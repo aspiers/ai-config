@@ -1,6 +1,12 @@
 ---
 description: Run tests according to repository guidelines
-allowed-tools: Bash(./bin/test-*), Bash(*test*), Bash(npm test), Bash(pytest), Bash(make test)
+permission:
+  bash:
+    "./bin/test-*": "allow"
+    "*test*": "allow"
+    "npm test": "allow"
+    "pytest": "allow"
+    "make test": "allow"
 ---
 # Running Tests
 

@@ -1,7 +1,11 @@
 ---
 description: Review code for quality, security, and maintainability
 agent: plan
-allowed-tools: Read, Grep, Glob, Bash
+tools:
+  read: true
+  grep: true
+  glob: true
+  bash: true
 ---
 # Goal
 

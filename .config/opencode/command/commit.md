@@ -1,6 +1,15 @@
 ---
 description: Create well-formatted commits using the conventional commits style
-allowed-tools: Bash(git status:*), Bash(git commit:*), Bash(git diff:*), Bash(git log:*)
+permission:
+  bash:
+    "git status": "allow"
+    "git commit *": "allow"
+    "git diff *": "allow"
+    "git log *": "allow"
+    "git add *": "deny"
+    "git stage *": "deny"
+    "git reset *": "deny"
+    "git restore *": "deny"
 ---
 
 # ⚠️ CRITICAL RULE ⚠️

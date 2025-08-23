@@ -1,6 +1,10 @@
 ---
 description: Wrapper around /init
-allowed-tools: Bash(mv:*), Bash(ln -s:*), Bash(ls:*)
+permission:
+  bash:
+    "mv": "allow"
+    "ln -s": "allow"
+    "ls": "allow"
 ---
 # Improve the results of running the /init command
 

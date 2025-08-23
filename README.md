@@ -49,7 +49,13 @@ Application configuration files:
 ### Scripts (`bin/`)
 
 - **`ccu`** - Runs the latest version of `ccusage` to monitor Claude Code usage statistics
-- **`ccul`** - Live monitoring of Claude Code usage with automatic refresh every 5 seconds using blocks display format
+- **`ccul`** - Live monitoring of Claude Code usage with automatic refresh
+  every 5 seconds using blocks display format; although for *live* monitoring,
+  I actually prefer [Claude Code Usage
+  Monitor](https://github.com/Maciek-roboblog/Claude-Code-Usage-Monitor) (`uv
+  tool install claude-monitor`) (not to be confused with `npx ccmonitor` from
+  [shinagaki/ccmonitor](https://github.shinagaki/ccmonitor) which also looks
+  OK but far less popular)
 - **`cl`** and **`claude`** - Wrappers for running the local Claude Code installation at `/home/adam/.claude/local/claude`
 
 ### `.shared_rc.d/`

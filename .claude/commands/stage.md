@@ -1,6 +1,6 @@
 ---
 description: Stage relevant changes via git add
-allowed-tools: Bash(git add:*), Bash(git status:*)
+allowed-tools: Bash(git add:*), Bash(git status:*), Bash(git diff:*)
 ---
 # Staging Changes
 

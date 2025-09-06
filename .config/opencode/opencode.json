@@ -1,5 +1,13 @@
 {
   "$schema": "https://opencode.ai/config.json",
+  "permission": {
+    "bash": {
+      "*": "ask",
+      "pkill": "deny",
+      "kill": "deny",
+      "killall": "deny"
+    }
+  },
   "keybinds": {
     "leader": "ctrl+x",
     "editor_open": "<leader>e",

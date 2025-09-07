@@ -16,6 +16,7 @@
       "Bash(gh issue view:*)",
       "Bash(gh pr list:*)",
       "Bash(gh pr status:*)",
+      "Bash(jobs)",
       "Bash(npm search:*)",
       "Bash(npm info:*)",
       "Bash(ls:*)",

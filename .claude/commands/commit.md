@@ -53,9 +53,9 @@ Create well-formatted commits with the conventional commits style.
 
    🛑 **IF FILES ARE UNSTAGED**: STOP immediately and ask the user:
    "There are unstaged changes in addition to staged files. Would you
-   like me to stage the unstaged changes as well, or commit only the
-   currently staged files? If you want me to stage additional files,
-   please give explicit permission."
+   like me to (1) stage the unstaged changes as well, or (2) commit
+   only the currently staged files? If you want me to stage
+   additional files, please give explicit permission."
 
    ✅ **ONLY STAGE IF**: The user explicitly gives permission with
    phrases like "yes, stage them", "go ahead and stage", "stage all

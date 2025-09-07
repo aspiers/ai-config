@@ -16,9 +16,11 @@ Do NOT run any of these commands WITHOUT user permission:
 - `git restore --staged`
 - Any command that modifies the staging area
 
-Default behavior: Only work with files that are ALREADY staged by the user.
+Default behavior: Only work with files that are ALREADY staged by the
+user.
 
-Exception: Only stage files if the user gives explicit permission when asked.
+Exception: Only stage files if the user gives explicit permission when
+asked.
 
 # Creating a git commit
 
@@ -52,9 +54,9 @@ Create well-formatted commits with the conventional commits style.
 
    🛑 **IF FILES ARE UNSTAGED**: STOP immediately and ask the user:
    "There are unstaged changes in addition to staged files. Would you
-   like me to stage the unstaged changes as well, or commit only the
-   currently staged files? If you want me to stage additional files,
-   please give explicit permission."
+   like me to (1) stage the unstaged changes as well, or (2) commit
+   only the currently staged files? If you want me to stage
+   additional files, please give explicit permission."
 
    ✅ **ONLY STAGE IF**: The user explicitly gives permission with
    phrases like "yes, stage them", "go ahead and stage", "stage all

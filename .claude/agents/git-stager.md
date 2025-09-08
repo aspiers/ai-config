@@ -1,7 +1,7 @@
 ---
 name: git-stager
 description: Stage relevant changes via git add
-tools: Read, Grep, Bash(git add:*), Bash(git status:*)
+tools: Read, Grep, Bash(git add:*), Bash(git branch:*), Bash(git diff:*), Bash(git log:*), Bash(git status:*)
 ---
 # Staging Changes
 

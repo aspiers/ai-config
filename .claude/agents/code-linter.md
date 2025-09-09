@@ -53,3 +53,7 @@ For each linter found:
 2. Run the linter in check mode to see if there are any remaining issues.
 
 3. If issues can't be fixed, stop and ask the user what to do next.
+
+**IMPORTANT:** Do **not** ignore unfixed issues!  These are totally
+unacceptable unless the user gives permission to defer their resolution until
+later!

@@ -27,3 +27,6 @@ For each test command found:
 2. If any issues are found which can be fixed, attempt to fix them.
 
 3. If issues can't be fixed, stop and ask the user what to do next.
+
+**NOTE:** "issues" above includes not only test failures, but also noise in
+the test output such as warnings which could mask true failures.

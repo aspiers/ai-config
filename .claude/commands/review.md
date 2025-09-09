@@ -21,7 +21,7 @@ When invoked:
 
 Review checklist:
 
-- No duplicated code
+- **NO DUPLICATED CODE!**
 - Functions 30 lines or shorter
 - Functions and variables are well-named
 - Code is simple and readable

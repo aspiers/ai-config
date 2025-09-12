@@ -21,13 +21,20 @@ clarification.
 
 ## Process
 
+**CRITICAL REQUIREMENT: 100% test success is MANDATORY. Less than 100% test
+success is NEVER acceptable without explicit permission.**
+
 For each test command found:
 
 1. Run it.
 
-2. If any issues are found which can be fixed, attempt to fix them.
+2. If ANY test failures occur, they MUST be fixed. No exceptions.
 
-3. If issues can't be fixed, stop and ask the user what to do next.
+3. If issues can't be fixed immediately, stop and ask the user what to do next.
+
+4. Only consider the task complete when ALL tests pass with 100% success rate
+   OR the user explicitly gives permission to ignore certain failures or
+   warnings.
 
 **NOTE:** "issues" above includes not only test failures, but also noise in
 the test output such as warnings which could mask true failures.

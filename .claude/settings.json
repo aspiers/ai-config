@@ -17,6 +17,7 @@
       "Bash(gh pr list:*)",
       "Bash(gh pr status:*)",
       "Bash(jobs)",
+      "Bash(mkdir:*)",
       "Bash(npm search:*)",
       "Bash(npm info:*)",
       "Bash(ls:*)",

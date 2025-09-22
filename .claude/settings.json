@@ -25,7 +25,8 @@
       "Bash(true)",
       "WebFetch",
       "WebSearch",
-      "mcp__github__get_pull_request"
+      "mcp__github__get_pull_request",
+      "mcp__github__get_pull_request_review_comments"
     ],
     "deny": []
   },

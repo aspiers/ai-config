@@ -23,7 +23,8 @@
       "Bash(tree:*)",
       "Bash(true)",
       "WebFetch",
-      "WebSearch"
+      "WebSearch",
+      "mcp__github__get_pull_request"
     ],
     "deny": []
   },

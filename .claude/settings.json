@@ -10,6 +10,7 @@
       "Bash(git log:*)",
       "Bash(git ls-files:*)",
       "Bash(git ls-tree:*)",
+      "Bash(git stash show:*)",
       "Bash(git status:*)",
       "Bash(gh issue list:*)",
       "Bash(gh issue status:*)",

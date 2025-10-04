@@ -1,6 +1,6 @@
 ---
 description: Wrapper around /init
-allowed-tools: Bash(mv:*), Bash(ln -s:*), Bash(ls:*)
+allowed-tools: Bash(mv:*), Bash(ln -s:*), Bash(ls:*), Bash(:)
 ---
 # Improve the results of running the /init command
 
@@ -12,7 +12,7 @@ discoverable and readable by multiple AI agents looking in different places.
 
 ## Context
 
-- Existing files: !`ls CLAUDE.md AGENTS.md GEMINI.md`
+- Existing files: !`ls CLAUDE.md AGENTS.md GEMINI.md || :`
 
 ## Process
 

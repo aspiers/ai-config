@@ -52,9 +52,9 @@
 
 - Iterate on one off scripts when you need to learn more about schemas, datasets, patterns, ...
 
-- Never duplicate code without a good reason. Instead always look for opportunities to reuse and improve existing code.
+- **CRITICALLY IMPORTANT RULE: NEVER DUPLICATE CODE** without a good reason! Instead always look for opportunities to reuse and improve existing code.
 
-- *ALWAYS* respect `.editorconfig`, if present.
+- *ALWAYS* respect `.editorconfig`, if present. If not, ask if one should be added.
 
 - **CRITICAL RULE - NEVER VIOLATE**: again, *NEVER* add trailing whitespace to blank lines
   - This means blank lines must be completely empty (no spaces, no tabs)

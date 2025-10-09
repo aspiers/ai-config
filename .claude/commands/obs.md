@@ -115,6 +115,7 @@ Essential reading:
 - **Packaging Guidelines**: https://en.opensuse.org/openSUSE:Packaging_guidelines
 - **OBS User Guide**: https://openbuildservice.org/help/manuals/obs-user-guide/
 - **Spec file documentation**: https://en.opensuse.org/openSUSE:Specfile_guidelines
+- Guidelines on **packaging patches**: https://en.opensuse.org/openSUSE:Packaging_Patches_guidelines
 
 Language-specific guidelines:
 - **Python**: https://en.opensuse.org/openSUSE:Packaging_Python

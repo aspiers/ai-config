@@ -1,3 +1,7 @@
+---
+description: Run OBS project management commands
+allowed-tools: Bash(osc:*)
+---
 Open Build Service (OBS) project management commands for home:aspiers
 
 This command helps manage packages in the OBS home directory at

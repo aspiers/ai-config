@@ -7,6 +7,22 @@ Open Build Service (OBS) project management commands for home:aspiers
 This command helps manage packages in the OBS home directory at
 /home/adam/OBS/home/aspiers
 
+## CRITICAL REQUIREMENT: BUILD FROM SOURCE ONLY
+
+**NEVER use pre-built binaries, AppImages, or binary packages in OBS!**
+
+The entire purpose and requirement of OBS is to build packages from source
+code.  This ensures:
+
+- Reproducible builds
+- Security and transparency
+- Distribution-specific optimizations
+- License compliance verification
+
+Always download source tarballs, not binary releases. If a package fails to
+build from source, debug and fix the build process - do NOT look for pre-built
+alternatives.
+
 ## Setup and Basic Commands
 
 ### Create a new package:

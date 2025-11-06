@@ -3,11 +3,23 @@
 
 # Resource limits - adjust as needed
 MEMORY_LIMIT="8G"
-CPU_QUOTA="50%"
+# CPUQuota should be expressed as percentage of total CPU time
+# For a 4-core system, 200% = 2 cores, 100% = 1 core
+# Adjust based on your system (check with nproc)
+TOTAL_CPUS=$(nproc)
+CPU_PERCENT=80  # Percentage of total CPU to allow
+CPU_QUOTA=$((TOTAL_CPUS * CPU_PERCENT))%
 
 # Launch Cursor with resource constraints
+# Using --slice to create a proper hierarchy and --property=Delegate=yes
+# to ensure child processes stay in the cgroup
 exec systemd-run --user --scope \
-  --property=MemoryLimit=$MEMORY_LIMIT \
-  --property=CPUQuota=$CPU_QUOTA \
+  --slice=cursor-limited.slice \
+  --property=MemoryMax=$MEMORY_LIMIT \
   --property=MemoryHigh=7.5G \
+  --property=CPUQuota=$CPU_QUOTA \
+  --property=CPUWeight=50 \
+  --property=IOWeight=50 \
+  --property=TasksMax=1000 \
+  --property=Delegate=yes \
   -- ~/software/ide/cursor-*.AppImage "$@"

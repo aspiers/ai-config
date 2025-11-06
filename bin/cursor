@@ -1,0 +1,13 @@
+#!/bin/bash
+# Launch Cursor with systemd resource limits
+
+# Resource limits - adjust as needed
+MEMORY_LIMIT="8G"
+CPU_QUOTA="50%"
+
+# Launch Cursor with resource constraints
+exec systemd-run --user --scope \
+  --property=MemoryLimit=$MEMORY_LIMIT \
+  --property=CPUQuota=$CPU_QUOTA \
+  --property=MemoryHigh=7.5G \
+  -- ~/software/ide/cursor-*.AppImage "$@"

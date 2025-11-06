@@ -23,6 +23,9 @@ Always download source tarballs, not binary releases. If a package fails to
 build from source, debug and fix the build process - do NOT look for pre-built
 alternatives.
 
+Reproducibility is also essential, so any files added via `osc add` must
+have a clear origin.
+
 ## Setup and Basic Commands
 
 ### Create a new package:
@@ -39,7 +42,7 @@ echo "Next steps: download source, create .spec file, add files with 'osc add'"
 ### Common workflow for existing packages:
 ```bash
 cd /home/adam/OBS/home/aspiers/<package-name>
-osc up                    # Update from OBS
+osc up                   # Update from OBS
 osc status               # Check local changes
 osc add <new-files>      # Add new files
 osc commit -m "message"  # Commit changes
@@ -53,7 +56,7 @@ osc build openSUSE_Tumbleweed x86_64      # Build for Tumbleweed
 osc build --clean                         # Clean build
 ```
 
-### Monitor build results:
+### Monitor remote build results:
 ```bash
 osc results                               # Show build status for all targets
 osc results openSUSE_Tumbleweed           # Show results for specific target

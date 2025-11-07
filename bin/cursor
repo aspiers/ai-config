@@ -1,6 +1,10 @@
 #!/bin/bash
 # Launch Cursor with systemd resource limits
 
+# Frequently dumps useless cores, DOS-ing the system
+# in the process.
+ulimit -c 0
+
 # Resource limits - adjust as needed
 MEMORY_LIMIT="8G"
 # CPUQuota should be expressed as percentage of total CPU time

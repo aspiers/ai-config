@@ -24,6 +24,5 @@ exec systemd-run --user --scope \
   --property=CPUQuota=$CPU_QUOTA \
   --property=CPUWeight=50 \
   --property=IOWeight=50 \
-  --property=TasksMax=1000 \
   --property=Delegate=yes \
   -- ~/software/ide/cursor-*.AppImage "$@"

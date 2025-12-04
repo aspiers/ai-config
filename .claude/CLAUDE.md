@@ -42,7 +42,8 @@
 - Do not add comments that just describe what the code does,
   unless the code is particularly complex.
 
-- Remove code that is not needed
+- Remove code that is not needed if and ONLY if it's directly related to the
+  changes currently being worked on.
 
 - Prefer functional code with small modular functions and components
 

@@ -70,3 +70,7 @@
   commands like `cat` / `echo`.
 
 - Never assume problems are fixed without testing them.
+
+- Never run tests or long-running commands without piping through tee(1).  In
+  particular, don't blindly pipe through tail(1) unless you're sure the
+  premature termination via SIGPIPE won't cause problems.

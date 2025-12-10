@@ -78,3 +78,7 @@
   temporary logfile, prefer logfiles in the `tmp/` subdirectory of the
   repository rather than `/tmp`.  Don't assume `tmp/` exists though; you might
   have to create it.
+
+- **IMPORTANT**: When asked to check GitHub issues or PRs, use the `gh`
+  command-line.  **Do NOT use** `browser_navigate`, `browser_snapshot`, or
+  other playwright tools unless specifically requested by the user.

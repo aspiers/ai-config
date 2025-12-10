@@ -74,4 +74,7 @@
 
 - Never run tests or long-running commands without piping through tee(1).  In
   particular, don't blindly pipe through tail(1) unless you're sure the
-  premature termination via SIGPIPE won't cause problems.
+  premature termination via SIGPIPE won't cause problems.  When tee-ing into a
+  temporary logfile, prefer logfiles in the `tmp/` subdirectory of the
+  repository rather than `/tmp`.  Don't assume `tmp/` exists though; you might
+  have to create it.

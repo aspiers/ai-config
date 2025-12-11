@@ -9,6 +9,7 @@
       "Bash(git cat-file:*)",
       "Bash(git describe:*)",
       "Bash(git diff:*)",
+      "Bash(git fetch:*)",
       "Bash(git grep:*)",
       "Bash(git imerge diagram:*)",
       "Bash(git imerge list:*)",

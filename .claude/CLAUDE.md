@@ -72,13 +72,17 @@
 
 - Never assume problems are fixed without testing them.
 
-- Never run tests or long-running commands without piping through tee(1).  In
+- Never run tests or long-running / slow commands such as API calls or log
+  file retrievals (e.g. `gh run view`) without piping through tee(1).  In
   particular, don't blindly pipe through tail(1) unless you're sure the
   premature termination via SIGPIPE won't cause problems.  When tee-ing into a
   temporary logfile, prefer logfiles in the `tmp/` subdirectory of the
   repository rather than `/tmp`.  Don't assume `tmp/` exists though; you might
   have to create it.
 
-- **IMPORTANT**: When asked to check GitHub issues or PRs, use the `gh`
-  command-line.  **Do NOT use** `browser_navigate`, `browser_snapshot`, or
-  other playwright tools unless specifically requested by the user.
+- **IMPORTANT**: When asked to check GitHub issues, PRs, action runs etc., use
+  the `gh` command-line.  **Do NOT use** `browser_navigate`,
+  `browser_snapshot`, or other playwright tools unless specifically requested
+  by the user.  If you might need to examine the output multiple times, apply
+  the above advice about using tee(1) so you don't have to re-fetch the same
+  output.

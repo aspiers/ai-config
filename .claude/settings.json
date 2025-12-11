@@ -23,6 +23,7 @@
       "Bash(gh issue view:*)",
       "Bash(gh pr list:*)",
       "Bash(gh pr status:*)",
+      "Bash(gh run view:*)",
       "Bash(jobs)",
       "Bash(mkdir:*)",
       "Bash(npm search:*)",

@@ -35,6 +35,7 @@
       "Bash(npm search:*)",
       "Bash(npm info:*)",
       "Bash(ls:*)",
+      "Bash(tee:*)",
       "Bash(tree:*)",
       "Bash(true)",
       "WebFetch",

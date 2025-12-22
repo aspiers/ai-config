@@ -21,6 +21,8 @@
       "Bash(git log:*)",
       "Bash(git ls-files:*)",
       "Bash(git ls-tree:*)",
+      "Bash(git merge-base:*)",
+      "Bash(git merge-tree:*)",
       "Bash(git show:*)",
       "Bash(git stash show:*)",
       "Bash(git status:*)",

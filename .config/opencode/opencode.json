@@ -19,7 +19,6 @@
     "tool_details": "<leader>d",
     "model_list": "<leader>m",
     "theme_list": "<leader>t",
-    "project_init": "<leader>i",
     "input_clear": "ctrl+c",
     "input_paste": "ctrl+v",
     "input_submit": "enter",

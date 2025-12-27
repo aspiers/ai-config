@@ -96,3 +96,5 @@
   by the user.  If you might need to examine the output multiple times, apply
   the above advice about using tee(1) so you don't have to re-fetch the same
   output.
+
+- When running `git diff` or similar, always use `--no-ext-diff`.

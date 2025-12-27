@@ -76,13 +76,35 @@
           }
         ]
       }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bd prime"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bd prime"
+          }
+        ]
+      }
     ]
+  },
+  "enabledPlugins": {
+    "beads@beads-marketplace": true
   },
   "alwaysThinkingEnabled": false,
   "feedbackSurveyState": {
     "lastShownTime": 1754076415986
-  },
-  "enabledPlugins": {
-    "beads@beads-marketplace": true
   }
 }

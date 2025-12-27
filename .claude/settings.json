@@ -57,7 +57,8 @@
       "mcp__plugin_beads_beads__stats",
       "mcp__plugin_beads_beads__update",
       "mcp__github__get_pull_request",
-      "mcp__github__get_pull_request_review_comments"
+      "mcp__github__get_pull_request_review_comments",
+      "mcp__github__issue_read"
     ],
     "deny": []
   },

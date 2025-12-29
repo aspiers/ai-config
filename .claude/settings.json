@@ -60,7 +60,10 @@
       "mcp__github__get_pull_request_review_comments",
       "mcp__github__issue_read"
     ],
-    "deny": []
+    "deny": [
+      "Bash(pkill:*)",
+      "Bash(killall:*)"
+    ]
   },
   "hooks": {
     "Notification": [

@@ -1,0 +1,44 @@
+# Base permissions for AI coding agents
+# This abstraction provides minimal safe permissions for AI agents
+# that perform code analysis and file operations
+
+# Basic system abstractions
+include <abstractions/base>
+include <abstractions/nameservice>
+include <abstractions/consoles>
+
+# Network access for API calls
+network inet stream,
+network inet6 stream,
+network unix stream,
+
+# Read access to common paths
+/ r,
+/home/ r,
+owner @{HOME}/ r,
+owner @{HOME}/** r,
+
+# Temp directory access
+/tmp/** rw,
+/var/tmp/** rw,
+
+# Proc and sys access for system info
+@{PROC}/@{pid}/** r,
+/sys/kernel/mm/transparent_hugepage/hpage_pmd_size r,
+/sys/fs/cgroup/user.slice/user-*/user@*.service/*/memory.* r,
+
+# CRITICAL: Deny access to sensitive files and log any
+# inappropriate attempts
+audit deny /**/.env rwklx,
+audit deny /**/.env.* rwklx,
+audit deny /**/.npmrc rwklx,
+audit deny /**/.pypirc rwklx,
+audit deny /**/credentials.* rwklx,
+audit deny /**/*_secret* rwklx,
+audit deny /**/*-secret* rwklx,
+audit deny /**/.secret* rwklx,
+audit deny /**/*_password* rwklx,
+audit deny /**/*-password* rwklx,
+audit deny /**/.password* rwklx,
+audit deny /**/.ssh/id_* rwklx,
+audit deny /**/.gnupg/* rwklx,

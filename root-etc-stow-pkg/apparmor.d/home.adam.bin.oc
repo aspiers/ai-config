@@ -1,0 +1,35 @@
+# AppArmor profile for OpenCode AI agent
+# Managed via stow from ~/.GIT/adamspiers.org/ai-config
+abi <abi/4.0>,
+
+include <tunables/global>
+
+/home/adam/bin/oc {
+  include <abstractions/base>
+  include <abstractions/bash>
+  include <abstractions/consoles>
+
+  /home/adam/bin/oc r,
+  /usr/bin/bash ix,
+
+  # Allow executing bun with a confined child profile
+  /home/adam/.nvm/versions/node/*/lib/node_modules/bun/bin/bun.exe Px -> opencode,
+}
+
+profile opencode {
+  # Base AI agent permissions
+  include <abstractions/ai-agent-base>
+
+  # Safe command set
+  include <abstractions/ai-agent-safe-commands>
+
+  # Version control
+  include <abstractions/ai-agent-git>
+  include <abstractions/ai-agent-github>
+
+  # Package managers
+  include <abstractions/ai-agent-npm>
+
+  # OpenCode-specific
+  include <abstractions/ai-agent-opencode>
+}

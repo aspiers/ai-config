@@ -1,0 +1,8 @@
+# NPM permissions for AI agents
+# Read-only npm operations (search, info)
+
+/usr/bin/npm rix,
+
+# NPM config
+owner @{HOME}/.npmrc r,
+owner @{HOME}/.config/npm/** r,

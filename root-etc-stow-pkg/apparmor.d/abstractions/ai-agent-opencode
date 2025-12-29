@@ -1,0 +1,17 @@
+# OpenCode-specific permissions
+# Allows bun runtime and OpenCode access
+
+# Bun executable from any nvm node version
+/home/adam/.nvm/versions/node/**/bun.exe mrix,
+
+# OpenCode repository access
+/home/adam/.GIT/3rd-party/opencode/** r,
+
+# OpenCode config and cache
+owner @{HOME}/.config/opencode/** rw,
+owner @{HOME}/.cache/opencode/** rw,
+owner @{HOME}/.local/share/opencode/** rw,
+
+# Bun cache and temp files
+owner @{HOME}/.cache/.bun/** rwkl,
+owner @{HOME}/.bun/** rwkl,

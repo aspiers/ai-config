@@ -69,3 +69,4 @@ COPYING
 ^/\.prettier.*
 ^/\.editorconfig
 ^/node_modules
+^/root-etc-stow-pkg

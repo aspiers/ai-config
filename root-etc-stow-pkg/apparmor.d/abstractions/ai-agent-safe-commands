@@ -1,0 +1,24 @@
+# Safe read-only and non-destructive commands for AI agents
+# These commands are generally safe for AI agents to execute
+
+# File search and inspection (read-only)
+/usr/bin/find rix,
+/usr/bin/grep rix,
+/usr/bin/ls rix,
+/usr/bin/cat rix,
+/usr/bin/tree rix,
+/usr/bin/identify rix,
+
+# Text processing (read-only/safe)
+/usr/bin/jq rix,
+/usr/bin/sort rix,
+/usr/bin/tee rix,
+/usr/bin/md5sum rix,
+
+# Shell utilities
+/usr/bin/true rix,
+/usr/bin/false rix,
+
+# Directory creation (generally safe)
+/usr/bin/mkdir rix,
+/bin/mkdir rix,

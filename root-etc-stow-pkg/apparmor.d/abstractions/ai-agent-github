@@ -1,0 +1,10 @@
+# GitHub CLI permissions for AI agents
+# Allows gh CLI for repository interaction
+
+/usr/bin/gh rix,
+
+# gh needs git
+include <abstractions/ai-agent-git>
+
+# gh config and auth
+owner @{HOME}/.config/gh/** r,

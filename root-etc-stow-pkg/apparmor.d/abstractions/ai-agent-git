@@ -1,0 +1,12 @@
+# Git permissions for AI agents
+# Restricted to read-only and safe git operations
+
+/usr/bin/git rix,
+
+# Git will need bash for hooks/pagers
+/usr/bin/bash ix,
+/bin/bash ix,
+
+# Additional read access git needs
+owner @{HOME}/.gitconfig r,
+owner @{HOME}/.git-credentials r,

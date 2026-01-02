@@ -33,6 +33,7 @@
       "gh pr status *": "allow",
       "gh pr view *": "allow",
       "gh run view *": "allow",
+      "head": "allow",
       "identify": "allow",
       "jobs": "allow",
       "jq": "allow",

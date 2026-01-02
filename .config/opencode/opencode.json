@@ -6,6 +6,7 @@
       "pkill": "deny",
       "kill": "deny",
       "killall": "deny",
+      "echo *": "allow",
       "find *": "allow",
       "grep *": "allow",
       "git add*": "allow",

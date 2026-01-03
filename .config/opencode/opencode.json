@@ -50,6 +50,7 @@
       "test*": "allow",
       "tree*": "allow",
       "true": "allow",
+      "uname *": "allow",
       "wc*": "allow"
     }
   },

@@ -51,6 +51,7 @@
       "Bash(test:*)",
       "Bash(tree:*)",
       "Bash(true)",
+      "Bash(uname:*)",
       "Bash(wc:*)",
       "WebFetch",
       "WebSearch",

@@ -3,9 +3,8 @@
   "permission": {
     "bash": {
       "*": "ask",
-      "pkill": "deny",
-      "kill": "deny",
-      "killall": "deny",
+      "pkill *": "deny",
+      "killall *": "deny",
       "echo *": "allow",
       "find *": "allow",
       "grep *": "allow",
@@ -46,8 +45,10 @@
       "ls *": "allow",
       "sort*": "allow",
       "tee*": "allow",
+      "test*": "allow",
       "tree*": "allow",
-      "true": "allow"
+      "true": "allow",
+      "wc*": "allow"
     }
   },
   "keybinds": {

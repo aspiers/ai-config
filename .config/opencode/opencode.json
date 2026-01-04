@@ -36,6 +36,7 @@
       "gh run view *": "allow",
       "head": "allow",
       "identify": "allow",
+      "ai-safe-rm *": "allow",
       "jobs": "allow",
       "jq": "allow",
       "md5sum*": "allow",

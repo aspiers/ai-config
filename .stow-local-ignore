@@ -70,3 +70,4 @@ COPYING
 ^/\.editorconfig
 ^/node_modules
 ^/root-etc-stow-pkg
+^/tests

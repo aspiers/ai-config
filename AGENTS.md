@@ -190,7 +190,29 @@ ai-safe-rm src/legacy/*.js
 
 Helper script: `bin/ai-safe-rm`
 
+## Testing
+
+Test suites are located in the `tests/` directory.
+
+### Running tests
+
+```bash
+# Run all tests for ai-safe-rm
+python3 tests/test_ai_safe_rm.py
+
+# Run with verbose output
+python3 tests/test_ai_safe_rm.py -v
+
+# Run specific test
+python3 tests/test_ai_safe_rm.py TestAiSafeRm.test_modified_tracked_file_backed_up
+```
+
+See `tests/README.md` for detailed test documentation.
+
 ## Verification Commands
 
 - **Shell scripts**: `bash -n script`
 - **JSON files**: `jq . file.json >/dev/null`
+- **Python tests**: `python3 tests/test_*.py`
+
+**Always run tests and verification commands before completing any code change.**

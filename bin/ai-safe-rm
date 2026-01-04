@@ -1,0 +1,191 @@
+#!/bin/bash
+#
+# ai-safe-rm - Safely delete files/directories with git-aware backup strategy
+#
+# Usage: ai-safe-rm [-r] <file1> [file2 ...]
+#
+# Options:
+#   -r    Recursively delete directories
+#
+# Behavior:
+# - Files tracked in git and unmodified from HEAD: delete directly
+# - Files tracked in git but modified: move to .safe-rm/ with content hash
+# - Files not tracked in git: move to .safe-rm/ with content hash
+# - Directories: require -r flag, processed recursively
+#
+
+set -e
+
+SAFE_RM_DIR=".safe-rm"
+RECURSIVE=false
+
+# Check if we're in a git repo
+if ! git rev-parse --git-dir &>/dev/null; then
+    echo "Error: Not in a git repository" >&2
+    exit 1
+fi
+
+# Get the git root directory
+GIT_ROOT=$(git rev-parse --show-toplevel)
+
+# Function to get MD5 hash of file content (first 8 chars)
+get_content_hash() {
+    local file="$1"
+    md5sum "$file" | cut -c1-8
+}
+
+# Function to get relative path from git root
+get_relative_path() {
+    local file="$1"
+    realpath --relative-to="$GIT_ROOT" "$file"
+}
+
+# Function to move file to safe-rm with hash
+backup_file() {
+    local file="$1"
+    local rel_path="$2"
+    local reason="$3"
+
+    local hash=$(get_content_hash "$file")
+    local dirname=$(dirname "$rel_path")
+    local basename=$(basename "$rel_path")
+    local backup_dir="$GIT_ROOT/$SAFE_RM_DIR/$dirname"
+
+    # Extract filename and extension
+    local filename="${basename%.*}"
+    local extension="${basename##*.}"
+
+    # Construct backup filename with hash before extension
+    local backup_name
+    if [[ "$filename" == "$extension" ]]; then
+        # No extension (e.g., LICENSE, Makefile)
+        backup_name="${basename}.${hash}"
+    else
+        # Has extension (e.g., README.md -> README.b72ae922.md)
+        backup_name="${filename}.${hash}.${extension}"
+    fi
+
+    local backup_file="$backup_dir/${backup_name}"
+
+    mkdir -p "$backup_dir"
+    echo "Moving $reason file to: $backup_file"
+    mv "$file" "$backup_file"
+}
+
+# Function to process a single file
+process_file() {
+    local file="$1"
+
+    # Get relative path for git operations
+    local rel_path=$(get_relative_path "$file")
+
+    # Reject files outside the repo
+    if [[ "$rel_path" == ..* ]]; then
+        echo "Error: File is outside the git repository: $file" >&2
+        exit 1
+    fi
+
+    # Check if file is tracked in git
+    if git ls-files --error-unmatch "$rel_path" &>/dev/null; then
+        # File is tracked - check if it's modified
+        if git diff --quiet HEAD -- "$rel_path" 2>/dev/null; then
+            # Unmodified - safe to delete directly
+            echo "Deleting unmodified tracked file: $file"
+            rm "$file"
+        else
+            # Modified - move to safe-rm with hash
+            backup_file "$file" "$rel_path" "modified tracked"
+        fi
+    else
+        # Not tracked - move to safe-rm with hash
+        backup_file "$file" "$rel_path" "untracked"
+    fi
+}
+
+# Function to recursively process directory contents
+process_directory_recursive() {
+    local dir="$1"
+
+    # Process all files in directory recursively
+    find "$dir" -depth -type f | while read -r file; do
+        process_file "$file"
+    done
+
+    # Remove empty directories left behind
+    find "$dir" -depth -type d -empty -delete 2>/dev/null || true
+}
+
+# Function to check if directory is safe to delete entirely
+dir_safe_to_delete() {
+    local dir="$1"
+    local rel_path=$(get_relative_path "$dir")
+
+    # Check if any tracked files are modified
+    if ! git diff --quiet HEAD -- "$rel_path" 2>/dev/null; then
+        return 1  # Has modified tracked files
+    fi
+
+    # Check if any untracked files exist
+    if find "$dir" -type f | while read -r file; do
+        local file_rel=$(get_relative_path "$file")
+        if ! git ls-files --error-unmatch "$file_rel" &>/dev/null 2>&1; then
+            return 0  # Found untracked file
+        fi
+    done; then
+        return 1  # Has untracked files
+    fi
+
+    return 0  # Safe to delete
+}
+
+# Function to process a directory
+process_directory() {
+    local dir="$1"
+
+    # Check if we can safely delete the entire directory
+    if dir_safe_to_delete "$dir"; then
+        # All files are unmodified tracked - safe to delete entire directory
+        echo "Deleting directory with only unmodified tracked files: $dir"
+        rm -rf "$dir"
+    else
+        # Has files that need selective processing - recurse
+        echo "Processing directory recursively: $dir"
+        process_directory_recursive "$dir"
+    fi
+}
+
+# Function to process a single path (file or directory)
+process_path() {
+    local path="$1"
+
+    if [[ ! -e "$path" ]]; then
+        echo "Warning: File/directory does not exist: $path" >&2
+        return
+    fi
+
+    if [[ -d "$path" ]]; then
+        # It's a directory
+        if [[ "$RECURSIVE" != true ]]; then
+            echo "Error: $path is a directory (use -r to delete directories)" >&2
+            exit 1
+        fi
+        process_directory "$path"
+    else
+        # It's a file
+        process_file "$path"
+    fi
+}
+
+# Parse options
+while getopts "r" opt; do
+    case $opt in
+        r) RECURSIVE=true ;;
+        *) echo "Usage: ai-safe-rm [-r] <file1> [file2 ...]" >&2; exit 1 ;;
+    esac
+done
+shift $((OPTIND-1))
+
+# Process each path
+for path in "$@"; do
+    process_path "$path"
+done

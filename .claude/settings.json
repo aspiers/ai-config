@@ -54,6 +54,8 @@
       "Bash(uname:*)",
       "Bash(uvx ruff:*)",
       "Bash(wc:*)",
+      "Skill(safe-rm)",
+      "Bash(ai-safe-rm:*)",
       "WebFetch",
       "WebSearch",
       "mcp__plugin_beads_beads__close",

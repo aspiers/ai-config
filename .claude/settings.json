@@ -52,6 +52,7 @@
       "Bash(tree:*)",
       "Bash(true)",
       "Bash(uname:*)",
+      "Bash(uvx ruff:*)",
       "Bash(wc:*)",
       "WebFetch",
       "WebSearch",

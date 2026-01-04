@@ -51,6 +51,7 @@
       "tree*": "allow",
       "true": "allow",
       "uname *": "allow",
+      "uvx ruff*": "allow",
       "wc*": "allow"
     }
   },

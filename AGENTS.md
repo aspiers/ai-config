@@ -23,6 +23,10 @@ Format:
 
 Pattern: `"command argpatterns": "action"` where `*` matches any args
 
+**Important**: Insert new entries in alphabetical order by command name.
+When adding a new command, find the correct position to maintain sorting.
+**Do NOT reorder existing entries.**
+
 ### Claude Code
 
 File: `.claude/settings.json` under `permissions.allow`
@@ -32,6 +36,10 @@ Format:
 "Bash(uname:*)",
 ```
 
+**Important**: Insert new entries in alphabetical order. Commands are sorted
+by the command name (the part after `Bash(` and before `:`).
+**Do NOT reorder existing entries.**
+
 ### General Pattern
 
 When adding new AI tools:
@@ -39,6 +47,8 @@ When adding new AI tools:
 1. Find their config file (usually in `~/.config/` or project root)
 2. Look for `permissions`, `allowedCommands`, or similar sections
 3. Add the command with glob patterns for arguments
+4. **Insert new entries in alphabetical order by command name**
+5. **Do NOT reorder existing entries.**
 
 ## Git Operations
 

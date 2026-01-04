@@ -45,6 +45,7 @@
       "npm info*": "allow",
       "ls": "allow",
       "ls *": "allow",
+      "readlink *": "allow",
       "sed*": "allow",
       "sort*": "allow",
       "tee*": "allow",

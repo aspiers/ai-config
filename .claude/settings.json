@@ -45,6 +45,7 @@
       "Bash(npm search:*)",
       "Bash(npm info:*)",
       "Bash(ls:*)",
+      "Bash(readlink:*)",
       "Bash(sed:*)",
       "Bash(sort:*)",
       "Bash(tee:*)",

@@ -84,5 +84,6 @@
     "variant_cycle": "<leader>v",
     "input_transpose_characters": "ctrl+t",
     "app_exit": "ctrl+c,<leader>q"
-  }
+  },
+  "plugin": ["opencode-beads"]
 }

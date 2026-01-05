@@ -24,6 +24,7 @@
       "git merge-base*": "allow",
       "git merge-tree*": "allow",
       "git show*": "allow",
+      "git stash list*": "allow",
       "git stash show*": "allow",
       "git status*": "allow",
       "gh issue list*": "allow",

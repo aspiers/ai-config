@@ -16,6 +16,12 @@
   assumptions about things and then build further thinking or actions on those
   blind assumptions.
 
+- **Consult official documentation first**: When working with APIs, libraries,
+  frameworks, or tools, always prefer consulting official documentation over
+  guessing or reverse-engineering behavior. Use WebFetch to retrieve docs when
+  needed. Do not assume you know how something works based on patterns or
+  similar tools - verify against the actual documentation.
+
 - If you are not sure about something, then state your assumptions clearly and
   explicitly allow for the fact that the assumption could be wrong.
 

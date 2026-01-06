@@ -59,7 +59,8 @@
       "true": "allow",
       "uname *": "allow",
       "uvx ruff*": "allow",
-      "wc*": "allow"
+      "wc*": "allow",
+      "which *": "allow"
     }
   },
   "keybinds": {

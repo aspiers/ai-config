@@ -89,5 +89,5 @@
     "input_transpose_characters": "ctrl+t",
     "app_exit": "ctrl+c,<leader>q"
   },
-  "plugin": ["opencode-beads", "opencode-pty"]
+  "plugin": ["opencode-beads", "opencode-lmstudio", "opencode-pty"]
 }

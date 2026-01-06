@@ -5,12 +5,14 @@ tools:
   read: true
   grep: true
   bash: true
-  edit: false
-  write: false
+  edit: true
+  write: true
+  skill: true
 permission:
   bash:
     "*": "ask"
     "git add *": "allow"
+    "git apply *": "allow"
     "git status": "allow"
     "git diff *": "allow"
     "git log *": "allow"
@@ -38,12 +40,10 @@ exist, STOP and ask for permission.
    committed:" section is empty. If not empty, HALT and ask for user
    guidance.
 
-3. Run `git status` again to see all unstaged changes.
+3. Load the `git-staging` skill and follow its techniques for staging.
+   **Do NOT use interactive commands like `git add -p`**.
 
-4. Carefully review which files are relevant to the current task.
-
-5. Stage only the relevant files using `git add <file1> <file2> ...`.
-   If there is a change to a `tasks.md` marking the relevant sub-task
+4. If there is a change to a `tasks.md` marking the relevant sub-task
    as completed, include it.
 
-6. Run `git status` again to confirm only intended files are staged.
+5. Run `git status` to confirm only intended changes are staged.

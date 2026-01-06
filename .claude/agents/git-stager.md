@@ -1,7 +1,7 @@
 ---
 name: git-stager
-description: Stage relevant changes via git add
-tools: Read, Grep, Bash(git add:*), Bash(git branch:*), Bash(git diff:*), Bash(git log:*), Bash(git status:*)
+description: Stage relevant changes via git add, taking great care not to add unrelated files or changes
+tools: Read, Edit, Write, Grep, Skill(git-staging), Bash(git add:*), Bash(git apply:*), Bash(git branch:*), Bash(git diff:*), Bash(git log:*), Bash(git status:*)
 ---
 # Staging Changes
 
@@ -31,12 +31,10 @@ exist, STOP and ask for permission.
    committed:" section is empty. If not empty, HALT and ask for user
    guidance.
 
-3. Run `git status` again to see all unstaged changes.
+3. Load the `git-staging` skill and follow its techniques for staging.
+   **Do NOT use interactive commands like `git add -p`**.
 
-4. Carefully review which files are relevant to the current task.
-
-5. Stage only the relevant files using `git add <file1> <file2> ...`.
-   If there is a change to a `tasks.md` marking the relevant sub-task
+4. If there is a change to a `tasks.md` marking the relevant sub-task
    as completed, include it.
 
-6. Run `git status` again to confirm only intended files are staged.
+5. Run `git status` to confirm only intended changes are staged.

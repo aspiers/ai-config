@@ -34,6 +34,7 @@
       "gh issue view*": "allow",
       "gh pr diff *": "allow",
       "gh pr list*": "allow",
+      "gh pr search*": "allow",
       "gh pr status *": "allow",
       "gh pr view *": "allow",
       "gh run view *": "allow",

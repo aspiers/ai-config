@@ -5,6 +5,7 @@
       "*": "ask",
       "pkill *": "deny",
       "killall *": "deny",
+      "awk *": "allow",
       "cat *": "allow",
       "echo *": "allow",
       "find *": "allow",

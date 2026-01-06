@@ -31,6 +31,7 @@
       "Bash(git stash show:*)",
       "Bash(git status:*)",
       "Bash(gh issue list:*)",
+      "Bash(gh issue search:*)",
       "Bash(gh issue status:*)",
       "Bash(gh issue view:*)",
       "Bash(gh pr diff:*)",

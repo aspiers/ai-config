@@ -29,6 +29,7 @@
       "git stash show*": "allow",
       "git status*": "allow",
       "gh issue list*": "allow",
+      "gh issue search*": "allow",
       "gh issue status*": "allow",
       "gh issue view*": "allow",
       "gh pr diff *": "allow",

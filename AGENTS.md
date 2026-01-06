@@ -50,6 +50,15 @@ When adding new AI tools:
 4. **Insert new entries in alphabetical order by command name**
 5. **Do NOT reorder existing entries.**
 
+### After Adding Commands
+
+After adding the new command entries to both config files:
+
+1. Check if there are any other staged changes with `git status`
+2. If there are NO other staged changes, stage ONLY the new hunks in the two
+   config files using `git add -p` (be careful not to stage unrelated changes)
+3. Invoke the git-committer subagent to commit the changes
+
 ## Git Operations
 
 For git commands, always use `--no-ext-diff` flag with `git diff`.

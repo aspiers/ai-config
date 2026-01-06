@@ -50,6 +50,7 @@
       "Bash(readlink:*)",
       "Bash(sed:*)",
       "Bash(sort:*)",
+      "Bash(tail:*)",
       "Bash(tee:*)",
       "Bash(test:*)",
       "Bash(tree:*)",

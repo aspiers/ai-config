@@ -50,6 +50,7 @@
       "readlink *": "allow",
       "sed*": "allow",
       "sort*": "allow",
+      "tail *": "allow",
       "tee*": "allow",
       "test*": "allow",
       "tree*": "allow",

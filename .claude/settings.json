@@ -8,6 +8,7 @@
       "Glob",
       "Grep",
       "Bash(awk:*)",
+      "Bash(bash -n:*)",
       "Bash(bd --version)",
       "Bash(bd admin cleanup --dry-run:*)",
       "Bash(bd admin compact --analyze:*)",

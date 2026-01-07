@@ -6,6 +6,7 @@
       "pkill *": "deny",
       "killall *": "deny",
       "awk *": "allow",
+      "bash -n *": "allow",
       "bd --version": "allow",
       "bd admin cleanup --dry-run*": "allow",
       "bd admin compact --analyze*": "allow",

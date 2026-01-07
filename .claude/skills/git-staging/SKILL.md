@@ -1,6 +1,6 @@
 ---
 name: git-staging
-description: Stage files, hunks, or specific lines in git non-interactively. Use when you need to selectively stage changes without using interactive tools like git add -p. Creates unified diff patches and applies them directly to the index.
+description: Stage files, hunks, or specific lines in git non-interactively.
 ---
 
 # Non-interactive Git Staging
@@ -13,6 +13,22 @@ Use this skill when you need to:
 - Stage only specific lines within a hunk
 - Avoid interactive git commands (`git add -p`, `git add -i`, etc.)
 - Programmatically control exactly what gets staged
+
+## Step 1: Assess the changes
+
+Before choosing a staging method, determine what changes exist:
+
+```bash
+git status                    # See which files have changes
+git diff --no-ext-diff        # See all unstaged changes
+git diff --cached --no-ext-diff  # See already-staged changes
+```
+
+**Decision tree:**
+
+- If only ONE file has changes and you want ALL of them staged → use `git add <file>`
+- If ONE file has multiple unrelated hunks and you want only SOME → use Method 2 or 3
+- If MULTIPLE files need staging → stage per-file with `git add` for each, or selectively with patch method
 
 ## Why not use `git add -p`?
 
@@ -126,7 +142,7 @@ index abc123..def456 100644
  def foo():
      pass
 +    # Added comment in first hunk
- 
+
  def bar():
 @@ -20,6 +21,7 @@ def bar():
  def baz():

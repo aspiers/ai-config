@@ -56,9 +56,9 @@ After adding the new command entries to both config files:
 
 1. Check if there are any other staged changes with `git status`
 2. If there are NO other staged changes, stage ONLY the new hunks in the two
-   config files using the `git-staging` skill (be careful not to stage
+   config files using the `git-stager` subagent (be careful not to stage
    unrelated changes)
-3. Invoke the git-committer subagent to commit the changes
+3. Invoke the `git-committer` subagent to commit the changes
 
 ## Git Operations
 

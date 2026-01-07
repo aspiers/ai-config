@@ -82,6 +82,7 @@
       "uname *": "allow",
       "uvx ruff*": "allow",
       "wc*": "allow",
+      "xxd *": "allow",
       "which *": "allow"
     }
   },

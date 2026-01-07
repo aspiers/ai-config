@@ -82,6 +82,7 @@
       "Bash(uname:*)",
       "Bash(uvx ruff:*)",
       "Bash(wc:*)",
+      "Bash(xxd:*)",
       "Bash(which:*)",
       "Skill(safe-rm)",
       "Bash(ai-safe-rm:*)",

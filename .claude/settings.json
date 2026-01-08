@@ -95,7 +95,7 @@
       "Bash(identify)",
       "Bash(jobs)",
       "Bash(join:*)",
-      "Bash(jq)",
+      "Bash(jq:*)",
       "Bash(logname)",
       "Bash(look:*)",
       "Bash(lscpu:*)",

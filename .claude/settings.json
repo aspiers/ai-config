@@ -126,6 +126,7 @@
       "Bash(readlink:*)",
       "Bash(realpath:*)",
       "Bash(rev:*)",
+      "Bash(rg:*)",
       "Bash(rpm -q:*)",
       "Bash(sed:*)",
       "Bash(seq:*)",

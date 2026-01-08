@@ -126,6 +126,7 @@
       "readlink *": "allow",
       "realpath *": "allow",
       "rev *": "allow",
+      "rg *": "allow",
       "rpm -q*": "allow",
       "sed*": "allow",
       "seq *": "allow",

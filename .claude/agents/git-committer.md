@@ -71,8 +71,16 @@ Create well-formatted commits with the conventional commits style.
 4. If multiple distinct changes are detected, stop and ask the user
    whether to break the commit into multiple smaller commits.
 
-5. Use the output of `git diff` to understand what actual changes are
-   being committed.
+5. Use the appropriate diff command to understand what actual changes
+   are being committed:
+
+   - **For new commits**: Use `git diff --no-ext-diff --cached` to see
+     only staged changes.
+
+   - **For amending commits**: Use `git show --no-ext-diff HEAD` to see
+     what's actually in the commit being amended. Do NOT use
+     `git diff HEAD~1` as this includes unstaged working directory
+     changes!
 
 6. Commit to git using a descriptive commit message that:
 

@@ -33,21 +33,52 @@ license information when redistributing or modifying the code.
 
 Claude Code configuration containing:
 
-- `CLAUDE.md` - Global project-specific instructions and coding rules
-- `commands/` - Custom slash commands for Claude Code including commit
-  helpers, task generators, and workflow automation
-- `agents/` - Custom agent definitions for specialized tasks (code review,
-  testing, git operations, etc.)
+- `CLAUDE.md` - Global instructions and coding rules
+- `settings.json` - Permission configuration for allowed bash commands
+- `commands/` - Custom slash commands:
+  - `commit` - Intelligent git commit workflow
+  - `do` - Task execution helper
+  - `dry` - Dry-run mode for testing changes
+  - `gen-prp` - Generate PR descriptions
+  - `gen-tasks` - Generate task lists from specifications
+  - `init2` - Project initialization
+  - `iter` - Iterative development workflow
+  - `lint` - Code linting
+  - `obs` - Obsidian integration
+  - `reflect` - Self-reflection prompt
+  - `review` - Code review
+  - `small` - Small change workflow
+  - `stage` - Git staging helper
+  - `test` - Test runner
+- `agents/` - Specialized sub-agents:
+  - `code-linter` - Automated linting
+  - `code-reviewer` - Code review analysis
+  - `git-committer` - Commit message generation
+  - `git-stager` - Selective git staging
+  - `task-implementer` - Task implementation
+  - `test-runner` - Test execution
+- `skills/` - [Agent Skills](https://agentskills.io/) (modular capability packages):
+  - `safe-rm/` - Safe file deletion with git-aware backup
+  - `git-staging/` - Non-interactive git staging techniques
 
-#### `.config/`
+#### `.config/opencode/`
 
-Application configuration files:
+[OpenCode](https://opencode.ai/) configuration (parallel to Claude Code):
 
-- `opencode/` - OpenCode AI editor configuration with custom commands,
-  agents, plugins, and local LM Studio provider setup
+- `opencode.json` - Main configuration with permission settings
+- `opencode-lmstudio.json` - Local LM Studio provider setup
+- `command/` - Slash commands (mirrors `.claude/commands/`)
+- `agent/` - Sub-agents (mirrors `.claude/agents/`, plus `task-orchestrator`)
+- `plugin/` - JavaScript plugins:
+  - `env-protection.js` - Prevents exposure of environment variables
+  - `notification.js` - Desktop notifications for agent events
 
 ### Scripts (`bin/`)
 
+- **`ai-safe-rm`** - Git-aware safe file deletion script (used by safe-rm skill):
+  - Tracked+unmodified files: deleted directly (recoverable from git)
+  - Tracked+modified files: backed up to `.safe-rm/` with content hash
+  - Untracked files: backed up to `.safe-rm/` with content hash
 - **`ccu`** - Runs the latest version of `ccusage` to monitor Claude Code usage statistics
 - **`ccul`** - Live monitoring of Claude Code usage with automatic refresh
   every 5 seconds using blocks display format; although for *live* monitoring,

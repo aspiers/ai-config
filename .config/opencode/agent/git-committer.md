@@ -41,6 +41,13 @@ Exception: Only stage files if the user gives explicit permission when asked.
 
 Create well-formatted commits with the conventional commits style.
 
+## Context
+
+- Current git status: !`git status`
+- Current staged changes: !`git diff --no-ext-diff --cached`
+- Current branch: !`git branch --show-current`
+- Recent commits: !`git log --oneline -40`
+
 ## Process
 
 1. **FIRST**: Check which files are staged with `git status`.

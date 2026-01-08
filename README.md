@@ -87,12 +87,39 @@ Claude Code configuration containing:
   tool install claude-monitor`) (not to be confused with `npx ccmonitor` from
   [shinagaki/ccmonitor](https://github.shinagaki/ccmonitor) which also looks
   OK but far less popular)
-- **`cl`** and **`claude`** - Wrappers for running the local Claude Code installation at `/home/adam/.claude/local/claude`
+- **`cl`** and **`claude`** - Wrappers for running the local Claude Code installation
+- **`cursor`** - Launches Cursor IDE with systemd resource limits (memory, CPU, I/O)
+- **`llm-setup`** - Installs/upgrades [llm](https://llm.datasette.io/) with common plugins
+  (gpt4all, anthropic, gemini, openrouter, deepseek)
 
-### `.shared_rc.d/`
+### AppArmor profiles (`root-etc-stow-pkg/apparmor.d/`)
 
-Shared shell configuration fragments for common environment setup.
-These are loaded by <https://github.com/aspiers/shell-env/blob/master/.shared_rc>.
+WIP security profiles for sandboxing AI agents:
+
+- `abstractions/ai-agent-base` - Base permissions (network, temp dirs, sensitive file deny rules)
+- `abstractions/ai-agent-git` - Git operations
+- `abstractions/ai-agent-github` - GitHub CLI access
+- `abstractions/ai-agent-npm` - npm/Node.js operations
+- `abstractions/ai-agent-opencode` - OpenCode-specific permissions
+- `abstractions/ai-agent-safe-commands` - Whitelisted safe commands
+- `home.adam.bin.oc` - Main OpenCode profile
+
+### Shell configuration (`.shared_rc.d/`)
+
+Shell configuration fragments loaded by
+[shell-env](https://github.com/aspiers/shell-env):
+
+- `lmstudio` - Adds LM Studio bin directory to PATH
+
+### Testing (`tests/`)
+
+- `test_ai_safe_rm.py` - Unit tests for the `ai-safe-rm` script
+
+### Other files
+
+- `AGENTS.md` - Instructions for AI agents working in this repository
+- `.editorconfig` - Editor formatting rules
+- `.stow-local-ignore` - Files to exclude from stow deployment
 
 ## Requirements
 

@@ -104,3 +104,6 @@
   output.
 
 - When running `git diff` or similar, always use `--no-ext-diff`.
+
+- **Git commit references**: `HEAD^!` is a revision range equivalent to `HEAD^..HEAD`,
+  i.e. specifying the one commit `HEAD`.

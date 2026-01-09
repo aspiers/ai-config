@@ -86,6 +86,7 @@
       "gh pr status *": "allow",
       "gh pr view *": "allow",
       "gh run view *": "allow",
+      "gh run list*": "allow",
       "head": "allow",
       "head *": "allow",
       "hexdump *": "allow",

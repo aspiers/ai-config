@@ -88,6 +88,7 @@
       "Bash(gh pr status:*)",
       "Bash(gh pr view:*)",
       "Bash(gh run view:*)",
+      "Bash(gh run list:*)",
       "Bash(head:*)",
       "Bash(hexdump:*)",
       "Bash(hostid)",

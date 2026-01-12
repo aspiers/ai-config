@@ -110,7 +110,7 @@
       "lsns *": "allow",
       "man *": "allow",
       "md5sum*": "allow",
-      "mkdir*": "allow",
+      "mkdir *": "allow",
       "mountpoint *": "allow",
       "namei *": "allow",
       "nl *": "allow",

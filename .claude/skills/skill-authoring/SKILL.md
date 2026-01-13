@@ -67,6 +67,53 @@ description: What + When       # max 1024 chars, include trigger contexts
 - Keywords users might mention
 - Specific trigger contexts
 
+### Example `SKILL.md`
+
+N.B. The following example is indented here so that triple backticks can be included within the example, but when creating / editing a `SKILL.md`, most of it should not be indented.
+
+Note also that `SKILL.md` files do not necessarily need to provide and use helper tools; however it's included this example skill for illustrative purposes.
+
+    ---
+    name: example-skill
+    description: Process example files with specific formatting. Use when users mention examples, processing, or .example files.
+    ---
+
+    # Example Skill
+
+    Process example files following consistent patterns.
+
+    ## When to Use This Skill
+
+    - When processing .example files
+    - When users ask about example formatting
+    - When converting example formats
+
+    ## How It Works
+
+    1. Read the input file using the example-parser tool
+    2. Apply formatting rules from references/rules.md
+    3. Write output to destination
+
+    ## Usage
+
+    ```bash
+    python scripts/process_example.py input.example output.txt
+    ```
+
+    ## How to use the example-parser tool
+
+    ```python
+    from example_parser import parse
+
+    result = parse("data.example")
+    print(result.summary)
+    ```
+
+    ## Reference Files
+
+    - [Formatting Rules](references/rules.md)
+    - [Parser Documentation](references/parser.md)
+
 ## Best Practices
 
 ### Naming Conventions

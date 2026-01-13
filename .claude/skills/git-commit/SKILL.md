@@ -32,7 +32,7 @@ Exception: Only stage files if the user gives explicit permission when asked.
 
 ## Process
 
-1. **FIRST**: Check which files are staged with `git status`.
+1. **FIRST**: Check which files are staged and unstaged with `git status`. (Do not mix these two categories up!)
 
    **ABSOLUTE REQUIREMENT**: Do NOT attempt to change what is staged, now or at any later point in this process!
 
@@ -46,7 +46,7 @@ Exception: Only stage files if the user gives explicit permission when asked.
 
 4. If multiple distinct changes are detected, stop and ask the user whether to break the commit into multiple smaller commits.
 
-5. Use the output of `git diff` to understand what actual changes are being committed.
+5. Use the output of `git diff --cached --no-ext-diff` to understand what actual changes are staged.  Be careful not to confused staged with unstaged changes.
 
 6. Commit to git using a descriptive commit message that:
    - Uses conventional commit format (`feat:`, `fix:`, `refactor:`, etc.) following existing style and tone

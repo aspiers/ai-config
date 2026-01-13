@@ -102,6 +102,16 @@
   without re-fetching.  **Do NOT use** `browser_navigate`, `browser_snapshot`,
   or other playwright tools unless specifically requested by the user.
 
+- **Use the slow-commands skill for long-running operations**: Commands that
+  take >5 seconds or need multiple analyses of output should use the
+  slow-commands skill (load with `skill slow-commands`) and pipe through tee(1)
+  to a file in the repository's `tmp/` directory.
+
+- **Avoid truncating output carelessly**: When running long or important
+  commands, avoid using head(1) which can hide errors. Use tee(1) to capture
+  full output for analysis. Only use head(1) when you specifically need the
+  first N lines and are confident no errors appear later.
+
 - When running `git diff` or similar, always use `--no-ext-diff`.
 
 - **Git commit references**: `HEAD^!` is a revision range equivalent to `HEAD^..HEAD`,

@@ -43,8 +43,11 @@ Skills load in three tiers:
 
 ### Required Files
 
+Each skill should be created in the repository as a subdirectory of
+`.claude/skills/`:
+
 ```
-skill-name/
+.claude/skills/skill-name/
 ├── SKILL.md (required - instructions + metadata)
 └── Optional bundled resources:
     ├── scripts/     - Executable code (Python/Bash/etc.)

@@ -22,8 +22,17 @@
   needed. Do not assume you know how something works based on patterns or
   similar tools - verify against the actual documentation.
 
+- **Verify assumptions before acting**: When uncertain about API behavior,
+  check official docs or source code first. Do not make changes based on
+  guesses or speculation. If you cannot verify, admit uncertainty and ask
+  the user for guidance before proceeding.
+
 - If you are not sure about something, then state your assumptions clearly and
   explicitly allow for the fact that the assumption could be wrong.
+
+- **Avoid speculation**: Do not answer with "likely", "probably", or "I think"
+  when you don't know. Say "I don't know" or "I need more information to
+  answer this definitively."
 
 - **CRITICAL RULE - NEVER VIOLATE**: *NEVER* add trailing whitespace to blank
   lines

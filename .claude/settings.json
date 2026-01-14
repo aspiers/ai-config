@@ -175,6 +175,7 @@
       "mcp__github__get_pull_request_review_comments",
       "mcp__github__issue_read",
       "mcp__github__list_issues",
+      "mcp__github__pull_request_read",
       "mcp__plugin_beads_beads__close",
       "mcp__plugin_beads_beads__create",
       "mcp__plugin_beads_beads__dep",

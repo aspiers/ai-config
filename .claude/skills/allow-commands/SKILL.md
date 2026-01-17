@@ -76,7 +76,7 @@ Adding `rg` (ripgrep) to both configs:
 "rg *": "allow",
 ```
 
-**Claude Code** (insert after `Bash(rev:*)`, before `Bash(rpm -q:*)`):
+**Claude Code** (insert after `Bash(rg:*)`, before `Bash(rpm -q:*)`):
 ```json
 "Bash(rg:*)",
 ```

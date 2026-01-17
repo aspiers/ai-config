@@ -122,6 +122,7 @@
       "od *": "allow",
       "paste *": "allow",
       "pathchk *": "allow",
+      "pnpm why *": "allow",
       "pr *": "allow",
       "printenv *": "allow",
       "printf *": "allow",
@@ -166,6 +167,8 @@
       "which *": "allow",
       "whoami": "allow",
       "xxd *": "allow",
+      "yarn info *": "allow",
+      "yarn why *": "allow",
       "yes *": "allow",
       "zgrep *": "allow"
     }

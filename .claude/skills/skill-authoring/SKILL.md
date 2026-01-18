@@ -121,11 +121,13 @@ Note also that `SKILL.md` files do not necessarily need to provide and use helpe
 
 ### Naming Conventions
 
-Use gerund form (verb + -ing):
-- ✅ `processing-pdfs`
-- ✅ `analyzing-spreadsheets`
-- ✅ `managing-databases`
-- ❌ `pdf-helper`, `data-utils`
+Use gerunds or gerundial nouns:
+
+- **Gerunds** (verb + -ing): `processing-pdfs`, `analyzing-spreadsheets`, `managing-databases`
+- **Gerundial nouns** (verb-derived nouns): `generation`, `authoring`, `initialization`, `management`
+
+- ✅ `processing-pdfs`, `generating-prps`, `authoring-skills`
+- ❌ `pdf-helper`, `data-utils`, `skill-creator`
 
 ### Writing Effective Descriptions
 

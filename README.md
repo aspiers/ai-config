@@ -73,6 +73,18 @@ Claude Code configuration containing:
   - `env-protection.js` - Prevents exposure of environment variables
   - `notification.js` - Desktop notifications for agent events
 
+#### Command and Agent Delegation
+
+Commands (`.claude/commands/` and `.config/opencode/command/`) and agents
+(`.claude/agents/` and `.config/opencode/agent/`) are designed as thin wrappers
+that delegate to skills. This ensures:
+
+- No duplication of implementation content between platforms
+- Single source of truth in skills (`.claude/skills/`)
+- Easy maintenance and consistency
+
+See [AGENTS.md](AGENTS.md) for the detailed delegation pattern.
+
 ### Scripts (`bin/`)
 
 - **`ai-safe-rm`** - Git-aware safe file deletion script (used by safe-rm skill):

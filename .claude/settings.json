@@ -195,8 +195,10 @@
     "deny": [
       "Bash(pkill:*)",
       "Bash(killall:*)"
-    ]
+    ],
+    "defaultMode": "default"
   },
+  "model": "opus",
   "hooks": {
     "Notification": [
       {

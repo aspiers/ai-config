@@ -9,7 +9,7 @@
 
 ## Adding/Changing Allowed Commands
 
-Use the `allow-commands` skill for instructions on adding or modifying
+Use the `allow-agent-commands` skill for instructions on adding or modifying
 command permissions in AI agent configs.
 
 ## Git Operations
@@ -180,6 +180,50 @@ python3 tests/test_ai_safe_rm.py TestAiSafeRm.test_modified_tracked_file_backed_
 ```
 
 See `tests/README.md` for detailed test documentation.
+
+## Command and Agent Delegation Pattern
+
+All custom commands and subagent definitions should delegate to skills rather than
+containing implementation content directly.
+
+### The Pattern
+
+**Commands** (`.claude/commands/<name>.md` and `.config/opencode/command/<name>.md`):
+
+```yaml
+---
+description: Brief description of what the command does
+allowed-tools: Skill(skill-name), ...
+---
+
+Use the `<skill-name>` skill to accomplish this task.
+```
+
+**Agents** (`.claude/agents/<name>.md` and `.config/opencode/agent/<name>.md`):
+
+```yaml
+---
+name: agent-name
+description: Brief description of what the agent does
+tools: Read, Grep, Glob, Skill(skill-name), ...
+---
+
+Use the `<skill-name>` skill to accomplish this task.
+```
+
+### Why This Pattern?
+
+1. **Single source of truth**: Skills contain all implementation content
+2. **Easier maintenance**: Changes to skills automatically propagate
+3. **Platform consistency**: Commands/agents are thin wrappers with platform-specific frontmatter
+4. **Token efficiency**: Agents load skills progressively via progressive disclosure
+
+### Anti-Pattern to Avoid
+
+Commands or agents with:
+- Full implementation steps beyond "Use the X skill"
+- Duplicated content between Claude and OpenCode versions
+- More than ~20 lines of content beyond frontmatter and delegation instruction
 
 ## Verification Commands
 

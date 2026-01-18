@@ -1,5 +1,5 @@
 ---
-name: slow-commands
+name: slow-command-running
 description: Pipe long running commands through tee(1) to allow watching output and repeated analyses without rerunning
 ---
 

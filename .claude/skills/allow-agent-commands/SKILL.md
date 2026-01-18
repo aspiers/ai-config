@@ -1,5 +1,5 @@
 ---
-name: allow-commands
+name: allow-agent-commands
 description: Add or change allowed commands in AI agent permission configs (OpenCode, Claude Code)
 ---
 

@@ -44,6 +44,7 @@
       "cut *": "allow",
       "date *": "allow",
       "df *": "allow",
+      "diff *": "allow",
       "dir *": "allow",
       "dirname *": "allow",
       "dmesg *": "allow",

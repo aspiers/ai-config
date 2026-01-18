@@ -46,6 +46,7 @@
       "Bash(cut:*)",
       "Bash(date:*)",
       "Bash(df:*)",
+      "Bash(diff:*)",
       "Bash(dir:*)",
       "Bash(dirname:*)",
       "Bash(dmesg:*)",

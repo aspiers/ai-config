@@ -83,6 +83,7 @@
       "git ls-tree*": "allow",
       "git merge-base*": "allow",
       "git merge-tree*": "allow",
+      "git reflog *": "allow",
       "git rev-parse *": "allow",
       "git show*": "allow",
       "git stash list*": "allow",

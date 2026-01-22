@@ -1,6 +1,6 @@
 ---
 description: Orchestrates the complete development workflow for implementing sub-tasks from a task list
-mode: primary
+mode: subagent
 tools:
   read: true
   grep: true

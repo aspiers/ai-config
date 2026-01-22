@@ -1,6 +1,6 @@
 ---
 description: Engineer implementing a single sub-task from a list of tasks, ensuring adherence to project quality controls
-mode: primary
+mode: subagent
 tools:
   read: true
   grep: true

@@ -181,6 +181,28 @@ python3 tests/test_ai_safe_rm.py TestAiSafeRm.test_modified_tracked_file_backed_
 
 See `tests/README.md` for detailed test documentation.
 
+## Available Subagents
+
+Subagents are specialized AI agents that delegate to skills. They follow the naming
+convention of **agent nouns** with the **-er suffix** ("one who does X"):
+
+| Subagent | Purpose |
+|----------|---------|
+| `code-deduplicator` | Remove code duplication |
+| `code-linter` | Run linters |
+| `code-refactorer` | Refactor large code units |
+| `code-reviewer` | Review code for quality |
+| `doc-updater` | Update documentation |
+| `git-committer` | Create commits |
+| `git-stager` | Stage changes |
+| `prp-generator` | Generate PRPs |
+| `task-generator` | Generate tasks from PRPs |
+| `task-implementer` | Implement tasks |
+| `task-orchestrator` | Orchestrate complete workflow |
+| `test-runner` | Run tests |
+
+See `.claude/agents/` for the full definitions.
+
 ## Command and Agent Delegation Pattern
 
 All custom commands and subagent definitions should delegate to skills rather than

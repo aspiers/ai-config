@@ -51,11 +51,17 @@ Claude Code configuration containing:
   - `stage` - Git staging helper
   - `test` - Test runner
 - `agents/` - Specialized sub-agents:
+  - `code-deduplicator` - Remove code duplication
   - `code-linter` - Automated linting
+  - `code-refactorer` - Refactor large code units
   - `code-reviewer` - Code review analysis
+  - `doc-updater` - Update documentation based on learnings
   - `git-committer` - Commit message generation
   - `git-stager` - Selective git staging
+  - `prp-generator` - Generate Product Requirements Prompts
+  - `task-generator` - Generate tasks from PRPs
   - `task-implementer` - Task implementation
+  - `task-orchestrator` - Complete workflow orchestration
   - `test-runner` - Test execution
 - `skills/` - [Agent Skills](https://agentskills.io/) (modular capability packages):
   - `safe-rm/` - Safe file deletion with git-aware backup

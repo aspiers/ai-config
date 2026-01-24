@@ -20,4 +20,6 @@ permission:
     "git branch": "allow"
 ---
 
-Use the `git-commit` skill to create commits.
+Use the `git-commit` skill to create commits.  Explicit permission
+for staging files may NEVER be given by an agent or subagent, ONLY
+by a human.

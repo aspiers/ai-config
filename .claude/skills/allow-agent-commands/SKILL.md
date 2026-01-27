@@ -19,6 +19,10 @@ Commands must be explicitly allowed in the permission configs before agents
 can run them. This skill covers adding entries to both OpenCode and Claude
 Code configuration files.
 
+**IMPORTANT**: The config files are stowed into `~` via GNU Stow symlinks.
+Always edit them directly from within the ai-config repository, NOT from `~`.
+The paths below are relative to the ai-config repository root.
+
 ## OpenCode Configuration
 
 File: `.config/opencode/opencode.json` under `permission.bash`

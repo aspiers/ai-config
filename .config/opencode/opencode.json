@@ -74,6 +74,7 @@
       "git add*": "allow",
       "git branch --list*": "allow",
       "git cat-file *": "allow",
+      "git config --get *": "allow",
       "git describe": "allow",
       "git diff *": "allow",
       "git fetch *": "allow",

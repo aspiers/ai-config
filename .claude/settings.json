@@ -76,6 +76,7 @@
       "Bash(git add:*)",
       "Bash(git branch --list:*)",
       "Bash(git cat-file:*)",
+      "Bash(git config --get:*)",
       "Bash(git describe:*)",
       "Bash(git diff:*)",
       "Bash(git fetch:*)",

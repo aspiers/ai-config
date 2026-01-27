@@ -20,6 +20,7 @@
       "Bash(bd admin cleanup --dry-run:*)",
       "Bash(bd admin compact --analyze:*)",
       "Bash(bd admin compact --stats:*)",
+      "Bash(bd create:*)",
       "Bash(bd daemons health:*)",
       "Bash(bd daemons list:*)",
       "Bash(bd daemons logs:*)",

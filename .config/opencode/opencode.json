@@ -18,6 +18,7 @@
       "bd admin cleanup --dry-run*": "allow",
       "bd admin compact --analyze*": "allow",
       "bd admin compact --stats*": "allow",
+      "bd create*": "allow",
       "bd daemons health*": "allow",
       "bd daemons list*": "allow",
       "bd daemons logs*": "allow",

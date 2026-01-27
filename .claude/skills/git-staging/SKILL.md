@@ -43,6 +43,15 @@ The key insight is that `git apply --cached` applies a patch directly to the
 staging area (index) without modifying the working tree. This lets you stage
 precise changes non-interactively.
 
+## Temporary files
+
+All temporary patch files should be written to `tmp/` within the repository
+(not `/tmp`) to avoid permission prompts. Ensure the directory exists first:
+
+```bash
+mkdir -p tmp
+```
+
 ## Methods
 
 ### Method 1: Stage entire file
@@ -59,7 +68,7 @@ When you need to stage only certain hunks from a file:
 
 1. Generate the full diff for the file:
    ```bash
-   git diff <file> > /tmp/full.patch
+   git diff <file> > tmp/full.patch
    ```
 
 2. Edit the patch to keep only the hunks you want to stage (use the Edit tool
@@ -67,7 +76,7 @@ When you need to stage only certain hunks from a file:
 
 3. Apply the edited patch to the index:
    ```bash
-   git apply --cached /tmp/selected.patch
+   git apply --cached tmp/selected.patch
    ```
 
 ### Method 3: Stage specific lines within a hunk
@@ -77,7 +86,7 @@ edit the patch to maintain validity:
 
 1. Generate the diff:
    ```bash
-   git diff <file> > /tmp/full.patch
+   git diff <file> > tmp/full.patch
    ```
 
 2. Edit the patch, following these rules for the hunk you're modifying:
@@ -89,7 +98,7 @@ edit the patch to maintain validity:
 
 3. Apply:
    ```bash
-   git apply --cached /tmp/selected.patch
+   git apply --cached tmp/selected.patch
    ```
 
 ## Patch format reference
@@ -128,7 +137,7 @@ Given a file with two hunks of changes:
 
 ```bash
 # Generate full diff
-git diff --no-ext-diff myfile.py > /tmp/full.patch
+git diff --no-ext-diff myfile.py > tmp/full.patch
 ```
 
 The patch might look like:
@@ -166,7 +175,7 @@ index abc123..def456 100644
 Then apply:
 
 ```bash
-git apply --cached /tmp/second-hunk.patch
+git apply --cached tmp/second-hunk.patch
 ```
 
 ## Example: Excluding specific added lines
@@ -224,12 +233,12 @@ If `git apply --cached` fails:
 
 1. Test the patch first without `--cached`:
    ```bash
-   git apply --check /tmp/selected.patch
+   git apply --check tmp/selected.patch
    ```
 
 2. Use verbose mode to see what's happening:
    ```bash
-   git apply --cached -v /tmp/selected.patch
+   git apply --cached -v tmp/selected.patch
    ```
 
 3. Common error messages:

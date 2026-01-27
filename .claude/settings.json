@@ -24,6 +24,7 @@
       "Bash(bd daemons health:*)",
       "Bash(bd daemons list:*)",
       "Bash(bd daemons logs:*)",
+      "Bash(bd dep:*)",
       "Bash(bd dep tree:*)",
       "Bash(bd duplicates --dry-run:*)",
       "Bash(bd duplicates)",

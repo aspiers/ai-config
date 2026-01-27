@@ -22,6 +22,7 @@
       "bd daemons health*": "allow",
       "bd daemons list*": "allow",
       "bd daemons logs*": "allow",
+      "bd dep*": "allow",
       "bd dep tree*": "allow",
       "bd duplicates --dry-run*": "allow",
       "bd duplicates": "allow",

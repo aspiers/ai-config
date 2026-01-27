@@ -13,6 +13,7 @@ permission:
     "*": "ask"
     "git add *": "allow"
     "git apply *": "allow"
+    "git diff *": "allow"
     "git status": "allow"
 ---
 

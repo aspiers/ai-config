@@ -62,12 +62,26 @@ Use the `<skill-name>` skill to accomplish this task.
 
 - `Read`, `Write`, `Edit`, `Grep`, `Glob`, `Bash` - Core tools
 - `Skill(skill-name)` - Load a skill
-- `Bash(command:*)` - Allow bash command with any arguments
+- `Bash(command:*)` - Allow bash command with any arguments (note the colon)
+
+**Bash permission syntax** (Claude Code uses colons, not spaces):
+```yaml
+# Allow git commit with any arguments
+Bash(git commit:*)
+
+# Allow all git commands
+Bash(git:*)
+
+# Allow specific script
+Bash(~/.claude/skills/my-skill/scripts/helper.py:*)
+```
 
 **Example:**
 ```yaml
-tools: Read, Grep, Glob, Bash, Skill(code-linting)
+tools: Read, Grep, Glob, Bash(git status:*), Bash(git commit:*), Skill(code-linting)
 ```
+
+**Documentation**: https://docs.anthropic.com/en/docs/claude-code/settings#tool-permissions
 
 ## Naming Conventions
 
@@ -163,6 +177,8 @@ Use the `code-linting` skill to run linters.
 
 ### Agent with Bash Permissions (OpenCode)
 
+OpenCode uses spaces in permission patterns (unlike Claude Code which uses colons):
+
 ```yaml
 ---
 description: Run tests
@@ -175,13 +191,17 @@ tools:
   skill: true
 permission:
   bash:
-    "pytest": "allow"
-    "npm test": "allow"
     "*": "ask"
+    "pytest *": "allow"
+    "npm test": "allow"
+    "git status": "allow"
+    "git commit *": "allow"
 ---
 
 Use the `test-running` skill to run tests.
 ```
+
+**Documentation**: https://opencode.ai/docs/permissions
 
 ### Primary Mode Agent (OpenCode)
 

@@ -1,43 +1,46 @@
 ---
 name: agent-command-authoring
-description: Create Claude Code slash commands and OpenCode command files that delegate to skills. Use when creating new commands or refactoring existing ones to follow the delegation pattern.
+description: Create Claude Code slash commands and OpenCode command files that delegate to subagents. Use when creating new commands or refactoring existing ones to follow the delegation pattern.
 ---
 
 # Agent Command Authoring
 
-Create commands that delegate to skills for Claude Code and OpenCode.
+Create commands that delegate to subagents for Claude Code and OpenCode.
 
 ## When to Use This Skill
 
 Use this skill when:
 - Creating a new custom command
-- Refactoring an existing command to delegate to a skill
+- Refactoring an existing command to delegate to a subagent
 - Ensuring consistency between Claude Code and OpenCode command implementations
 
 ## The Delegation Pattern
 
-Commands should be **thin wrappers** that delegate all implementation to skills:
+Commands should be **thin wrappers** that delegate to subagents (which in turn
+delegate to skills):
+
+```
+command → subagent → skill
+```
 
 **Claude Code command** (`.claude/commands/<name>.md`):
 ```yaml
 ---
 description: Brief description of what the command does
-allowed-tools: Skill(skill-name), ...
+allowed-tools: Task(subagent-name)
 ---
 
-Use the `<skill-name>` skill to accomplish this task.
+Use the `<subagent-name>` subagent to accomplish this task.
 ```
 
 **OpenCode command** (`.config/opencode/command/<name>.md`):
 ```yaml
 ---
 description: Brief description of what the command does
-permission:
-  bash:
-    ...
+agent: <subagent-name>
 ---
 
-Use the `<skill-name>` skill to accomplish this task.
+Use the `<subagent-name>` subagent to accomplish this task.
 ```
 
 ## Claude Code Command Structure
@@ -47,23 +50,17 @@ Use the `<skill-name>` skill to accomplish this task.
 | Field | Required | Description |
 |-------|----------|-------------|
 | `description` | Yes | 1-2 sentence description of what the command does |
-| `allowed-tools` | Yes | List of tools the command can use, including `Skill(skill-name)` |
+| `allowed-tools` | Yes | `Task(subagent-name)` to invoke the subagent |
 | `argument-hint` | No | Hint for command arguments (e.g., `[feature_name [subtask_number]]`) |
 
 ### allowed-tools Format
 
-- `Bash(command)` - Allow specific bash command
-- `Bash(command:*)` - Allow command with any arguments
-- `Read` - Allow reading files
-- `Write` - Allow writing files
-- `Edit` - Allow editing files
-- `Grep` - Allow searching file contents
-- `Glob` - Allow finding files by pattern
-- `Skill(skill-name)` - Allow loading a skill
+For commands that delegate to subagents:
+- `Task(subagent-name)` - Invoke a subagent
 
 **Example:**
 ```yaml
-allowed-tools: Bash(git status:*), Bash(git commit:*), Skill(git-commit)
+allowed-tools: Task(git-committer)
 ```
 
 ## Naming Conventions
@@ -85,29 +82,22 @@ The imperative form gives commands their characteristic feel:
 | Field | Required | Description |
 |-------|----------|-------------|
 | `description` | Yes | 1-2 sentence description of what the command does |
-| `permission` | Yes | Map of tool categories to permission rules |
+| `agent` | Yes | Name of the subagent to invoke |
 
-### Permission Format
-
+**Example:**
 ```yaml
-permission:
-  bash:
-    "git status": "allow"
-    "git commit *": "allow"
-    "git add *": "deny"
+---
+description: Create well-formatted commits using conventional commits style
+agent: git-committer
+---
 ```
-
-Permission values:
-- `allow` - Permit without prompting
-- `deny` - Always deny
-- `ask` - Prompt user each time
 
 ## Command Body
 
 The command body should be **5-20 lines maximum** and contain only:
 
 ```markdown
-Use the `<skill-name>` skill to accomplish this task.
+Use the `<subagent-name>` subagent to accomplish this task.
 ```
 
 **Do NOT include:**
@@ -117,15 +107,15 @@ Use the `<skill-name>` skill to accomplish this task.
 
 ## Examples
 
-### Minimal Command (Claude)
+### Minimal Command (Claude Code)
 
 ```yaml
 ---
 description: Create well-formatted commits using conventional commits style
-allowed-tools: Skill(git-commit)
+allowed-tools: Task(git-committer)
 ---
 
-Use the `git-commit` skill to create a well-formatted commit.
+Use the `git-committer` subagent to create a well-formatted commit.
 ```
 
 ### Minimal Command (OpenCode)
@@ -133,34 +123,32 @@ Use the `git-commit` skill to create a well-formatted commit.
 ```yaml
 ---
 description: Create well-formatted commits using conventional commits style
-permission:
-  bash:
-    "git commit *": "allow"
-    "git status": "allow"
+agent: git-committer
 ---
 
-Use the `git-commit` skill to create a well-formatted commit.
+Use the `git-committer` subagent to create a well-formatted commit.
 ```
 
-### Command with Arguments (Claude)
+### Command with Arguments (Claude Code)
 
 ```yaml
 ---
 description: Generate a PRP
 argument-hint: [feature_name]
-allowed-tools: Skill(prp-generation)
+allowed-tools: Task(prp-generator)
 ---
 
-Use the `prp-generation` skill to create a Product Requirements Prompt.
+Use the `prp-generator` subagent to create a Product Requirements Prompt.
 ```
 
 ## Why This Pattern?
 
 1. **Single source of truth**: Skills contain all implementation content
-2. **Easier maintenance**: Changes to skills automatically propagate to all commands
+2. **Easier maintenance**: Changes to skills automatically propagate
 3. **Platform consistency**: Commands are thin wrappers with platform-specific frontmatter
-4. **Token efficiency**: Skills load progressively via progressive disclosure
-5. **No duplication**: Implementation lives in one place
+4. **Token efficiency**: Subagents load skills progressively via progressive disclosure
+5. **No duplication**: Implementation lives in one place (the skill)
+6. **Isolation**: Subagents run in their own context with appropriate permissions
 
 ## Anti-Pattern to Avoid
 
@@ -184,7 +172,7 @@ Stage relevant changes via `git add`...
 6. Run `git status` again...
 ```
 
-**GOOD** - Command that delegates:
+**BAD** - Command that delegates directly to skill (skipping subagent):
 
 ```yaml
 ---
@@ -195,12 +183,49 @@ allowed-tools: Skill(git-staging)
 Use the `git-staging` skill to stage relevant changes.
 ```
 
+**GOOD** - Command that delegates to subagent:
+
+```yaml
+---
+description: Stage changes via git add
+allowed-tools: Task(git-stager)
+---
+
+Use the `git-stager` subagent to stage relevant changes.
+```
+
 ## Workflow
 
-1. Create the skill first (or identify existing skill to use)
-2. Create/refactor Claude command with proper frontmatter and delegation
-3. Create/refactor OpenCode command with matching content and platform-specific frontmatter
-4. Verify both commands delegate correctly
+1. **Check for existing skill**: Identify the skill the command should use
+2. **Check for existing subagent**: Look for a subagent that delegates to that skill
+   - Claude Code: `.claude/agents/<name>.md`
+   - OpenCode: `.config/opencode/agent/<name>.md`
+3. **If no subagent exists**: Ask the user if they want one created
+   - If yes, use the `subagent-authoring` skill to create it first
+   - If no, stop and explain the command cannot be created without a subagent
+4. Create/refactor Claude Code command with `allowed-tools: Task(subagent-name)`
+5. Create/refactor OpenCode command with `agent: subagent-name`
+6. Verify the full chain works: command → subagent → skill
+
+## Missing Subagent Handling
+
+Before creating a command, always verify the target subagent exists:
+
+```bash
+# Check Claude Code subagent
+ls ~/.claude/agents/<subagent-name>.md
+
+# Check OpenCode subagent
+ls ~/.config/opencode/agent/<subagent-name>.md
+```
+
+If either file is missing, **ask the user**:
+
+> "The subagent `<subagent-name>` doesn't exist yet. Would you like me to
+> create it using the `subagent-authoring` skill before proceeding with
+> the command?"
+
+Do NOT create commands that reference non-existent subagents.
 
 ## Related Skills
 

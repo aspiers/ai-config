@@ -1,5 +1,6 @@
 ---
 description: Remove code duplication you just introduced
+agent: code-deduplicator
 ---
 
-Use the `code-refactoring-dry` skill to remove duplication.
+Use the `code-deduplicator` subagent to remove duplication.

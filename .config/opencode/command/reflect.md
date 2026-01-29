@@ -1,5 +1,6 @@
 ---
 description: Update docs based on learnings
+agent: doc-updater
 ---
 
-Use the `documentation-updates` skill to update documentation.
+Use the `doc-updater` subagent to update documentation.

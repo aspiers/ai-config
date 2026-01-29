@@ -1,12 +1,6 @@
 ---
 description: Run tests according to repository guidelines
-permission:
-  bash:
-    "./bin/test-*": "allow"
-    "*test*": "allow"
-    "npm test": "allow"
-    "pytest": "allow"
-    "make test": "allow"
+agent: test-runner
 ---
 
-Use the `test-running` skill to run tests.
+Use the `test-runner` subagent to run tests.

@@ -1,7 +1,7 @@
 ---
 description: Generate a PRP
 argument-hint: [feature_name]
-allowed-tools: Skill(prp-generation)
+allowed-tools: Task(prp-generator)
 ---
 
-Use the `prp-generation` skill to create a Product Requirements Prompt.
+Use the `prp-generator` subagent to create a Product Requirements Prompt.

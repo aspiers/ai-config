@@ -1,6 +1,6 @@
 ---
 description: Create well-formatted commits using the conventional commits style
-allowed-tools: Bash(git status:*), Bash(git commit:*), Bash(git diff:*), Bash(git log:*), Skill(git-commit)
+allowed-tools: Task(git-committer)
 ---
 
-Use the `git-commit` skill to create a well-formatted commit.
+Use the `git-committer` subagent to create a well-formatted commit.

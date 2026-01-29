@@ -1,6 +1,6 @@
 ---
 description: Run linters according to repository guidelines
-allowed-tools: Skill(code-linting)
+allowed-tools: Task(code-linter)
 ---
 
-Use the `code-linting` skill to run linters.
+Use the `code-linter` subagent to run linters.

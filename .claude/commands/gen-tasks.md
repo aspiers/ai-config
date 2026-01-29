@@ -1,7 +1,7 @@
 ---
 description: Generate tasks from a PRP
 argument-hint: [feature_name]
-allowed-tools: Skill(task-generation)
+allowed-tools: Task(task-generator)
 ---
 
-Use the `task-generation` skill to generate tasks from a PRP.
+Use the `task-generator` subagent to generate tasks from a PRP.

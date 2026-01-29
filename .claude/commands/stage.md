@@ -1,6 +1,6 @@
 ---
 description: Stage relevant changes via git add
-allowed-tools: Skill(git-staging)
+allowed-tools: Task(git-stager)
 ---
 
-Use the `git-staging` skill to stage relevant changes.
+Use the `git-stager` subagent to stage relevant changes.

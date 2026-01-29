@@ -1,5 +1,6 @@
 ---
 description: Generate tasks from a PRP
+agent: task-generator
 ---
 
-Use the `task-generation` skill to generate tasks from a PRP.
+Use the `task-generator` subagent to generate tasks from a PRP.

@@ -1,6 +1,6 @@
 ---
 description: Run tests according to repository guidelines
-allowed-tools: Skill(test-running)
+allowed-tools: Task(test-runner)
 ---
 
-Use the `test-running` skill to run tests.
+Use the `test-runner` subagent to run tests.

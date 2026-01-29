@@ -1,5 +1,6 @@
 ---
 description: Refactor overly large code you just added or extended
+agent: code-refactorer
 ---
 
-Use the `code-refactoring-small` skill to refactor code.
+Use the `code-refactorer` subagent to refactor code.

@@ -1,6 +1,6 @@
 ---
 description: Review code for quality, security, and maintainability
-allowed-tools: Skill(code-reviewing)
+allowed-tools: Task(code-reviewer)
 ---
 
-Use the `code-reviewing` skill to review code.
+Use the `code-reviewer` subagent to review code.

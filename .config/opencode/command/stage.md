@@ -1,9 +1,6 @@
 ---
 description: Stage relevant changes via git add
-permission:
-  bash:
-    "git add": "allow"
-    "git status": "allow"
+agent: git-stager
 ---
 
-Use the `git-staging` skill to stage relevant changes.
+Use the `git-stager` subagent to stage relevant changes.

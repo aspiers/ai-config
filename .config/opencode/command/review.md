@@ -1,11 +1,6 @@
 ---
 description: Review code for quality, security, and maintainability
-agent: plan
-tools:
-  read: true
-  grep: true
-  glob: true
-  bash: true
+agent: code-reviewer
 ---
 
-Use the `code-reviewing` skill to review code.
+Use the `code-reviewer` subagent to review code.

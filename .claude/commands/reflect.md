@@ -1,6 +1,6 @@
 ---
 description: Update docs based on learnings
-allowed-tools: Skill(documentation-updates)
+allowed-tools: Task(doc-updater)
 ---
 
-Use the `documentation-updates` skill to update documentation.
+Use the `doc-updater` subagent to update documentation.

@@ -102,6 +102,13 @@ The generated file should follow this structure:
 <Any additional context for reviewers, breaking changes, or follow-up work>
 ```
 
+## Formatting Guidelines
+
+- Wrap all symbols, variables, function names, file paths, and code references
+  in backticks (e.g., `myFunction`, `CONFIG_VALUE`, `src/utils.ts`)
+- Use fenced code blocks for multi-line code snippets
+- Keep bullet points concise and scannable
+
 ## Important Notes
 
 - The file path `.git/magit/posts/new-pullreq` is used by magit-forge

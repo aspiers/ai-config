@@ -195,6 +195,7 @@ convention of **agent nouns** with the **-er suffix** ("one who does X"):
 | `doc-updater` | Update documentation |
 | `git-committer` | Create commits |
 | `git-stager` | Stage changes |
+| `pr-describer` | Generate PR descriptions |
 | `prp-generator` | Generate PRPs |
 | `task-generator` | Generate tasks from PRPs |
 | `task-implementer` | Implement tasks |
@@ -205,8 +206,8 @@ See `.claude/agents/` for the full definitions.
 
 ## Command and Agent Delegation Pattern
 
-All custom commands and subagent definitions should delegate to skills rather than
-containing implementation content directly.
+All custom commands and subagent definitions should delegate to skills rather
+than containing implementation content directly.
 
 ### The Pattern
 

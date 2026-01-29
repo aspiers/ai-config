@@ -53,6 +53,7 @@
       "Bash(gh run view:*)",
       "Bash(git add:*)",
       "Bash(git branch --list:*)",
+      "Bash(git branch --show-current)",
       "Bash(git cat-file:*)",
       "Bash(git config --get:*)",
       "Bash(git describe:*)",

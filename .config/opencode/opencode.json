@@ -51,6 +51,7 @@
       "gh run view *": "allow",
       "git add*": "allow",
       "git branch --list*": "allow",
+      "git branch --show-current*": "allow",
       "git cat-file *": "allow",
       "git config --get *": "allow",
       "git describe": "allow",

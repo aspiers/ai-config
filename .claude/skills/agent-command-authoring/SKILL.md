@@ -199,7 +199,7 @@ Use the `git-stager` subagent to stage relevant changes.
 1. **Check for existing skill**: Identify the skill the command should use
 2. **Check for existing subagent**: Look for a subagent that delegates to that skill
    - Claude Code: `.claude/agents/<name>.md`
-   - OpenCode: `.config/opencode/agent/<name>.md`
+   - OpenCode: `.config/opencode/agents/<name>.md`
 3. **If no subagent exists**: Ask the user if they want one created
    - If yes, use the `subagent-authoring` skill to create it first
    - If no, stop and explain the command cannot be created without a subagent
@@ -216,7 +216,7 @@ Before creating a command, always verify the target subagent exists:
 ls ~/.claude/agents/<subagent-name>.md
 
 # Check OpenCode subagent
-ls ~/.config/opencode/agent/<subagent-name>.md
+ls ~/.config/opencode/agents/<subagent-name>.md
 ```
 
 If either file is missing, **ask the user**:

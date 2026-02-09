@@ -29,7 +29,7 @@ tools: Read, Grep, Glob, Skill(skill-name), ...
 Use the `<skill-name>` skill to accomplish this task.
 ```
 
-**OpenCode agent** (`.config/opencode/agent/<name>.md`):
+**OpenCode agent** (`.config/opencode/agents/<name>.md`):
 ```yaml
 ---
 description: Brief description of what the agent does

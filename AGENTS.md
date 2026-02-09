@@ -222,7 +222,7 @@ allowed-tools: Skill(skill-name), ...
 Use the `<skill-name>` skill to accomplish this task.
 ```
 
-**Agents** (`.claude/agents/<name>.md` and `.config/opencode/agent/<name>.md`):
+**Agents** (`.claude/agents/<name>.md` and `.config/opencode/agents/<name>.md`):
 
 ```yaml
 ---

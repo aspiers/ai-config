@@ -82,7 +82,7 @@ Claude Code configuration containing:
 #### Command and Agent Delegation
 
 Commands (`.claude/commands/` and `.config/opencode/command/`) and agents
-(`.claude/agents/` and `.config/opencode/agent/`) are designed as thin wrappers
+(`.claude/agents/` and `.config/opencode/agents/`) are designed as thin wrappers
 that delegate to skills. This ensures:
 
 - No duplication of implementation content between platforms

@@ -130,6 +130,7 @@
       "Bash(sha256sum:*)",
       "Bash(sha384sum:*)",
       "Bash(sha512sum:*)",
+      "Bash(shellcheck:*)",
       "Bash(shuf:*)",
       "Bash(sort:*)",
       "Bash(stat:*)",

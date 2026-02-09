@@ -133,6 +133,7 @@
       "sha256sum *": "allow",
       "sha384sum *": "allow",
       "sha512sum *": "allow",
+      "shellcheck *": "allow",
       "shuf *": "allow",
       "sort*": "allow",
       "stat *": "allow",

@@ -14,7 +14,7 @@ permission:
     "git add *": "allow"
     "git apply *": "allow"
     "git diff *": "allow"
-    "git status": "allow"
+    "git status*": "allow"
 ---
 
 Use the `git-staging` skill to stage relevant changes.

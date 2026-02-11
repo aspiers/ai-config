@@ -71,6 +71,7 @@
       "git stash list*": "allow",
       "git stash show*": "allow",
       "git status*": "allow",
+      "go build *": "allow",
       "grep *": "allow",
       "groups *": "allow",
       "head *": "allow",

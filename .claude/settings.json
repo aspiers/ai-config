@@ -225,6 +225,17 @@
           }
         ]
       }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/adam/.local/bin/dcg"
+          }
+        ]
+      }
     ]
   },
   "enabledPlugins": {

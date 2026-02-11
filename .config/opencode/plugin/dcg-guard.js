@@ -1,0 +1,1 @@
+/home/adam/.config/opencode/opencode-dcg-plugin/plugin/dcg-guard.js

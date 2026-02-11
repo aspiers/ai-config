@@ -112,6 +112,7 @@
       "pr *": "allow",
       "printenv *": "allow",
       "printf *": "allow",
+      "ps *": "allow",
       "ptx *": "allow",
       "pwd": "allow",
       "readlink *": "allow",

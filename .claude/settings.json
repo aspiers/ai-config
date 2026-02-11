@@ -112,6 +112,7 @@
       "Bash(printenv:*)",
       "Bash(printf:*)",
       "Bash(pnpm why:*)",
+      "Bash(ps:*)",
       "Bash(ptx:*)",
       "Bash(pwd)",
       "Bash(readlink:*)",

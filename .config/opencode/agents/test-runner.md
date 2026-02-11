@@ -1,5 +1,6 @@
 ---
 description: Automated testing specialist. Must be used proactively immediately after code is successfully linted.
+model: anthropic/claude-sonnet-4-5
 mode: subagent
 tools:
   bash: true

@@ -1,5 +1,6 @@
 ---
 description: Update documentation based on lessons learned from conversations
+model: anthropic/claude-sonnet-4-5
 mode: subagent
 tools:
   read: true

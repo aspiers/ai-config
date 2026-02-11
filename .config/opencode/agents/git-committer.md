@@ -1,5 +1,6 @@
 ---
 description: Commits staged changes to git with proper conventional commit messages
+model: anthropic/claude-sonnet-4-5
 mode: subagent
 tools:
   read: true

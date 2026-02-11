@@ -1,5 +1,6 @@
 ---
 description: Code linting specialist. Masters linting tools, formatting, and code quality checks. Use PROACTIVELY immediately after code is successfully written or modified, when creating new files, or before committing changes.
+model: anthropic/claude-sonnet-4-5
 mode: subagent
 tools:
   bash: true

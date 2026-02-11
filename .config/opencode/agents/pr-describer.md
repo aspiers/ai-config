@@ -1,5 +1,6 @@
 ---
 description: Generates PR descriptions for the current branch
+model: anthropic/claude-sonnet-4-5
 mode: subagent
 tools:
   read: true

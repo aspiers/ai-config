@@ -37,7 +37,39 @@ Perform the following steps:
    - `CLAUDE.md` → points to `AGENTS.md`
    - `AGENT.md` → points to `AGENTS.md` (for agents that look for this filename)
 
-5. **Verify**: Confirm the symlinks work by checking file accessibility
+5. **Fix unsafe `git push` commands**: Scan all agent instruction files
+   (`AGENTS.md`, `CLAUDE.md`, and any other files they reference) for
+   bare or underspecified `git push` invocations that could
+   accidentally push to the wrong branch. This is a common problem
+   with instructions added by tools like beads.
+
+   **What to look for**: any `git push` that does NOT specify both
+   a remote and a refspec, e.g.:
+   - `git push` (no arguments at all)
+   - `git push origin` (remote but no refspec)
+   - `git push --force` (flags but no remote/refspec)
+
+   **Why this matters**: a bare `git push` relies on the upstream
+   tracking branch configuration. If you're on a feature branch
+   that happens to track `main`, `git push` will push your feature
+   commits directly to `main`. Using `git push origin HEAD` is much
+   safer because it pushes the current branch to a remote branch of
+   the same name, preventing accidental pushes to trunk branches.
+
+   **How to fix**: replace bare `git push` with
+   `git push origin HEAD`. Preserve any flags that were present,
+   e.g. `git push --force` → `git push origin HEAD --force`.
+
+   **Edge cases to handle**:
+   - Lines inside code blocks (` ``` `) and inline code (`` ` ``)
+   - Lines in checklists like `[ ] 6. git push  (push to remote)`
+   - Comments after the command, e.g. `git push  # deploy`
+   - Multiple occurrences in the same file
+   - Do NOT modify lines that already specify both remote and
+     refspec (e.g. `git push origin main`,
+     `git push origin HEAD`)
+
+6. **Verify**: Confirm the symlinks work by checking file accessibility
 
 ## Context
 
@@ -61,6 +93,33 @@ cat CLAUDE.md
 cat AGENT.md
 ```
 
+### Fixing unsafe `git push`
+
+Search agent instruction files for bare `git push`:
+
+```bash
+# Find bare git push commands in agent files
+grep -n 'git push' AGENTS.md CLAUDE.md .beads/context/*.md
+```
+
+Example transformations:
+
+| Before | After |
+|--------|-------|
+| `git push` | `git push origin HEAD` |
+| `git push --force` | `git push origin HEAD --force` |
+| `git push origin` | `git push origin HEAD` |
+| `[ ] 6. git push` | `[ ] 6. git push origin HEAD` |
+
+Leave these unchanged (already safe):
+
+| Already safe |
+|--------------|
+| `git push origin HEAD` |
+| `git push origin main` |
+| `git push origin HEAD --force` |
+| `git push -u origin HEAD` |
+
 ## Result
 
 After this process:
@@ -68,3 +127,6 @@ After this process:
 - `CLAUDE.md` is a symlink to `AGENTS.md`
 - `AGENT.md` is a symlink to `AGENTS.md`
 - Multiple AI agents can discover and read the same rules
+- All `git push` commands in agent instructions explicitly
+  specify remote and refspec to prevent accidental pushes
+  to trunk branches

@@ -35,7 +35,6 @@ Perform the following steps:
 
 4. **Create symlinks**: Generate symlinks so different agents can find the rules:
    - `CLAUDE.md` → points to `AGENTS.md`
-   - `AGENT.md` → points to `AGENTS.md` (for agents that look for this filename)
 
 5. **Fix unsafe `git push` commands**: Scan all agent instruction files
    (`AGENTS.md`, `CLAUDE.md`, and any other files they reference) for
@@ -86,11 +85,9 @@ mv CLAUDE.md AGENTS.md
 
 # Create symlinks
 ln -s AGENTS.md CLAUDE.md
-ln -s AGENTS.md AGENT.md
 
 # Verify
 cat CLAUDE.md
-cat AGENT.md
 ```
 
 ### Fixing unsafe `git push`
@@ -125,7 +122,6 @@ Leave these unchanged (already safe):
 After this process:
 - `AGENTS.md` contains the authoritative AI agent rules
 - `CLAUDE.md` is a symlink to `AGENTS.md`
-- `AGENT.md` is a symlink to `AGENTS.md`
 - Multiple AI agents can discover and read the same rules
 - All `git push` commands in agent instructions explicitly
   specify remote and refspec to prevent accidental pushes

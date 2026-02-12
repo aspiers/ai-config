@@ -31,7 +31,7 @@ Perform the following steps:
 
 2. **Handle new project**: If neither file exists, first run Claude's `/init` process to generate initial content
 
-3. **Rename if needed**: If `CLAUDE.md` exists, rename it to `AGENTS.md`
+3. **Rename if needed**: If only `CLAUDE.md` exists, rename it to `AGENTS.md`
 
 4. **Create symlinks**: Generate symlinks so different agents can find the rules:
    - `CLAUDE.md` → points to `AGENTS.md`

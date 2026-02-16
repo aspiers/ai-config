@@ -1,3 +1,1 @@
-if [ -d $HOME/.lmstudio/bin ]; then
-    export PATH="$PATH:$HOME/.lmstudio/bin"
-fi
+safe_add_to_path --append "$HOME/.lmstudio/bin"

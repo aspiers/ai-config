@@ -1,10 +1,20 @@
 export const NotificationPlugin = async ({ $, client, directory, worktree }) => {
   // console.log("NotificationPlugin loaded!");
   const fs = await import('fs');
+  const { execSync } = await import('child_process');
   const logPath = '/tmp/opencode-notification-plugin.log';
 
   const logWithDate = (msg) => {
     fs.appendFileSync(logPath, new Date().toISOString() + ' ' + msg + '\n');
+  };
+
+  const hasCommand = (cmd) => {
+    try {
+      execSync(`which ${cmd}`, { stdio: 'ignore' });
+      return true;
+    } catch {
+      return false;
+    }
   };
 
   return {
@@ -14,7 +24,11 @@ export const NotificationPlugin = async ({ $, client, directory, worktree }) => 
           logWithDate(`Started handling ${event.type} event`);
           $.throws(true);
           try {
-              const result = await $`mplayer -volume 50 /usr/share/sounds/Oxygen-Sys-App-Positive.ogg &>> /tmp/wtf.log`;
+              if (hasCommand('mplayer')) {
+                  await $`mplayer -volume 50 /usr/share/sounds/Oxygen-Sys-App-Positive.ogg &>> /tmp/wtf.log`;
+              } else {
+                  logWithDate('mplayer not found on PATH, skipping sound');
+              }
               // logWithDate('result: ' + JSON.stringify(result));
               const sessionID = event.properties?.sessionID;
               let title = worktree || directory || 'unknown';
@@ -44,8 +58,11 @@ export const NotificationPlugin = async ({ $, client, directory, worktree }) => 
                   }
               }
               const body = lastPrompt ? `${title}\n\n${lastPrompt}` : title;
-              const result2 = await $`notify-send 'opencode finished' ${body} &>> /tmp/opencode-notify-send.log`;
-              // logWithDate(JSON.stringify(result2));
+              if (hasCommand('notify-send')) {
+                  await $`notify-send 'opencode finished' ${body} &>> /tmp/opencode-notify-send.log`;
+              } else {
+                  logWithDate('notify-send not found on PATH, skipping notification');
+              }
           } catch (err) {
               logWithDate(`ERROR: ${err}`);
           }

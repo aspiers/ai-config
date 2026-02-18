@@ -73,7 +73,7 @@ Bash(git commit:*)
 Bash(git:*)
 
 # Allow specific script
-Bash(~/.claude/skills/my-skill/scripts/helper.py:*)
+Bash(~/.agents/skills/my-skill/scripts/helper.py:*)
 ```
 
 **Example:**

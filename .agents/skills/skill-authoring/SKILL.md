@@ -43,11 +43,24 @@ Skills load in three tiers:
 
 ### Required Files
 
-Each skill should be created in the repository as a subdirectory of
-`.claude/skills/`:
+Each skill is a directory containing a `SKILL.md` file. Multiple locations
+are scanned, in order of preference:
+
+**Project-local** (walked up from cwd to git worktree root):
+- `.agents/skills/<name>/SKILL.md` — preferred cross-platform standard
+- `.claude/skills/<name>/SKILL.md` — Claude-compatible
+- `.opencode/skills/<name>/SKILL.md` — OpenCode-specific
+
+**Global** (user home):
+- `~/.agents/skills/<name>/SKILL.md`
+- `~/.claude/skills/<name>/SKILL.md`
+- `~/.config/opencode/skills/<name>/SKILL.md`
+
+Use `.agents/skills/` for new skills — it is the emerging cross-platform
+standard supported by Claude Code, OpenCode, and other agents.
 
 ```
-.claude/skills/skill-name/
+.agents/skills/skill-name/
 ├── SKILL.md (required - instructions + metadata)
 └── Optional bundled resources:
     ├── scripts/     - Executable code (Python/Bash/etc.)

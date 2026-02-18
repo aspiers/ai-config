@@ -71,6 +71,6 @@ COPYING
 ^/\.editorconfig
 ^/node_modules
 ^/root-etc-stow-pkg
-^/\.claude/skills/allow-commands
+^/\.agents/skills/allow-commands
 ^/tests
 ^/\.beads

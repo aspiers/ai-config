@@ -70,12 +70,15 @@ This keeps token usage efficient while maintaining full capability.
 
 ### Location
 
-**Project-specific skills**: `.claude/skills/<skill-name>/SKILL.md`
-**Global skills**: `~/.claude/skills/<skill-name>/SKILL.md`
+**Project-specific skills** (preferred, cross-platform): `.agents/skills/<skill-name>/SKILL.md`
+**Global skills** (preferred, cross-platform): `~/.agents/skills/<skill-name>/SKILL.md`
 
-Both Claude Code and OpenCode automatically scan `~/.claude/skills/` for
-global skills. Use stow or symlinks to manage skills in this repository
-that should be available globally.
+`.agents/skills/` is the emerging cross-platform standard supported by Claude
+Code, OpenCode, and other agents. `.claude/skills/` is also still scanned for
+backwards compatibility.
+
+Use stow or symlinks to manage skills in this repository that should be
+available globally.
 
 ### Integration with Helper Scripts
 
@@ -111,7 +114,7 @@ for a full description.  Short summary:
 
 ### Example Skill: safe-rm
 
-Location: `.claude/skills/safe-rm/SKILL.md`
+Location: `.agents/skills/safe-rm/SKILL.md`
 
 This skill demonstrates best practices for structure and documentation:
 

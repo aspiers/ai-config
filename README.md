@@ -86,7 +86,7 @@ Commands (`.claude/commands/` and `.config/opencode/command/`) and agents
 that delegate to skills. This ensures:
 
 - No duplication of implementation content between platforms
-- Single source of truth in skills (`.claude/skills/`)
+- Single source of truth in skills (`.agents/skills/`)
 - Easy maintenance and consistency
 
 See [AGENTS.md](AGENTS.md) for the detailed delegation pattern.

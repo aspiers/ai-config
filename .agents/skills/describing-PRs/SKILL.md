@@ -1,7 +1,7 @@
 ---
 name: describing-PRs
 description: Generate a PR description for the current branch. Writes Markdown to .git/magit/posts/new-pullreq for use with magit-forge.
-allowed-tools: Bash(~/.claude/skills/describing-PRs/scripts/find-merge-base.py:*)
+allowed-tools: Bash(~/.agents/skills/describing-PRs/scripts/find-merge-base.py:*)
 ---
 
 # PR Description Generator
@@ -23,7 +23,7 @@ Use this skill when:
    Run the helper script to find the base branch:
 
    ```bash
-   BASE=$(~/.claude/skills/describing-PRs/scripts/find-merge-base.py)
+   BASE=$(~/.agents/skills/describing-PRs/scripts/find-merge-base.py)
    ```
 
    The script outputs a branch name (e.g., `origin/main`) that represents

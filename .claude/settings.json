@@ -49,6 +49,7 @@
       "Bash(gh pr search:*)",
       "Bash(gh pr status:*)",
       "Bash(gh pr view:*)",
+      "Bash(gh repo view:*)",
       "Bash(gh run list:*)",
       "Bash(gh run view:*)",
       "Bash(git add:*)",
@@ -245,5 +246,6 @@
   "alwaysThinkingEnabled": false,
   "feedbackSurveyState": {
     "lastShownTime": 1754076415986
-  }
+  },
+  "effortLevel": "medium"
 }

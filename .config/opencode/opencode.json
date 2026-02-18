@@ -47,6 +47,7 @@
       "gh pr search*": "allow",
       "gh pr status *": "allow",
       "gh pr view *": "allow",
+      "gh repo view*": "allow",
       "gh run list*": "allow",
       "gh run view *": "allow",
       "git add*": "allow",

@@ -266,9 +266,10 @@ Commands or agents with:
 
 **Always run tests and verification commands before completing any code change.**
 
-## Landing the Plane (Session Completion)
+## Landing the Plane (Session Completion) when using beads
 
-**When ending a work session**, you MUST complete ALL steps below. Work is NOT complete until `git push` succeeds.
+**When ending a beads work session**, you MUST complete ALL steps below. Work
+is NOT complete until `git push` succeeds.
 
 **MANDATORY WORKFLOW:**
 

@@ -82,6 +82,7 @@
       "Bash(hostid)",
       "Bash(id:*)",
       "Bash(identify)",
+      "Bash(info:*)",
       "Bash(jobs)",
       "Bash(join:*)",
       "Bash(jq:*)",

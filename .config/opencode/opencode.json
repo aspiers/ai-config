@@ -81,6 +81,7 @@
       "hostid": "allow",
       "id *": "allow",
       "identify": "allow",
+      "info *": "allow",
       "jobs": "allow",
       "join *": "allow",
       "jq *": "allow",

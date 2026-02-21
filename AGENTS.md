@@ -278,7 +278,8 @@ Commands or agents with:
 4. **PUSH TO REMOTE** - This is MANDATORY:
    ```bash
    git pull --rebase
-   bd sync
+   bd export -i .beads/issues.jsonl  # ONLY if using beads Dolt backend
+   bd sync  # ONLY if still using the old SQLite beads backend; it's a no-op if using Dolt!
    git push
    git status  # MUST show "up to date with origin"
    ```

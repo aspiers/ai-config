@@ -16,6 +16,11 @@ command permissions in AI agent configs.
 
 For git commands, always use `--no-ext-diff` flag with `git diff`.
 
+If working on a local branch that hasn't been published anywhere and you've
+just made a commit and then notice a mistake, prefer amending that commit over
+adding a fixup on top — but only if the amended result remains a single logical
+change and doesn't combine unrelated changes.
+
 ## Adding Agent Skills
 
 Agent Skills are modular packages that extend AI agent capabilities by

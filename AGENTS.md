@@ -16,10 +16,12 @@ command permissions in AI agent configs.
 
 For git commands, always use `--no-ext-diff` flag with `git diff`.
 
-If working on a local branch that hasn't been published anywhere and you've
-just made a commit and then notice a mistake, prefer amending that commit over
-adding a fixup on top — but only if the amended result remains a single logical
-change and doesn't combine unrelated changes.
+If you've recently made a commit in a local branch that hasn't been published
+anywhere else yet and then you notice a mistake in it, in order to avoid
+polluting the history with a bunch of mistakes and fixups, you should
+*generally* prefer amending that commit over adding a fixup on top.  But this
+is ONLY OK if the amended result remains a single logical change!  Commits
+must NOT combine unrelated changes!
 
 ## Adding Agent Skills
 

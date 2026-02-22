@@ -7,6 +7,8 @@ if ! [ -e "$acfs_loader" ]; then
     return 0
 fi
 
+source "$acfs_loader"
+
 # bun completions for zsh
 [ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
 

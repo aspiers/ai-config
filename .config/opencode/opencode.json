@@ -203,5 +203,9 @@
     "opencode-beads",
     "opencode-lmstudio",
     "opencode-pty"
-  ]
+  ],
+  "experimental": {
+    "paste_min_lines": 6,
+    "paste_min_length": 500
+  }
 }

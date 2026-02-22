@@ -8,6 +8,8 @@ if ! [ -e "$acfs_loader" ]; then
 fi
 
 source "$acfs_loader"
+# Deduplicate PATH entries that acfs.zshrc may have added via raw PATH= assignments.
+path=($path)
 
 # bun completions for zsh
 [ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"

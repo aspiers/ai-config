@@ -50,6 +50,7 @@
       "gh repo view*": "allow",
       "gh run list*": "allow",
       "gh run view *": "allow",
+      "gh search *": "allow",
       "git add*": "allow",
       "git branch --list*": "allow",
       "git branch --show-current*": "allow",

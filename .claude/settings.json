@@ -140,6 +140,7 @@
       "Bash(shuf:*)",
       "Bash(sort:*)",
       "Bash(stat:*)",
+      "Bash(strings:*)",
       "Bash(stty)",
       "Bash(sum:*)",
       "Bash(tac:*)",

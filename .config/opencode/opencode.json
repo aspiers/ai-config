@@ -143,6 +143,7 @@
       "shuf *": "allow",
       "sort*": "allow",
       "stat *": "allow",
+      "strings *": "allow",
       "stty": "allow",
       "sum *": "allow",
       "tac *": "allow",

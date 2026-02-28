@@ -1,6 +1,7 @@
 ---
 description: Remove code duplication you just introduced
-allowed-tools: Task(code-deduplicator)
+allowed-tools: Skill(code-refactoring-dry)
 ---
 
-Use the `code-deduplicator` subagent to remove duplication.
+Use the `code-refactoring-dry` skill to remove duplication in the files you
+have worked on in this session.

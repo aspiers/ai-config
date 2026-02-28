@@ -1,6 +1,6 @@
 ---
 description: Review code for quality, security, and maintainability
-agent: code-reviewer
 ---
 
-Use the `code-reviewer` subagent to review code.
+Use the `code-reviewing` skill to review the files you have worked on in this
+session.

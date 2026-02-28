@@ -172,7 +172,8 @@ Stage relevant changes via `git add`...
 6. Run `git status` again...
 ```
 
-**BAD** - Command that delegates directly to skill (skipping subagent):
+**BAD** - Command that delegates directly to skill (skipping subagent), for
+commands that do **not** need session context:
 
 ```yaml
 ---
@@ -183,7 +184,7 @@ allowed-tools: Skill(git-staging)
 Use the `git-staging` skill to stage relevant changes.
 ```
 
-**GOOD** - Command that delegates to subagent:
+**GOOD** - Command that delegates to subagent (for context-independent tasks):
 
 ```yaml
 ---
@@ -193,6 +194,25 @@ allowed-tools: Task(git-stager)
 
 Use the `git-stager` subagent to stage relevant changes.
 ```
+
+**EXCEPTION** - Commands that are inherently session-context-dependent (e.g.
+"review what I just wrote", "remove duplication I just introduced") should
+skip the subagent and invoke the skill directly. Subagents start with a fresh
+context and will not know what was recently worked on unless the parent agent
+tells them — which defeats the purpose of the command.
+
+```yaml
+---
+description: Remove code duplication you just introduced
+allowed-tools: Skill(code-refactoring-dry)
+---
+
+Use the `code-refactoring-dry` skill to remove duplication in the files you
+have worked on in this session.
+```
+
+In OpenCode, omit the `agent:` field entirely for the same effect (the command
+then runs in the primary agent's context).
 
 ## Workflow
 

@@ -19,7 +19,7 @@ Use this skill when:
 
 ### Step 1: Identify the Duplication
 
-Review your recent changes (committed or uncommitted) to find:
+Review the files you have been working on in this session to find:
 - Duplicated code patterns
 - Duplicated logic or structures
 - Copied and pasted blocks with minor variations

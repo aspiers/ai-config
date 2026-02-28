@@ -1,6 +1,7 @@
 ---
 description: Review code for quality, security, and maintainability
-allowed-tools: Task(code-reviewer)
+allowed-tools: Skill(code-reviewing)
 ---
 
-Use the `code-reviewer` subagent to review code.
+Use the `code-reviewing` skill to review the files you have worked on in this
+session.

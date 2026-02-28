@@ -1,6 +1,7 @@
 ---
 description: Refactor overly large code you just added or extended
-allowed-tools: Task(code-refactorer)
+allowed-tools: Skill(code-refactoring-small)
 ---
 
-Use the `code-refactorer` subagent to refactor code.
+Use the `code-refactoring-small` skill to refactor the files you have worked
+on in this session.

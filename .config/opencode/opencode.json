@@ -42,6 +42,7 @@
       "gh issue search*": "allow",
       "gh issue status*": "allow",
       "gh issue view*": "allow",
+      "gh pr checks *": "allow",
       "gh pr diff *": "allow",
       "gh pr list*": "allow",
       "gh pr search*": "allow",

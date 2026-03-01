@@ -14,7 +14,7 @@ command permissions in AI agent configs.
 
 ## Git Operations
 
-For git commands, always use `--no-ext-diff` flag with `git diff`.
+For `git diff` commands, always use the `--no-ext-diff` flag.
 
 If you've recently made a commit in a local branch that hasn't been published
 anywhere else yet and then you notice a mistake in it, in order to avoid

@@ -205,6 +205,7 @@
     "@franlol/opencode-md-table-formatter",
     "opencode-beads",
     "opencode-lmstudio",
+    "anthropic-multi-auth",
     "opencode-pty"
   ],
   "experimental": {

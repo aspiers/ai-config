@@ -252,11 +252,5 @@
   "feedbackSurveyState": {
     "lastShownTime": 1754076415986
   },
-  "effortLevel": "medium",
-  "mcpServers": {
-    "browsermcp": {
-      "command": "npx",
-      "args": ["-y", "@browsermcp/mcp"]
-    }
-  }
+  "effortLevel": "medium"
 }

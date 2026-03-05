@@ -212,12 +212,5 @@
   "experimental": {
     "paste_min_lines": 6,
     "paste_min_length": 500
-  },
-  "mcp": {
-    "browsermcp": {
-      "type": "local",
-      "command": ["npx", "-y", "@browsermcp/mcp"],
-      "enabled": true
-    }
   }
 }

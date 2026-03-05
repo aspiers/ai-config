@@ -141,6 +141,7 @@
       "sha512sum *": "allow",
       "shellcheck *": "allow",
       "shuf *": "allow",
+      "sleep *": "allow",
       "sort*": "allow",
       "stat *": "allow",
       "strings *": "allow",

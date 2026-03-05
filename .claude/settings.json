@@ -138,6 +138,7 @@
       "Bash(sha512sum:*)",
       "Bash(shellcheck:*)",
       "Bash(shuf:*)",
+      "Bash(sleep:*)",
       "Bash(sort:*)",
       "Bash(stat:*)",
       "Bash(strings:*)",

@@ -190,7 +190,9 @@
     ],
     "deny": [
       "Bash(pkill:*)",
-      "Bash(killall:*)"
+      "Bash(killall:*)",
+      "Bash(bd init)",
+      "Bash(bd init:*)"
     ],
     "defaultMode": "default"
   },

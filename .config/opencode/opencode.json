@@ -14,6 +14,8 @@
       "basename *": "allow",
       "basenc *": "allow",
       "bash -n *": "allow",
+      "bd init": "deny",
+      "bd init *": "deny",
       "bd *": "allow",
       "bzgrep *": "allow",
       "cal *": "allow",

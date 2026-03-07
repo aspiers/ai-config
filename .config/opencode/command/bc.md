@@ -16,3 +16,4 @@ before creating the bead issue.
 3. If investigation is needed, do it NOW, then update the bead:
    `bd update <id> --title="<better title>" --description="<final description>" --json`
 4. Report the created issue ID back to the user.
+5. If you were previously in the middle of working on something which this request interrupted, resume that immediately without asking.

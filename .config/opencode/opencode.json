@@ -204,6 +204,7 @@
   },
   "plugin": [
     "@franlol/opencode-md-table-formatter",
+    "opencode-gemini-auth",
     "opencode-beads",
     "opencode-lmstudio",
     "anthropic-multi-auth",

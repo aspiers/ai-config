@@ -10,6 +10,7 @@ Update documentation based on lessons learned from the conversation.
 ## When to Use This Skill
 
 Use this skill when:
+
 - You made a mistake or misunderstanding that could have been prevented
 - You discovered something that should be documented for future reference
 - The user asks you to "reflect" on what happened
@@ -34,12 +35,17 @@ following as appropriate:
 
 3. **Agent settings**:
    - Per-project settings (`.claude/settings.json`, `opencode.json`)
+   - Per-project agent skills in `.agents/skills`
    - Global settings (`~/.config/opencode/opencode.json`, `~/.claude/settings.json`)
+   - Global agent skills in `~/.agents/skills`
 
 4. **Other project documentation**:
    - README.md
    - Design documents
    - Architecture guides
+
+Bear in mind that many global files for agent config and skills are stowed
+via GNU Stow using symlinks which point back to a git repo somewhere.
 
 ### What to Document
 

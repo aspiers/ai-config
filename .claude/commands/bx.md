@@ -20,3 +20,4 @@ before creating the bead issue.
    `bd update <id> --title="<better title>" --description="<final description>" --json`
 4. Implement the work described in the issue.
 5. After implementation is complete, run: `bd close <id> --json`
+6. If you were previously in the middle of working on something which this request interrupted, resume that immediately without asking.

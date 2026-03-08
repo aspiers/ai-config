@@ -29,7 +29,7 @@ eval "$(ntm shell zsh)"
 
 # Atuin init handled by .zshrc.d/atuin
 
-unalias br 2>/dev/null  # br installer - remove conflicting alias
+unalias bd 2>/dev/null  # acfs installer injects alias bd='br'; undo it
 
 alias am='cd "$HOME/mcp_agent_mail" && scripts/run_server_with_token.sh'
 

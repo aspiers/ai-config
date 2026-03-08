@@ -19,6 +19,7 @@ last-touched
 # Legacy database files
 db.sqlite
 bd.db
+dolt*
 
 # Worktree redirect file (contains relative path to main repo's .beads/)
 # Must not be committed as paths would be wrong in other clones

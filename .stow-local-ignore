@@ -69,7 +69,7 @@ COPYING
 ^/GEMINI.md
 ^/\.prettier.*
 ^/\.editorconfig
-^/node_modules
+node_modules
 ^/root-etc-stow-pkg
 ^/\.agents/skills/allow-commands
 ^/tests

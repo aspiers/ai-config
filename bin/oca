@@ -1,0 +1,5 @@
+#!/bin/bash
+#
+# oca - OpenCode attach to an existing session
+
+exec ocr attach "$@"

@@ -1,0 +1,5 @@
+#!/bin/bash
+#
+# ocw - OpenCode web interface
+
+exec ocr web "$@"

@@ -1,5 +1,5 @@
 #!/bin/bash
+#
+# ocwe - OpenCode web interface exposed externally
 
-# export OPENCODE_SERVER_USER_NAME=...
-# export OPENCODE_SERVER_PASSWORD=...
 exec ocw --hostname 0.0.0.0 "$@"

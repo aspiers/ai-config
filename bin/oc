@@ -1,0 +1,5 @@
+#!/bin/bash
+#
+# oc - OpenCode TUI in the current directory
+
+exec ocr "$(pwd)" "$@"

@@ -1,0 +1,32 @@
+#!/bin/bash
+#
+# ocr - OpenCode Runner (base wrapper)
+#
+# All other oc* wrappers delegate to this script.
+# Launches bun in its own systemd scope so that oomd kills
+# only the bun process, not the parent shell.
+
+OPENCODE_REPO="$HOME/.GIT/3rd-party/opencode"
+OPENCODE_PKG="$OPENCODE_REPO/packages/opencode"
+
+if [[ ! -d "$OPENCODE_REPO" ]]; then
+    echo "error: opencode repo not found at $OPENCODE_REPO" >&2
+    exit 1
+fi
+
+# Find bun: prefer ~/.bun/bin, then $PATH
+if [[ -x "$HOME/.bun/bin/bun" ]]; then
+    bun="$HOME/.bun/bin/bun"
+elif command -v bun &>/dev/null; then
+    bun="$(command -v bun)"
+else
+    echo "error: bun not found" >&2
+    exit 1
+fi
+
+exec systemd-run --user --scope \
+    --unit="opencode-$$" \
+    -p MemoryMax=16G \
+    "$bun" run --cwd="$OPENCODE_PKG" --conditions=browser \
+    src/index.ts \
+    "$@"

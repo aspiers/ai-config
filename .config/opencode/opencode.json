@@ -208,7 +208,6 @@
     "@franlol/opencode-md-table-formatter",
     "opencode-gemini-auth",
     "opencode-beads",
-    "anthropic-multi-auth",
     "opencode-pty"
   ],
   "experimental": {

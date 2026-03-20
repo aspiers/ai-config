@@ -22,14 +22,21 @@ export const NotificationPlugin = async ({ $, client, directory, worktree }) => 
       logWithDate(JSON.stringify(event));
       if (event.type === "session.idle") {
           logWithDate(`Started handling ${event.type} event`);
-          $.throws(true);
           try {
+              // Play sound notification
               if (hasCommand('mplayer')) {
-                  await $`mplayer -volume 50 /usr/share/sounds/Oxygen-Sys-App-Positive.ogg &>> /tmp/wtf.log`;
+                  try {
+                      execSync('mplayer -volume 50 /usr/share/sounds/Oxygen-Sys-App-Positive.ogg >> /tmp/wtf.log 2>&1', {
+                          timeout: 10000,
+                      });
+                  } catch (e) {
+                      logWithDate(`mplayer failed: ${e}`);
+                  }
               } else {
                   logWithDate('mplayer not found on PATH, skipping sound');
               }
-              // logWithDate('result: ' + JSON.stringify(result));
+
+              // Gather session context for notifications
               const sessionID = event.properties?.sessionID;
               let title = worktree || directory || 'unknown';
               let lastPrompt = '';
@@ -57,11 +64,48 @@ export const NotificationPlugin = async ({ $, client, directory, worktree }) => 
                       logWithDate(`Failed to get session info: ${e}`);
                   }
               }
+
+              // Desktop notification via notify-send
               const body = lastPrompt ? `${title}\n\n${lastPrompt}` : title;
               if (hasCommand('notify-send')) {
-                  await $`notify-send 'opencode finished' ${body} &>> /tmp/opencode-notify-send.log`;
+                  try {
+                      execSync(`notify-send 'opencode finished' ${JSON.stringify(body)} >> /tmp/opencode-notify-send.log 2>&1`, {
+                          timeout: 5000,
+                      });
+                  } catch (e) {
+                      logWithDate(`notify-send failed: ${e}`);
+                  }
               } else {
                   logWithDate('notify-send not found on PATH, skipping notification');
+              }
+
+              // ntfy.sh push notification via ACFS notify library
+              // acfs_notify backgrounds curl via (curl ...) & disown, so
+              // execSync kills it before completion. Use spawn+detached
+              // to let the process tree outlive the event handler.
+              if (hasCommand('notify-agent-idle')) {
+                  try {
+                      const { spawn } = await import('child_process');
+                      const hookInput = JSON.stringify({
+                          hook_event_name: 'Stop',
+                          session_id: sessionID || 'unknown',
+                          agent_type: 'opencode',
+                          cwd: worktree || directory || process.cwd(),
+                          title: title,
+                          last_prompt: lastPrompt,
+                      });
+                      logWithDate(`notify-agent-idle: sending hookInput (${hookInput.length} bytes)`);
+                      const child = spawn('sh', ['-c', `echo ${JSON.stringify(hookInput)} | notify-agent-idle`], {
+                          detached: true,
+                          stdio: 'ignore',
+                      });
+                      child.unref();
+                      logWithDate('notify-agent-idle: spawned detached');
+                  } catch (e) {
+                      logWithDate(`notify-agent-idle failed: ${e}`);
+                  }
+              } else {
+                  logWithDate('notify-agent-idle not found on PATH, skipping ntfy notification');
               }
           } catch (err) {
               logWithDate(`ERROR: ${err}`);

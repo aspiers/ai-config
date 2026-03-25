@@ -149,7 +149,8 @@ Bad: "Implement the feature"
 Good: "Done when: (1) POST /api/user with `{ displayName: 'Test' }` updates
 the `display_name` column in the database, (2) GET /api/user returns the
 `displayName` field in the response, (3) Sending `displayName` longer than 50
-chars returns HTTP 400, (4) Unit test covers all three cases and passes."
+chars returns HTTP 400, (4) Unit test covers all three cases and passes,
+(5) All changes committed to git as logically grouped commit(s)."
 
 ### Scoped to one concern
 
@@ -190,6 +191,7 @@ Every bead description MUST follow this structure:
 1. <specific testable condition>
 2. <specific testable condition>
 3. <specific testable condition>
+4. All changes committed to git as logically grouped commit(s)
 ```
 
 ## Rules

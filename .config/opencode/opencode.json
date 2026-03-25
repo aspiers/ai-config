@@ -58,6 +58,7 @@
       "git branch --list*": "allow",
       "git branch --show-current*": "allow",
       "git cat-file *": "allow",
+      "git check-ignore *": "allow",
       "git config --get *": "allow",
       "git describe": "allow",
       "git diff *": "allow",

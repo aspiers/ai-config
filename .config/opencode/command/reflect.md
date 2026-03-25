@@ -1,6 +1,6 @@
 ---
-description: Update docs based on learnings
-agent: doc-updater
+description: Update docs based on learnings from this session
 ---
 
-Use the `doc-updater` subagent to update documentation.
+Use the `documentation-updates` skill to reflect on this conversation and
+update documentation based on any mistakes, learnings, or gaps discovered.

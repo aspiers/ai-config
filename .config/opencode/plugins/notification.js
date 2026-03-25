@@ -1,7 +1,7 @@
 export const NotificationPlugin = async ({ $, client, directory, worktree }) => {
   // console.log("NotificationPlugin loaded!");
   const fs = await import('fs');
-  const { execSync } = await import('child_process');
+  const { execSync, spawnSync, spawn } = await import('child_process');
   const logPath = '/tmp/opencode-notification-plugin.log';
 
   const logWithDate = (msg) => {
@@ -26,9 +26,12 @@ export const NotificationPlugin = async ({ $, client, directory, worktree }) => 
               // Play sound notification
               if (hasCommand('mplayer')) {
                   try {
-                      execSync('mplayer -volume 50 /usr/share/sounds/Oxygen-Sys-App-Positive.ogg >> /tmp/wtf.log 2>&1', {
+                      const mlogFd = fs.openSync('/tmp/opencode-mplayer.log', 'a');
+                      spawnSync('mplayer', ['-volume', '50', '/usr/share/sounds/Oxygen-Sys-App-Positive.ogg'], {
                           timeout: 10000,
+                          stdio: ['ignore', mlogFd, mlogFd],
                       });
+                      fs.closeSync(mlogFd);
                   } catch (e) {
                       logWithDate(`mplayer failed: ${e}`);
                   }
@@ -69,9 +72,12 @@ export const NotificationPlugin = async ({ $, client, directory, worktree }) => 
               const body = lastPrompt ? `${title}\n\n${lastPrompt}` : title;
               if (hasCommand('notify-send')) {
                   try {
-                      execSync(`notify-send 'opencode finished' ${JSON.stringify(body)} >> /tmp/opencode-notify-send.log 2>&1`, {
+                      const logFd = fs.openSync('/tmp/opencode-notify-send.log', 'a');
+                      spawnSync('notify-send', ['opencode finished', body], {
                           timeout: 5000,
+                          stdio: ['ignore', logFd, logFd],
                       });
+                      fs.closeSync(logFd);
                   } catch (e) {
                       logWithDate(`notify-send failed: ${e}`);
                   }
@@ -85,7 +91,6 @@ export const NotificationPlugin = async ({ $, client, directory, worktree }) => 
               // to let the process tree outlive the event handler.
               if (hasCommand('notify-agent-idle')) {
                   try {
-                      const { spawn } = await import('child_process');
                       const hookInput = JSON.stringify({
                           hook_event_name: 'Stop',
                           session_id: sessionID || 'unknown',
@@ -95,11 +100,14 @@ export const NotificationPlugin = async ({ $, client, directory, worktree }) => 
                           last_prompt: lastPrompt,
                       });
                       logWithDate(`notify-agent-idle: sending hookInput (${hookInput.length} bytes)`);
-                      const child = spawn('sh', ['-c', `echo ${JSON.stringify(hookInput)} | notify-agent-idle`], {
+                      const naiLogFd = fs.openSync('/tmp/opencode-notify-agent-idle.log', 'a');
+                      const child = spawn('notify-agent-idle', [], {
                           detached: true,
-                          stdio: 'ignore',
+                          stdio: ['pipe', naiLogFd, naiLogFd],
                       });
+                      child.stdin.end(hookInput);
                       child.unref();
+                      // Don't closeSync — detached process still needs the fd
                       logWithDate('notify-agent-idle: spawned detached');
                   } catch (e) {
                       logWithDate(`notify-agent-idle failed: ${e}`);

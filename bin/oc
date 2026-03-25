@@ -1,5 +1,15 @@
-#!/bin/bash
+#!/bin/zsh
 #
 # oc - OpenCode TUI in the current directory
 
-exec ocr "$(pwd)" "$@"
+autoload cx cxx cxg
+
+suffix=": oc"
+
+current_title=$(cxg)
+if [[ "$current_title" != *"$suffix" ]]; then
+    cx "${current_title}${suffix}"
+    trap cxx EXIT INT TERM HUP
+fi
+
+ocr "$(pwd)" "$@"

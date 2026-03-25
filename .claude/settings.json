@@ -206,6 +206,10 @@
         "hooks": [
           {
             "type": "command",
+            "command": "printf '\\a' > /dev/tty"
+          },
+          {
+            "type": "command",
             "command": "mplayer -volume 50 /usr/share/sounds/Oxygen-Sys-App-Positive.ogg"
           },
           {

@@ -98,10 +98,12 @@ export const NotificationPlugin = async ({ $, client, directory, worktree }) => 
         logWithDate('notify-agent-idle: spawned detached');
     };
 
-    // Run a notification step, logging failures without propagating
+    // Run a notification step, logging outcome either way
     const attempt = (label, fn) => {
         try {
-            return fn();
+            const result = fn();
+            logWithDate(`${label} succeeded`);
+            return result;
         } catch (e) {
             logWithDate(`${label} failed: ${e}`);
         }
@@ -109,7 +111,9 @@ export const NotificationPlugin = async ({ $, client, directory, worktree }) => 
 
     const attemptAsync = async (label, fn) => {
         try {
-            return await fn();
+            const result = await fn();
+            logWithDate(`${label} succeeded`);
+            return result;
         } catch (e) {
             logWithDate(`${label} failed: ${e}`);
         }

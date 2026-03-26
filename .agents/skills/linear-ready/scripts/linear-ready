@@ -1,0 +1,258 @@
+#!/usr/bin/env bash
+#
+# linear-ready — find Linear issues ready for an AI agent to pick up.
+#
+# Equivalent of `bd ready` for Linear workflows.  Uses `linear api`
+# (from @schpet/linear-cli) to run a single GraphQL query, then
+# filters client-side with jq to exclude issues with active blockers.
+#
+# Prerequisites:
+#   - linear-cli installed and authenticated (linear auth login)
+#   - jq installed
+#
+# Usage: linear-ready [OPTIONS]
+#
+# Options:
+#   --team <key>           Filter by team key (e.g. "ENG")
+#   --label <name>         Label to filter for (default: "AI")
+#   --project <name>       Filter by project name
+#   --assignee <name>      Filter by assignee display name
+#   --unassigned           Show only unassigned issues
+#   --priority <1-4>       Filter by priority (1=Urgent..4=Low)
+#   --limit <n>            Max results (default: 50)
+#   --state <types>        Comma-separated state types
+#                          (default: "backlog,unstarted")
+#   --include-blocked      Include blocked issues in output
+#   --json                 JSON output for agent consumption
+#   --help                 Show this help
+
+set -euo pipefail
+
+# ── defaults ────────────────────────────────────────────────────────
+LABEL="AI"
+LIMIT=50
+STATE_TYPES="backlog,unstarted"
+TEAM=""
+PROJECT=""
+ASSIGNEE=""
+UNASSIGNED=false
+PRIORITY=""
+INCLUDE_BLOCKED=false
+JSON_OUTPUT=false
+
+# ── parse arguments ────────────────────────────────────────────────
+usage() {
+    cat <<'USAGE'
+Usage: linear-ready [OPTIONS]
+
+Options:
+  --team <key>           Filter by team key (e.g. "ENG")
+  --label <name>         Label to filter for (default: "AI")
+  --project <name>       Filter by project name
+  --assignee <name>      Filter by assignee display name
+  --unassigned           Show only unassigned issues
+  --priority <1-4>       Filter by priority (1=Urgent..4=Low)
+  --limit <n>            Max results (default: 50)
+  --state <types>        Comma-separated state types
+                         (default: "backlog,unstarted")
+  --include-blocked      Include blocked issues in output
+  --json                 JSON output for agent consumption
+  --help                 Show this help
+USAGE
+    exit 0
+}
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --team)       TEAM="$2";       shift 2 ;;
+        --label)      LABEL="$2";      shift 2 ;;
+        --project)    PROJECT="$2";    shift 2 ;;
+        --assignee)   ASSIGNEE="$2";   shift 2 ;;
+        --unassigned) UNASSIGNED=true; shift ;;
+        --priority)   PRIORITY="$2";   shift 2 ;;
+        --limit)      LIMIT="$2";      shift 2 ;;
+        --state)      STATE_TYPES="$2"; shift 2 ;;
+        --include-blocked) INCLUDE_BLOCKED=true; shift ;;
+        --json)       JSON_OUTPUT=true; shift ;;
+        --help|-h)    usage ;;
+        *)
+            echo "Unknown option: $1" >&2
+            echo "Run with --help for usage" >&2
+            exit 1
+            ;;
+    esac
+done
+
+# ── check prerequisites ────────────────────────────────────────────
+for cmd in linear jq; do
+    if ! command -v "$cmd" &>/dev/null; then
+        echo "Error: '$cmd' is required but not found on PATH." >&2
+        if [[ "$cmd" == "linear" ]]; then
+            echo "Install: brew install schpet/tap/linear" >&2
+            echo "    or:  npm install -g @schpet/linear-cli" >&2
+        fi
+        exit 1
+    fi
+done
+
+# ── build filter JSON ──────────────────────────────────────────────
+# Convert comma-separated state types to JSON array
+STATE_JSON=$(echo "$STATE_TYPES" | jq -R 'split(",") | map(gsub("^\\s+|\\s+$"; ""))')
+
+# Start building the filter object
+FILTER=$(jq -n \
+    --argjson states "$STATE_JSON" \
+    --arg label "$LABEL" \
+    '{
+        labels: { some: { name: { eq: $label } } },
+        state: { type: { in: $states } }
+    }')
+
+# Add optional filters
+if [[ -n "$TEAM" ]]; then
+    FILTER=$(echo "$FILTER" | jq --arg team "$TEAM" '. + { team: { key: { eq: $team } } }')
+fi
+
+if [[ -n "$PROJECT" ]]; then
+    FILTER=$(echo "$FILTER" | jq --arg proj "$PROJECT" '. + { project: { name: { eq: $proj } } }')
+fi
+
+if [[ -n "$ASSIGNEE" ]]; then
+    FILTER=$(echo "$FILTER" | jq --arg user "$ASSIGNEE" '. + { assignee: { displayName: { eq: $user } } }')
+elif [[ "$UNASSIGNED" == true ]]; then
+    FILTER=$(echo "$FILTER" | jq '. + { assignee: { null: true } }')
+fi
+
+if [[ -n "$PRIORITY" ]]; then
+    FILTER=$(echo "$FILTER" | jq --argjson pri "$PRIORITY" '. + { priority: { eq: $pri } }')
+fi
+
+# ── GraphQL query ───────────────────────────────────────────────────
+read -r -d '' QUERY <<'GRAPHQL' || true
+query($filter: IssueFilter!, $limit: Int!) {
+  issues(filter: $filter, first: $limit) {
+    nodes {
+      identifier
+      title
+      priority
+      priorityLabel
+      url
+      state { name type }
+      labels { nodes { name } }
+      assignee { name displayName }
+      project { name }
+      projectMilestone { name }
+      parent { identifier title }
+      inverseRelations {
+        nodes {
+          type
+          issue {
+            identifier
+            title
+            state { name type }
+          }
+        }
+      }
+    }
+  }
+}
+GRAPHQL
+
+VARIABLES=$(jq -n \
+    --argjson filter "$FILTER" \
+    --argjson limit "$LIMIT" \
+    '{ filter: $filter, limit: $limit }')
+
+# ── execute query ───────────────────────────────────────────────────
+RAW=$(echo "$QUERY" | linear api --variables-json "$VARIABLES")
+
+# Check for errors
+if echo "$RAW" | jq -e '.errors' &>/dev/null; then
+    echo "GraphQL errors:" >&2
+    echo "$RAW" | jq '.errors' >&2
+    exit 1
+fi
+
+# ── client-side filtering: separate ready vs blocked ────────────────
+#
+# An issue is "blocked" if it has any inverseRelation of type "blocks"
+# where the blocking issue's state type is NOT completed/canceled/duplicate.
+# In Linear's relation model:
+#   - issue A blocks issue B → B.inverseRelations contains { type: "blocks", issue: A }
+RESULT=$(echo "$RAW" | jq '
+    .data.issues.nodes | map(
+        . + {
+            activeBlockers: [
+                .inverseRelations.nodes[]
+                | select(.type == "blocks")
+                | select(.issue.state.type |
+                    IN("completed", "canceled", "duplicate") | not)
+                | {
+                    identifier: .issue.identifier,
+                    title: .issue.title,
+                    state: .issue.state.name
+                }
+            ]
+        }
+    ) | {
+        ready: [.[] | select(.activeBlockers | length == 0)],
+        blocked: [.[] | select(.activeBlockers | length > 0)]
+    }
+')
+
+# ── output ──────────────────────────────────────────────────────────
+if [[ "$JSON_OUTPUT" == true ]]; then
+    if [[ "$INCLUDE_BLOCKED" == true ]]; then
+        echo "$RESULT" | jq '.'
+    else
+        echo "$RESULT" | jq '{ ready: .ready, blockedCount: (.blocked | length) }'
+    fi
+    exit 0
+fi
+
+# Pretty output
+READY_COUNT=$(echo "$RESULT" | jq '.ready | length')
+BLOCKED_COUNT=$(echo "$RESULT" | jq '.blocked | length')
+
+if [[ "$READY_COUNT" -eq 0 && "$BLOCKED_COUNT" -eq 0 ]]; then
+    echo "No issues found matching filters (label: $LABEL)."
+    exit 0
+fi
+
+if [[ "$READY_COUNT" -eq 0 ]]; then
+    echo "No ready issues (all $BLOCKED_COUNT matching issues are blocked)."
+    if [[ "$INCLUDE_BLOCKED" != true ]]; then
+        echo "Use --include-blocked to see them."
+    fi
+else
+    echo "Ready issues (label: $LABEL):"
+    echo ""
+    echo "$RESULT" | jq -r '
+        .ready[] |
+        "  \(.identifier)  [\(.priorityLabel)]  \(.title)\n" +
+        "          State: \(.state.name)" +
+        (if .project then " | Project: \(.project.name)" else "" end) +
+        (if .assignee then " | Assigned: \(.assignee.displayName // .assignee.name)" else " | Unassigned" end) +
+        (if .parent then " | Parent: \(.parent.identifier)" else "" end) +
+        "\n"
+    '
+fi
+
+if [[ "$BLOCKED_COUNT" -gt 0 ]]; then
+    if [[ "$INCLUDE_BLOCKED" == true ]]; then
+        echo ""
+        echo "Blocked issues:"
+        echo ""
+        echo "$RESULT" | jq -r '
+            .blocked[] |
+            "  \(.identifier)  [\(.priorityLabel)]  \(.title)\n" +
+            "          Blocked by: " +
+            ([.activeBlockers[] |
+                "\(.identifier) (\(.title)) [\(.state)]"
+            ] | join(", ")) +
+            "\n"
+        '
+    else
+        echo "Blocked: $BLOCKED_COUNT issue(s) hidden (use --include-blocked to show)"
+    fi
+fi

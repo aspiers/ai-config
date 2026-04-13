@@ -254,7 +254,8 @@
     ]
   },
   "enabledPlugins": {
-    "beads@beads-marketplace": true
+    "beads@beads-marketplace": true,
+    "ruby-lsp@claude-plugins-official": true
   },
   "alwaysThinkingEnabled": false,
   "feedbackSurveyState": {

@@ -258,8 +258,13 @@
     "ruby-lsp@claude-plugins-official": true
   },
   "alwaysThinkingEnabled": false,
+  "effortLevel": "medium",
+  "voiceEnabled": true,
+  "voice": {
+    "enabled": true,
+    "mode": "hold"
+  },
   "feedbackSurveyState": {
     "lastShownTime": 1754076415986
-  },
-  "effortLevel": "medium"
+  }
 }

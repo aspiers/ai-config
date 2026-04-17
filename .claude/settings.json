@@ -255,7 +255,16 @@
   },
   "enabledPlugins": {
     "beads@beads-marketplace": true,
-    "ruby-lsp@claude-plugins-official": true
+    "ruby-lsp@claude-plugins-official": true,
+    "caveman@caveman": true
+  },
+  "extraKnownMarketplaces": {
+    "caveman": {
+      "source": {
+        "source": "github",
+        "repo": "JuliusBrussee/caveman"
+      }
+    }
   },
   "alwaysThinkingEnabled": false,
   "effortLevel": "medium",

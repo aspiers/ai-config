@@ -208,6 +208,7 @@
   },
   "plugin": [
     "@franlol/opencode-md-table-formatter",
+    "opencode-claude-auth",
     "opencode-gemini-auth",
     "opencode-pty"
   ],

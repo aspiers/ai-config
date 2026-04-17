@@ -48,6 +48,26 @@
 
 - Ask for clarifications early and often
 
+- **Use the AskUserQuestion tool for choices, not plain prose.** When I need
+  the user to make a decision between concrete options — scope ("which PR?"),
+  approach ("option A or B?"), placement ("where should this section go?"),
+  whether to include something in scope, etc. — use the **AskUserQuestion**
+  tool with multiple-choice options rather than asking in plain text at the
+  end of a chat message. Plain-text questions buried at the end of long
+  messages are easy to miss and don't surface the option space clearly.
+  - AskUserQuestion can be loaded via ToolSearch (`select:AskUserQuestion`)
+    if not already in scope. Fetch the schema once per session.
+  - One AskUserQuestion call carries up to 4 questions — batch related
+    decisions instead of asking one at a time.
+  - If recommending an option, make it the first option and append
+    "(Recommended)" to its label.
+  - Plain prose is fine for follow-up clarifications that depend on a prior
+    answer, for explaining findings, or for flagging risks. It is NOT
+    appropriate as the primary mechanism for decision-gathering.
+  - If the option space is genuinely open-ended (e.g. naming), prose is
+    fine — but think hard before deciding it's truly open-ended. Most
+    "open-ended" questions actually have 2–4 obvious candidates.
+
 - Write clean, modular code with modern syntax and type annotations
 
 - Design for simplicity (simplest thing that could work, KISS)

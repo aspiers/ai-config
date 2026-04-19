@@ -7,7 +7,7 @@ allowed-tools: Bash(bd remember:*)
 Run the following command to store the memory:
 
 ```
-bd remember "$ARGUMENTS" --json
+bd remember "$ARGUMENTS"
 ```
 
 Report the result back to the user.

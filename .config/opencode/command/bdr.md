@@ -5,7 +5,7 @@ description: Store a persistent memory/learning via beads
 Run the following command to store the memory:
 
 ```
-bd remember "$ARGUMENTS" --json
+bd remember "$ARGUMENTS"
 ```
 
 Report the result back to the user.

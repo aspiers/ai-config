@@ -1,0 +1,216 @@
+#!/usr/bin/env -S node --env-file=.env
+// Xero OAuth2 flow helper
+//
+// Reads XERO_CLIENT_ID, XERO_CLIENT_SECRET, and optionally
+// XERO_REFRESH_TOKEN from .env (via --env-file).
+// Must be run from the repo root.
+//
+// Usage:
+//   ./xero-oauth           # full OAuth flow, read-only scopes (browser required)
+//   ./xero-oauth --write   # full OAuth flow, read+write scopes
+//   ./xero-oauth --refresh # refresh using stored refresh token
+
+import http from 'http';
+import https from 'https';
+import fs from 'fs';
+import path from 'path';
+import { spawn } from 'child_process';
+import { URL } from 'url';
+
+const OPENCODE_JSON = path.resolve('opencode.json');
+const MCP_JSON = path.resolve('.mcp.json');
+const ENV_FILE = path.resolve('.env');
+
+const REDIRECT_URI = 'http://localhost:8080/callback';
+
+// Scopes reference: https://developer.xero.com/documentation/guides/oauth2/scopes/
+// OpenAPI spec (uses deprecated broad scopes): https://github.com/XeroAPI/Xero-OpenAPI/blob/master/xero_accounting.yaml
+const BASE_SCOPES = ['openid', 'offline_access'];
+
+const ACCOUNTING_SCOPES_RO = [
+  'accounting.contacts.read',
+  'accounting.settings.read',
+  'accounting.invoices.read',
+  'accounting.payments.read',
+  'accounting.banktransactions.read',
+  'accounting.manualjournals.read',
+  'accounting.reports.aged.read',
+  'accounting.reports.balancesheet.read',
+  'accounting.reports.profitandloss.read',
+  'accounting.reports.trialbalance.read',
+];
+
+const ACCOUNTING_SCOPES_RW = [
+  'accounting.contacts',
+  'accounting.settings',
+  'accounting.invoices',
+  'accounting.payments',
+  'accounting.banktransactions',
+  'accounting.manualjournals',
+  'accounting.reports.aged.read',
+  'accounting.reports.balancesheet.read',
+  'accounting.reports.profitandloss.read',
+  'accounting.reports.trialbalance.read',
+];
+
+// Exchange tokens with Xero identity server
+function fetchTokens(credentials, body) {
+  return new Promise((resolve, reject) => {
+    const req = https.request({
+      hostname: 'identity.xero.com',
+      path: '/connect/token',
+      method: 'POST',
+      headers: {
+        'Authorization': `Basic ${credentials}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Length': Buffer.byteLength(body),
+      },
+    }, (res) => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => resolve({ status: res.statusCode, body: data }));
+    });
+    req.on('error', reject);
+    req.write(body);
+    req.end();
+  });
+}
+
+// Write access_token to opencode.json and refresh_token to .env
+function saveTokens(tokens) {
+  const config = JSON.parse(fs.readFileSync(OPENCODE_JSON, 'utf8'));
+  config.mcp.xero.environment.XERO_CLIENT_BEARER_TOKEN = tokens.access_token;
+  fs.writeFileSync(OPENCODE_JSON, JSON.stringify(config, null, 2) + '\n');
+  console.log('opencode.json updated with new bearer token.');
+
+  const mcp = JSON.parse(fs.readFileSync(MCP_JSON, 'utf8'));
+  mcp.mcpServers.xero.env = { XERO_CLIENT_BEARER_TOKEN: tokens.access_token };
+  fs.writeFileSync(MCP_JSON, JSON.stringify(mcp, null, 2) + '\n');
+  console.log('.mcp.json updated with new bearer token.');
+
+  if (tokens.refresh_token) {
+    let env = fs.readFileSync(ENV_FILE, 'utf8');
+    if (env.includes('XERO_REFRESH_TOKEN=')) {
+      env = env.replace(/^XERO_REFRESH_TOKEN=.*/m, `XERO_REFRESH_TOKEN=${tokens.refresh_token}`);
+    } else {
+      env = env.trimEnd() + `\nXERO_REFRESH_TOKEN=${tokens.refresh_token}\n`;
+    }
+    fs.writeFileSync(ENV_FILE, env);
+    console.log('.env updated with new refresh token.');
+  }
+
+  console.log(`Note: access_token expires in ${tokens.expires_in} seconds (~30 min).`);
+  console.log('Restart Claude Code or OpenCode to pick up the new token.');
+}
+
+async function refresh(credentials) {
+  const refreshToken = process.env.XERO_REFRESH_TOKEN;
+  if (!refreshToken) {
+    console.error('Error: XERO_REFRESH_TOKEN not found in .env. Run without --refresh first.');
+    process.exit(1);
+  }
+
+  console.log('Refreshing access token...');
+  const body = new URLSearchParams({
+    grant_type: 'refresh_token',
+    refresh_token: refreshToken,
+  }).toString();
+
+  const tokenRes = await fetchTokens(credentials, body);
+  const tokens = JSON.parse(tokenRes.body);
+
+  if (!tokens.access_token) {
+    console.error('Error refreshing token:', tokenRes.body);
+    process.exit(1);
+  }
+
+  saveTokens(tokens);
+}
+
+async function fullOAuthFlow(credentials, scopes) {
+  const authUrl = new URL('https://login.xero.com/identity/connect/authorize');
+  authUrl.searchParams.set('response_type', 'code');
+  authUrl.searchParams.set('client_id', process.env.XERO_CLIENT_ID);
+  authUrl.searchParams.set('redirect_uri', REDIRECT_URI);
+  authUrl.searchParams.set('scope', scopes);
+  authUrl.searchParams.set('state', 'xero-mcp');
+
+  const url = authUrl.toString();
+  console.log('\n=== Xero OAuth Flow ===\n');
+  console.log('Make sure http://localhost:8080/callback is added as a redirect URI in your Xero app.\n');
+  console.log('Opening browser...');
+  console.log(url);
+  spawn('open', [url], { detached: true, stdio: 'ignore' }).unref();
+  console.log('\nWaiting for callback on port 8080...\n');
+
+  const server = http.createServer(async (req, res) => {
+    const url = new URL(req.url, 'http://localhost:8080');
+    if (url.pathname !== '/callback') {
+      res.end('Not found');
+      return;
+    }
+
+    const code = url.searchParams.get('code');
+    if (!code) {
+      res.end('Error: no code in callback');
+      return;
+    }
+
+    const body = new URLSearchParams({
+      grant_type: 'authorization_code',
+      code,
+      redirect_uri: REDIRECT_URI,
+    }).toString();
+
+    const tokenRes = await fetchTokens(credentials, body);
+    const tokens = JSON.parse(tokenRes.body);
+
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end('Success! Check your terminal.');
+
+    server.close();
+    console.log('');
+    saveTokens(tokens);
+  });
+
+  server.listen(8080);
+}
+
+async function main() {
+  const clientId = process.env.XERO_CLIENT_ID;
+  const clientSecret = process.env.XERO_CLIENT_SECRET;
+
+  if (!clientId || !clientSecret) {
+    console.error('Error: XERO_CLIENT_ID and XERO_CLIENT_SECRET must be set in .env');
+    process.exit(1);
+  }
+
+  const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
+
+  const writeMode = process.argv.includes('--write');
+  const refreshMode = process.argv.includes('--refresh');
+
+  if (writeMode && refreshMode) {
+    console.error('Error: --write and --refresh cannot be combined.');
+    console.error('--refresh reuses the scopes from the original authorization.');
+    console.error('To switch scopes, run a full OAuth flow: ./xero-oauth --write');
+    process.exit(1);
+  }
+
+  if (refreshMode) {
+    await refresh(credentials);
+  } else {
+    const accountingScopes = writeMode ? ACCOUNTING_SCOPES_RW : ACCOUNTING_SCOPES_RO;
+    const scopes = [...BASE_SCOPES, ...accountingScopes].join(' ');
+
+    if (writeMode) {
+      console.log('Using read+write scopes.');
+    } else {
+      console.log('Using read-only scopes (pass --write for read+write).');
+    }
+
+    await fullOAuthFlow(credentials, scopes);
+  }
+}
+
+main();

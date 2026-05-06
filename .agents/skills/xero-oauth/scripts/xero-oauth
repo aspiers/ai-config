@@ -176,7 +176,33 @@ async function fullOAuthFlow(credentials, scopes) {
   server.listen(8080);
 }
 
+function printUsage() {
+  process.stdout.write(`xero-oauth — refresh or obtain a Xero OAuth2 bearer token
+
+Usage:
+  xero-oauth              Run the full OAuth flow with read-only scopes (browser required).
+  xero-oauth --write      Run the full OAuth flow with read+write scopes.
+  xero-oauth --refresh    Refresh the bearer token using the stored XERO_REFRESH_TOKEN.
+  xero-oauth -h, --help   Show this help and exit.
+
+Reads:
+  .env                    XERO_CLIENT_ID, XERO_CLIENT_SECRET, and (for --refresh) XERO_REFRESH_TOKEN.
+
+Writes (in the current working directory):
+  opencode.json           mcp.xero.environment.XERO_CLIENT_BEARER_TOKEN
+  .mcp.json               mcpServers.xero.env.XERO_CLIENT_BEARER_TOKEN
+  .env                    XERO_REFRESH_TOKEN (rotated)
+
+Restart your agent session after running so the new bearer token is picked up by the Xero MCP server.
+`);
+}
+
 async function main() {
+  if (process.argv.includes('-h') || process.argv.includes('--help')) {
+    printUsage();
+    return;
+  }
+
   const clientId = process.env.XERO_CLIENT_ID;
   const clientSecret = process.env.XERO_CLIENT_SECRET;
 
@@ -189,6 +215,14 @@ async function main() {
 
   const writeMode = process.argv.includes('--write');
   const refreshMode = process.argv.includes('--refresh');
+
+  const knownFlags = new Set(['--write', '--refresh', '-h', '--help']);
+  const unknown = process.argv.slice(2).filter(a => !knownFlags.has(a));
+  if (unknown.length > 0) {
+    console.error(`Error: unknown argument(s): ${unknown.join(' ')}`);
+    console.error('Run with --help for usage.');
+    process.exit(2);
+  }
 
   if (writeMode && refreshMode) {
     console.error('Error: --write and --refresh cannot be combined.');

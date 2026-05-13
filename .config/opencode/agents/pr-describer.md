@@ -15,7 +15,7 @@ permission:
     "*": "ask"
     "git *": "allow"
     "mkdir *": "allow"
-    "~/.agents/skills/describing-PRs/scripts/find-merge-base.py *": "allow"
+    "~/.agents/skills/describing-prs/scripts/find-merge-base.py *": "allow"
 ---
 
-Use the `describing-PRs` skill to generate a PR description.
+Use the `describing-prs` skill to generate a PR description.

@@ -1,0 +1,114 @@
+{
+  "lastChangelogVersion": "0.74.0",
+  "defaultProvider": "openai-codex",
+  "defaultModel": "gpt-5.5",
+  "defaultThinkingLevel": "medium",
+  "showHardwareCursor": false,
+  "theme": "dark",
+  "packages": [
+    "npm:pi-mcp-adapter",
+    "npm:pi-markdown-preview",
+    "npm:@juicesharp/rpiv-btw",
+    "npm:pi-ask-user",
+    "npm:pi-agent-browser-native",
+    "npm:pi-mermaid",
+    "npm:pi-session-context",
+    "npm:pi-web-access",
+    "npm:pi-prompt-shelf",
+    "npm:context-mode",
+    "npm:@latentminds/pi-quotas",
+    "npm:@aliou/pi-processes",
+    "npm:@zenobius/pi-worktrees",
+    "npm:pi-tmux-window-name",
+    "npm:pi-workbench",
+    "npm:@thinkscape/pi-status",
+    "npm:@vanillagreen/pi-skills-manager",
+    {
+      "source": "npm:@vanillagreen/pi-tool-renderer",
+      "extensions": []
+    },
+    "npm:@vanillagreen/pi-session-manager",
+    "npm:@vanillagreen/pi-extension-manager",
+    "npm:pi-resource-center",
+    "npm:@ifi/oh-pi-themes",
+    {
+      "source": "npm:amp-themes",
+      "extensions": [
+        "-extensions/amp-editor.ts",
+        "-extensions/amp-user-message.ts",
+        "-node_modules/pi-tool-display/index.ts"
+      ],
+      "skills": [
+        "-skills/release-amp-themes/SKILL.md",
+        "-skills/configure-amp-themes/SKILL.md"
+      ]
+    },
+    "npm:@sherif-fanous/pi-catppuccin",
+    "npm:@sherif-fanous/pi-theme-sync"
+  ],
+  "hideThinkingBlock": false,
+  "powerline": {
+    "preset": "ascii",
+    "fixedEditor": false
+  },
+  "enableSkillCommands": true,
+  "treeFilterMode": "user-only",
+  "piStatus": {
+    "separator": " ",
+    "components": [
+      {
+        "id": "spinner",
+        "enabled": true
+      },
+      {
+        "id": "pi_symbol",
+        "enabled": false
+      },
+      {
+        "id": "session",
+        "enabled": true
+      },
+      {
+        "id": "cwd",
+        "enabled": false
+      },
+      {
+        "id": "model",
+        "enabled": false
+      },
+      {
+        "id": "thinking",
+        "enabled": false
+      },
+      {
+        "id": "tokens",
+        "enabled": false
+      },
+      {
+        "id": "turn",
+        "enabled": false
+      },
+      {
+        "id": "git_branch",
+        "enabled": false
+      },
+      {
+        "id": "tools_count",
+        "enabled": false
+      },
+      {
+        "id": "current_tool",
+        "enabled": false
+      }
+    ],
+    "ghosttySupport": true
+  },
+  "vstack": {
+    "extensionManager": {
+      "disabledItems": [
+        "package:pi-tool-renderer"
+      ],
+      "config": {}
+    }
+  }
+}

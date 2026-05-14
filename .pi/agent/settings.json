@@ -4,7 +4,7 @@
   "defaultModel": "gpt-5.5",
   "defaultThinkingLevel": "medium",
   "showHardwareCursor": false,
-  "theme": "dark",
+  "theme": "catppuccin-mocha",
   "packages": [
     "npm:pi-mcp-adapter",
     "npm:pi-markdown-preview",
@@ -12,7 +12,13 @@
     "npm:pi-ask-user",
     "npm:pi-agent-browser-native",
     "npm:pi-mermaid",
-    "npm:pi-session-context",
+    {
+      "source": "npm:pi-session-context",
+      "extensions": [],
+      "skills": [],
+      "prompts": [],
+      "themes": []
+    },
     "npm:pi-web-access",
     "npm:pi-prompt-shelf",
     "npm:context-mode",
@@ -21,16 +27,30 @@
     "npm:@zenobius/pi-worktrees",
     "npm:pi-tmux-window-name",
     "npm:pi-workbench",
-    "npm:@thinkscape/pi-status",
+    {
+      "source": "https://github.com/aspiers/pi-status@fix/pi-status-title-renames",
+      "extensions": [
+        "+src/index.ts"
+      ]
+    },
     "npm:@vanillagreen/pi-skills-manager",
     {
       "source": "npm:@vanillagreen/pi-tool-renderer",
-      "extensions": []
+      "extensions": [],
+      "skills": [],
+      "prompts": [],
+      "themes": []
     },
     "npm:@vanillagreen/pi-session-manager",
     "npm:@vanillagreen/pi-extension-manager",
     "npm:pi-resource-center",
-    "npm:@ifi/oh-pi-themes",
+    {
+      "source": "npm:@ifi/oh-pi-themes",
+      "extensions": [],
+      "skills": [],
+      "prompts": [],
+      "themes": []
+    },
     {
       "source": "npm:amp-themes",
       "extensions": [
@@ -44,7 +64,12 @@
       ]
     },
     "npm:@sherif-fanous/pi-catppuccin",
-    "npm:@sherif-fanous/pi-theme-sync"
+    "npm:@sherif-fanous/pi-theme-sync",
+    "npm:@siesing/pi-shortcuts",
+    "npm:pi-recap",
+    "npm:@tmustier/pi-session-recap",
+    "npm:@brain0pia/pi-extension-times",
+    "npm:pi-lens"
   ],
   "hideThinkingBlock": false,
   "powerline": {
@@ -108,7 +133,17 @@
       "disabledItems": [
         "package:pi-tool-renderer"
       ],
-      "config": {}
+      "config": {
+        "@vanillagreen/pi-tool-renderer": {
+          "bashOutputMode": "opencode",
+          "enabled": true,
+          "renderMutationTools": true,
+          "pendingStatusAnimation": true
+        },
+        "@vanillagreen/pi-session-manager": {
+          "shortcutKey": "alt+m"
+        }
+      }
     }
   }
 }

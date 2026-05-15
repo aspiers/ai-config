@@ -75,7 +75,9 @@
     },
     "npm:@tmustier/pi-session-recap",
     "npm:@brain0pia/pi-extension-times",
-    "npm:pi-lens"
+    "npm:pi-lens",
+    "npm:@lukemelnik/pi-monitor",
+    "npm:pi-peek"
   ],
   "hideThinkingBlock": false,
   "powerline": {

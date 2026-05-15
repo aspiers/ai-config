@@ -144,10 +144,16 @@
       ],
       "config": {
         "@vanillagreen/pi-tool-renderer": {
-          "bashOutputMode": "opencode",
+          "bashOutputMode": "summary",
           "enabled": true,
           "renderMutationTools": true,
-          "pendingStatusAnimation": true
+          "pendingStatusAnimation": true,
+          "stackToolCalls": false,
+          "stackChildDisplay": "headline",
+          "bashPreviewLines": 80,
+          "readOutputMode": "summary",
+          "searchOutputMode": "count",
+          "toolChrome": "outlines"
         },
         "@vanillagreen/pi-session-manager": {
           "shortcutKey": "alt+m"

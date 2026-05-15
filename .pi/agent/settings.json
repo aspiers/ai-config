@@ -66,7 +66,13 @@
     "npm:@sherif-fanous/pi-catppuccin",
     "npm:@sherif-fanous/pi-theme-sync",
     "npm:@siesing/pi-shortcuts",
-    "npm:pi-recap",
+    {
+      "source": "npm:pi-recap",
+      "extensions": [],
+      "skills": [],
+      "prompts": [],
+      "themes": []
+    },
     "npm:@tmustier/pi-session-recap",
     "npm:@brain0pia/pi-extension-times",
     "npm:pi-lens"
@@ -131,6 +137,7 @@
   "vstack": {
     "extensionManager": {
       "disabledItems": [
+        "package:pi-recap",
         "package:pi-tool-renderer"
       ],
       "config": {

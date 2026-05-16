@@ -34,13 +34,7 @@
       ]
     },
     "npm:@vanillagreen/pi-skills-manager",
-    {
-      "source": "npm:@vanillagreen/pi-tool-renderer",
-      "extensions": [],
-      "skills": [],
-      "prompts": [],
-      "themes": []
-    },
+    "npm:@vanillagreen/pi-tool-renderer",
     "npm:@vanillagreen/pi-session-manager",
     "npm:@vanillagreen/pi-extension-manager",
     "npm:pi-resource-center",
@@ -75,7 +69,7 @@
     },
     "npm:@tmustier/pi-session-recap",
     "npm:@brain0pia/pi-extension-times",
-    "npm:pi-lens",
+    "git:github.com/apmantza/pi-lens",
     "npm:@lukemelnik/pi-monitor",
     "npm:pi-peek"
   ],
@@ -139,8 +133,7 @@
   "vstack": {
     "extensionManager": {
       "disabledItems": [
-        "package:pi-recap",
-        "package:pi-tool-renderer"
+        "package:pi-recap"
       ],
       "config": {
         "@vanillagreen/pi-tool-renderer": {
@@ -153,6 +146,9 @@
           "bashPreviewLines": 80,
           "readOutputMode": "summary",
           "searchOutputMode": "count",
+          "genericToolRenderers": true,
+          "mcpOutputMode": "preview",
+          "mcpPreviewLines": 80,
           "toolChrome": "outlines"
         },
         "@vanillagreen/pi-session-manager": {

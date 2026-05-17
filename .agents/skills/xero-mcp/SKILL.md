@@ -27,3 +27,13 @@ and must be refreshed via the `xero-oauth` helper script.
 That reference covers the `xero-oauth` script, prerequisites (`.env`
 credentials, Xero app registration), the refresh-vs-full-flow choice,
 and which config files get updated.
+
+## Searching for records
+
+The MCP list-* tools paginate at 10 records per page. Absence on page
+1 is **not** absence in Xero. Before concluding a record is missing,
+search by ID directly or page exhaustively.
+
+See [`references/searching-records.md`](references/searching-records.md)
+for the rules around `list-manual-journals`, `list-invoices`,
+`list-bank-transactions`, and `list-contacts`.

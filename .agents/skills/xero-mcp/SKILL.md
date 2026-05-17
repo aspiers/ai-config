@@ -1,20 +1,37 @@
 ---
-name: xero-oauth
-description: Obtain or refresh a Xero OAuth2 bearer token to establish an active Xero MCP session. Use when Xero MCP tools fail with authentication errors, when the token has expired (tokens last ~30 min), or before starting any Xero workflow.
+name: xero-mcp
+description: Use the Xero MCP server — obtain/refresh OAuth2 bearer tokens, troubleshoot authentication, and pick up other operational notes for working with Xero MCP tools. Use when Xero MCP tools fail with authentication errors, when the bearer token has expired (tokens last ~30 min), before starting any Xero workflow, or for general guidance on Xero MCP usage.
 ---
 
-# Xero OAuth
+# Xero MCP
 
-Ensures the Xero MCP server has a valid bearer token.
+Covers usage of the Xero MCP server, including authentication
+(OAuth2 bearer tokens) and related operational notes.
 
-## Script
+For browser-driven automation of the Xero web UI (not via MCP), see the
+separate [`xero-browser`](../xero-browser/SKILL.md) skill instead.
+
+## Authentication (OAuth2 bearer tokens)
+
+The Xero MCP server requires a valid bearer token
+(`XERO_CLIENT_BEARER_TOKEN`) in its environment. Tokens last ~30 minutes;
+refresh before or after expiry using the script below.
+
+### When to (re)authenticate
+
+- Xero MCP tools return authentication/authorization errors
+- Starting a Xero workflow and unsure if the token is current
+- Token has expired (~30 minute lifetime)
+- After revoking and re-authorizing the Xero app
+
+### Script
 
 The implementation lives at [`scripts/xero-oauth`](scripts/xero-oauth)
 within this skill directory. Either invoke it by absolute path, or
 symlink it onto your `PATH`:
 
 ```bash
-ln -s ~/.claude/skills/xero-oauth/scripts/xero-oauth ~/bin/xero-oauth
+ln -s ~/.claude/skills/xero-mcp/scripts/xero-oauth ~/bin/xero-oauth
 ```
 
 All commands below assume `xero-oauth` resolves on `PATH`. Run from a
@@ -22,14 +39,7 @@ project directory that has `.env`, `opencode.json`, and/or `.mcp.json`
 in its working directory — the script always reads/writes those at
 `$PWD`.
 
-## When to Use
-
-- Xero MCP tools return authentication/authorization errors
-- Starting a Xero workflow and unsure if token is current
-- Token has expired (they last ~30 minutes)
-- After revoking and re-authorizing the Xero app
-
-## How It Works
+### How it works
 
 `xero-oauth` reads credentials from `.env` and writes:
 
@@ -45,7 +55,7 @@ no configuration switch is required.
 
 After running, **restart the agent session** to pick up the new token.
 
-## Prerequisite
+### Prerequisite
 
 Register your own Xero OAuth2 app at
 <https://developer.xero.com/app/manage> with redirect URI
@@ -58,9 +68,9 @@ XERO_CLIENT_SECRET=<your-xero-app-client-secret>
 XERO_REFRESH_TOKEN=<refresh-token>   # only needed for --refresh
 ```
 
-## Usage
+### Usage
 
-### Token refresh (no browser — preferred)
+#### Token refresh (no browser — preferred)
 
 Use when `XERO_REFRESH_TOKEN` is already in `.env`:
 
@@ -68,7 +78,7 @@ Use when `XERO_REFRESH_TOKEN` is already in `.env`:
 xero-oauth --refresh
 ```
 
-### Full OAuth flow (browser required)
+#### Full OAuth flow (browser required)
 
 Use for first-time authorization or after revoking the app:
 
@@ -89,7 +99,7 @@ bank transactions, manual journals, etc.).
 > Xero → 3×3 dot icon (top right) → **Manage connected apps** → disconnect,
 > then re-run.
 
-## After Running
+### After running
 
 Restart the agent session (Claude Code or OpenCode) so the new
 `XERO_CLIENT_BEARER_TOKEN` is picked up by the Xero MCP server.

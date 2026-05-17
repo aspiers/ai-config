@@ -7,6 +7,10 @@ description: General Xero browser automation notes. Use when automating any Xero
 
 General notes for automating Xero with `agent-browser`.
 
+For Xero MCP server usage (OAuth, list-* tools, searching records by ID
+vs. pagination), see the separate [`xero-mcp`](../xero-mcp/SKILL.md)
+skill instead.
+
 ## Fiduciary Responsibility
 
 This is accounting with fiduciary responsibility. **Always stop and report

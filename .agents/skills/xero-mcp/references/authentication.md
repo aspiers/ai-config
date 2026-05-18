@@ -14,12 +14,9 @@ refresh before or after expiry using the script below.
 ## Script
 
 The implementation lives at [`../scripts/xero-oauth`](../scripts/xero-oauth)
-within this skill directory. Either invoke it by absolute path, or
-symlink it onto your `PATH`:
-
-```bash
-ln -s ~/.claude/skills/xero-mcp/scripts/xero-oauth ~/bin/xero-oauth
-```
+within this skill directory. The `ai-config` repo also keeps a
+`bin/xero-oauth` symlink pointing at it; stowing the repo (`mr restow`)
+places that symlink on `PATH` as `~/bin/xero-oauth`.
 
 All commands below assume `xero-oauth` resolves on `PATH`. Run from a
 project directory that has `.env`, `opencode.json`, and/or `.mcp.json`

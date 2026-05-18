@@ -326,6 +326,25 @@ The journal UUID remains unchanged after editing. The sequential journal number 
 increments to a new number (e.g. #11793) as a display artefact, but the old number no longer
 exists — Xero edits in place. There are no duplicates or voided entries created.
 
+**CRITICAL: Never refer to a manual journal by its sequential `#NNNNN` number
+in notes, todos, commit messages, or any persisted artefact.** That number is
+unstable — every edit-in-place renumbers it, so a doc that says "#11799" today
+points at nothing tomorrow.
+
+**The durable identifier is the full UUID** (e.g.
+`deadbeef-0000-4000-8000-000000000000`). Every persisted reference to a manual
+journal must include either the full UUID or — preferably — the full
+click-through URL `https://go.xero.com/Journal/View.aspx?invoiceID=<full-uuid>`,
+because you cannot reconstruct the URL without the full UUID anyway.
+
+The **truncated UUID prefix** (first segment, e.g. `deadbeef`) is purely a
+convenient shorthand for repeated mentions of the same journal within a
+discussion — to avoid repeating the long form once it has been introduced. It
+is not a substitute for the full UUID/URL: the durable record must always
+contain the full form somewhere nearby (typically the first time the journal
+is mentioned). The sequential `#NNNNN` is acceptable as transient context
+inside a single conversation, but never write it down anywhere durable.
+
 ### ExtJS autocomplete dropdowns (general)
 
 Xero uses ExtJS for many autocomplete/combo dropdowns throughout the application,

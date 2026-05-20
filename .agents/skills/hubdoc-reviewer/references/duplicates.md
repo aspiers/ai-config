@@ -79,7 +79,34 @@ duplicates are resolved.
 
 ## Trashing a document
 
-Click the Delete button via JS (it has class `delete-btn action`):
+### From within the duplicates drawer (preferred)
+
+Each `.duplicate-list-item` in the drawer has a `button.move-to-trash`.
+Clicking it trashes that specific doc **silently** — there is no
+confirmation dialog. Target by `data-dup-docid`:
+
+```bash
+agent-browser eval --stdin <<'EOF'
+(function() {
+  const docId = '903642305';
+  const item = document.querySelector('.duplicate-list-item[data-dup-docid="' + docId + '"]');
+  if (!item) return 'no item';
+  item.querySelector('button.move-to-trash').click();
+  return 'trashed ' + docId;
+})()
+EOF
+```
+
+**Caveat — stale list cache**: After Move-To-Trash, the Review tab's
+left-panel doc list may still show the trashed document. The main pane
+also stays on its old fields. Switching to another tab (e.g. Processing)
+and back to Review refreshes the list. A full `F5` reload does **not**
+reliably refresh it on its own — tab-switch is more reliable.
+
+### From the main editor (top-right Delete link)
+
+Use this when you want to trash the *currently-open* doc, not a duplicate
+in the drawer. It has class `delete-btn action`:
 
 ```bash
 agent-browser eval --stdin <<'EOF'

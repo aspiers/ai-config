@@ -109,6 +109,7 @@ another tenant.
 | Downloading and reading Hubdoc PDFs                           | [references/downloading.md](references/downloading.md)     |
 | Searching for documents                                       | [references/searching.md](references/searching.md)         |
 | End-to-end review-tab process (per-document workflow)         | [references/review-process.md](references/review-process.md) |
+| Duplicate-document detection, decision, trashing, drawer close | [references/duplicates.md](references/duplicates.md)       |
 | Failed-tab processing (validation errors and re-publishing)   | [references/failed-tab.md](references/failed-tab.md)       |
 
 Load the relevant reference for the specific subtask. The review-process

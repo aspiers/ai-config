@@ -63,61 +63,14 @@ items[1]?.closest('a')?.click();
 EVALEOF
 ```
 
-**Duplicates when searching**: When using the Hubdoc search box rather than
-browsing the Review tab, duplicates do NOT show a warning banner — they simply
-appear as multiple items in the left panel with the same supplier/date/amount.
-Always inspect the left panel for multiple entries from the same supplier before
-proceeding.
+Before reading fields, check if there is a "Potential Duplicate Document"
+warning banner with a "Show Duplicates" button visible, **or** (when
+arriving via the search box) multiple entries from the same supplier in
+the left panel.
 
-Before reading fields, check if there is a "Potential Duplicate Document" warning banner
-with a "Show Duplicates" button visible. The "Duplicate Documents" heading is always
-present in the DOM (hidden) — do **not** use its presence as an indicator. Only act
-if the warning banner and "Show Duplicates" button are actually visible.
-If so, click "Show Duplicates" and investigate **before doing anything else**.
-
-For each duplicate shown:
-
-- Note the supplier, date, amount, due date, and status icon (green
-  tick = archived, warning = unpublished)
-
-- Present the full details to the user and ask them to review, using a
-  table like this example:
-
-  | # | Doc ID    | Type                 | Invoice #                         | Date         | Amount     | Due Date     | Status                  |
-  |---|-----------|----------------------|-----------------------------------|--------------|------------|--------------|-------------------------|
-  | 1 | 867916854 | **Receipt** (paid)   | HMKGXYIU-0001, Receipt# 2661-7468 | Jan 28, 2026 | $21.23 USD | —            | ⚠ unpublished (current) |
-  | 2 | 867916848 | **Invoice** (unpaid) | HMKGXYIU-0001                     | Jan 28, 2026 | $21.23 USD | Jan 28, 2026 | ✓ published             |
-
-- In general, receipts are preferred over invoices as they include
-  proof of payment.  If both are unpublished, suggest keeping the
-  receipt and trashing the invoice.
-
-- If one duplicate is already published and the other is not, suggest
-  moving the unpublished one(s) to trash — but **wait for explicit
-  user confirmation before doing so**.  Exception: if the
-  already-published one is an invoice and the unpublished one is a
-  receipt, it is not worth switching — just trash the receipt.
-
-- Only proceed with reviewing/publishing the current document once
-  duplicates are resolved
-
-#### Trashing a document
-
-Click the Delete button via JS (it has class `delete-btn action`):
-
-```bash
-agent-browser eval --stdin <<'EVALEOF'
-document.querySelector('a.delete-btn.action')?.click();
-EVALEOF
-```
-
-A confirmation dialog appears. Use `snapshot -i` to find the OK ref — it
-appears as `link "OK"` (not a `<button>`), then click it:
-
-```bash
-agent-browser snapshot -i
-agent-browser click @eN  # where @eN is the "OK" link ref
-```
+If either applies, see [`duplicates.md`](duplicates.md) for the full
+detection / investigation / decision / trash / drawer-close workflow.
+Resolve duplicates **before** doing anything else on the current document.
 
 ### 3. For each document
 

@@ -180,5 +180,6 @@
         }
       }
     }
-  }
+  },
+  "steeringMode": "all"
 }

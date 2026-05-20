@@ -4,9 +4,11 @@
 
 Usage: fit-viewport.py [bottom_margin]   # default 50
 
-No probe / resize loop — derives Chromium's chrome overhead from the
-current window's inner vs outer dimensions, then issues one
-``agent-browser set viewport`` call.
+Derives Chromium's chrome overhead from the current window's inner vs
+outer dimensions, then issues one ``agent-browser set viewport`` call.
+Verifies the result and corrects once if the initial overhead reading
+disagreed with reality (rare — happens if inner dims were stale at
+read time).
 """
 import json
 import subprocess
@@ -35,17 +37,28 @@ def window_metrics():
     raise RuntimeError(f"could not parse metrics from: {out!r}")
 
 
+def overhead():
+    m = window_metrics()
+    return (round(m["ow"] - m["iw"] * m["dpr"]),
+            round(m["oh"] - m["ih"] * m["dpr"]))
+
+
 def main():
     bottom_margin = int(sys.argv[1]) if len(sys.argv) > 1 else 50
     sw, sh_ = screen_dims()
-    m = window_metrics()
-    over_w = round(m["ow"] - m["iw"] * m["dpr"])
-    over_h = round(m["oh"] - m["ih"] * m["dpr"])
     target_w, target_h = sw, sh_ - bottom_margin
+    over_w, over_h = overhead()
     set_w, set_h = target_w - over_w, target_h - over_h
     print(f"screen {sw}x{sh_}, chrome overhead +{over_w}x+{over_h}, "
           f"setting viewport {set_w}x{set_h}")
     sh(["agent-browser", "set", "viewport", str(set_w), str(set_h)])
+
+    new_over_w, new_over_h = overhead()
+    if (new_over_w, new_over_h) != (over_w, over_h):
+        set_w, set_h = target_w - new_over_w, target_h - new_over_h
+        print(f"correcting: actual overhead +{new_over_w}x+{new_over_h}, "
+              f"setting viewport {set_w}x{set_h}")
+        sh(["agent-browser", "set", "viewport", str(set_w), str(set_h)])
 
 
 if __name__ == "__main__":

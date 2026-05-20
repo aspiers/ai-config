@@ -83,7 +83,19 @@
     "npm:@brain0pia/pi-extension-times",
     "git:github.com/apmantza/pi-lens",
     "npm:@lukemelnik/pi-monitor",
-    "npm:pi-peek"
+    "npm:pi-peek",
+    "git:github.com/gotgenes/pi-packages",
+    {
+      "source": "npm:@gotgenes/pi-permission-system",
+      "extensions": [],
+      "skills": [],
+      "prompts": [],
+      "themes": []
+    },
+    "npm:@gotgenes/pi-github-tools",
+    "npm:@gotgenes/pi-autoformat",
+    "npm:pi-sandbox",
+    "npm:@spences10/pi-skill-importer"
   ],
   "hideThinkingBlock": false,
   "powerline": {

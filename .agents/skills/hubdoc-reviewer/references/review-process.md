@@ -345,22 +345,32 @@ publish speculatively.
 to ask the user multiple questions at once — for example when a document needs
 guidance on supplier, currency, account code, or document type.
 
+Use a three-column table:
+
+- **Field** — the field name.
+- **Previous** — the value before any edits, prefixed with ✅ if no change is
+  needed for that field, or ❌ if a change was required.
+- **New** — the new value if changed; leave blank if unchanged.
+
 Example of the ideal summary format:
 
 **Anthropic Receipt — Jan 26, 2026**
 
-| Field            | Value                                                   |
-| ---------------- | ------------------------------------------------------- |
-| Document Type    | Receipt *(was: Choose — set)*                           |
-| Mark as Paid     | ✓ checked *(was: unchecked — set)*                      |
-| Supplier         | Anthropic                                               |
-| Invoice / Ref. # | 2132-6089-6259 *(was: empty — set from receipt number)* |
-| Date             | 26-01-2026                                              |
-| Total Amount     | 86.53 GBP                                               |
-| Tax Rate         | No VAT 0%                                               |
-| Account Code     | 463 - IT Software and Consumables                       |
-| Xero Status      | Awaiting Payment *(was: Draft — set)*                   |
-| Xero Contact     | Anthropic *(already set)*                               |
+| Field            | Previous                | New              |
+|------------------|-------------------------|------------------|
+| Document Type    | ❌ Choose               | Receipt          |
+| Mark as Paid     | ❌ ✗ unchecked          | ✓ checked        |
+| Supplier         | ✅ Anthropic            |                  |
+| Invoice / Ref. # | ❌ *(empty)*            | 2132-6089-6259   |
+| Date             | ✅ 26-01-2026           |                  |
+| Total Amount     | ✅ 86.53 GBP            |                  |
+| Tax Rate         | ✅ No VAT 0%            |                  |
+| Account Code     | ✅ 463 - IT Software... |                  |
+| Xero Status      | ❌ Draft                | Awaiting Payment |
+| Xero Contact     | ✅ Anthropic            |                  |
+
+For newly-created Xero contacts, annotate the New column, e.g.
+`OpenAI *(newly created in Xero)*`.
 
 ### 5. Publish the document
 
@@ -407,6 +417,28 @@ EVALEOF
   to the user and ask how to proceed.
 - `status: "not_configured"` → Xero destination was not set up
 - `status: "unknown"` → unexpected state, take a screenshot to investigate
+
+#### Publish appears stuck on "Publishing"
+
+If the publish-state remains `Publishing` (text in `span.publish-state`) for
+30+ seconds with no transition to `publish-success` or `publish-failure`, the
+UI may simply be stale even though the backend publish succeeded. To check
+ground truth, **reload the current Hubdoc tab in place** — do NOT open the
+URL in a new navigation:
+
+```bash
+agent-browser press F5
+agent-browser wait 4000
+```
+
+**Important:** "Reload" means refresh the existing tab via `F5` (or
+`Ctrl+R`). It does **NOT** mean `agent-browser open https://app.hubdoc.com`
+— that's a fresh navigation, not a reload, and can lose tab state or
+re-trigger the All-tab landing page.
+
+After reload, switch back to the Review tab and check whether the document
+is still in the list. If it's gone, the publish succeeded. If still present,
+re-attempt publish or investigate further.
 
 ### 6. Move to the next document
 

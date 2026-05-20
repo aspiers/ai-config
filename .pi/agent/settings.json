@@ -21,7 +21,13 @@
     },
     "npm:pi-web-access",
     "npm:pi-prompt-shelf",
-    "npm:context-mode",
+    {
+      "source": "npm:context-mode",
+      "extensions": [],
+      "skills": [],
+      "prompts": [],
+      "themes": []
+    },
     "npm:@latentminds/pi-quotas",
     "npm:@aliou/pi-processes",
     "npm:@zenobius/pi-worktrees",

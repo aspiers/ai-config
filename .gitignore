@@ -1,0 +1,11 @@
+/.pi-lens/*.log
+/.pi-lens/*-cache.json
+/.pi/agent/*-cache.json
+/.pi/agent/git/
+/.pi/agent/sessions/
+/.pi/workbench/sessions.json
+/.pi/agent/extensions/**/logs/*.jsonl
+/.pi-lens/tools/
+/.pi/agent/auth.json
+/.pi-lens/projects/
+/.opencode/package-lock.json

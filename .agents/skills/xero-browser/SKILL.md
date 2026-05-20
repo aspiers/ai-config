@@ -244,14 +244,44 @@ full-list method becomes unreliable on a specific page state.
 ## Viewport
 
 The default viewport (1280x720) is too short for many Xero pages, causing
-elements to overlap or scroll unexpectedly. Use this before starting Xero
-automation:
+elements to overlap or scroll unexpectedly. `agent-browser set viewport`
+sets the **outer** window size, but Chromium adds its tab strip + URL bar
+on top, so the actual window ends up larger than the value you pass. The
+overhead varies by Chromium version, theme, DPR and window manager — no
+fixed fudge factor is reliable.
+
+Run the bundled [`scripts/fit-viewport.py`](scripts/fit-viewport.py) before
+starting Xero automation:
 
 ```bash
-agent-browser set viewport 1900 900
+.agents/skills/xero-browser/scripts/fit-viewport.py        # default 50px bottom margin
+.agents/skills/xero-browser/scripts/fit-viewport.py 80     # larger panel
 ```
 
-This takes effect immediately on the current session — no reload needed.
+It derives Chromium's chrome overhead directly from the existing window
+state (no probe / resize loop, so the Xero layout and PDF preview aren't
+disturbed mid-fit):
+
+- horizontal overhead = `outerWidth - innerWidth × devicePixelRatio`
+- vertical overhead = `outerHeight - innerHeight × devicePixelRatio`
+
+`innerWidth` / `innerHeight` are CSS pixels and `outerWidth` /
+`outerHeight` are device pixels, so multiplying by DPR brings them into
+the same unit. The difference is the chrome (tab strip + URL bar + window
+border) in device pixels — exactly what `set viewport` needs as its
+correction. The script then issues a single `agent-browser set viewport`
+call with `(screen_width - over_w, screen_height - bottom_margin - over_h)`.
+
+### Notes
+
+- `window-screen-info -n .agent-browser-data` locates the agent-browser
+  Chromium window (WM_CLASS instance `.agent-browser-data`) and reports
+  dimensions of the screen it occupies — works on multi-monitor setups.
+- Reported screen dims are device pixels. `agent-browser set viewport`
+  also takes device pixels. At `devicePixelRatio > 1` the in-page
+  `window.innerWidth` / `innerHeight` will be smaller (CSS pixels =
+  device pixels ÷ DPR), which is expected.
+- Takes effect immediately on the current session — no reload needed.
 
 ## Non-standard UI Elements
 

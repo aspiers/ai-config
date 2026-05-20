@@ -40,7 +40,13 @@
       ]
     },
     "npm:@vanillagreen/pi-skills-manager",
-    "npm:@vanillagreen/pi-tool-renderer",
+    {
+      "source": "npm:@vanillagreen/pi-tool-renderer",
+      "extensions": [],
+      "skills": [],
+      "prompts": [],
+      "themes": []
+    },
     "npm:@vanillagreen/pi-session-manager",
     "npm:@vanillagreen/pi-extension-manager",
     "npm:pi-resource-center",

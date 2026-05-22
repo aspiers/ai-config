@@ -37,3 +37,26 @@ search by ID directly or page exhaustively.
 See [`references/searching-records.md`](references/searching-records.md)
 for the rules around `list-manual-journals`, `list-invoices`,
 `list-bank-transactions`, and `list-contacts`.
+
+## Manual journals (create / update / void)
+
+The schema descriptions for `create-manual-journal` and
+`update-manual-journal` are misleading on at least two points:
+
+- `lineAmountTypes: "NO_TAX"` is rejected by the Xero API (use the
+  default — omit the field — which serialises as `NoTax`).
+- `update-manual-journal` says "Only works on draft manual journals",
+  but in practice mutates POSTED MJs (narration, date, lines, status).
+
+This makes the **void-and-replace** pattern (create new POSTED MJ
+referencing the old UUID, then update the old to `status: VOIDED`)
+viable via MCP without touching the web UI.
+
+The response strings from the write tools also render input params
+verbatim and show line items as `[object Object]` — so always confirm
+state with `list-manual-journals manualJournalId=<uuid>` after every
+write before trusting it.
+
+See [`references/manual-journals.md`](references/manual-journals.md)
+for the full void-and-replace recipe, common error messages, and the
+token-expiry coupling that bites multi-step MJ workflows.

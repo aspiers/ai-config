@@ -36,36 +36,36 @@ Claude Code configuration containing:
 - `CLAUDE.md` - Global instructions and coding rules
 - `settings.json` - Permission configuration for allowed bash commands
 - `commands/` - Custom slash commands:
-  - `commit` - Intelligent git commit workflow
-  - `do` - Task execution helper
-  - `dry` - Dry-run mode for testing changes
-  - `gen-prp` - Generate PR descriptions
-  - `gen-tasks` - Generate task lists from specifications
-  - `init2` - Project initialization
-  - `iter` - Iterative development workflow
-  - `lint` - Code linting
-  - `obs` - Obsidian integration
-  - `reflect` - Self-reflection prompt
-  - `review` - Code review
-  - `small` - Small change workflow
-  - `stage` - Git staging helper
-  - `test` - Test runner
+    - `commit` - Intelligent git commit workflow
+    - `do` - Task execution helper
+    - `dry` - Dry-run mode for testing changes
+    - `gen-prp` - Generate PR descriptions
+    - `gen-tasks` - Generate task lists from specifications
+    - `init2` - Project initialization
+    - `iter` - Iterative development workflow
+    - `lint` - Code linting
+    - `obs` - Obsidian integration
+    - `reflect` - Self-reflection prompt
+    - `review` - Code review
+    - `small` - Small change workflow
+    - `stage` - Git staging helper
+    - `test` - Test runner
 - `agents/` - Specialized sub-agents:
-  - `code-deduplicator` - Remove code duplication
-  - `code-linter` - Automated linting
-  - `code-refactorer` - Refactor large code units
-  - `code-reviewer` - Code review analysis
-  - `doc-updater` - Update documentation based on learnings
-  - `git-committer` - Commit message generation
-  - `git-stager` - Selective git staging
-  - `prp-generator` - Generate Product Requirements Prompts
-  - `task-generator` - Generate tasks from PRPs
-  - `task-implementer` - Task implementation
-  - `task-orchestrator` - Complete workflow orchestration
-  - `test-runner` - Test execution
+    - `code-deduplicator` - Remove code duplication
+    - `code-linter` - Automated linting
+    - `code-refactorer` - Refactor large code units
+    - `code-reviewer` - Code review analysis
+    - `doc-updater` - Update documentation based on learnings
+    - `git-committer` - Commit message generation
+    - `git-stager` - Selective git staging
+    - `prp-generator` - Generate Product Requirements Prompts
+    - `task-generator` - Generate tasks from PRPs
+    - `task-implementer` - Task implementation
+    - `task-orchestrator` - Complete workflow orchestration
+    - `test-runner` - Test execution
 - `skills/` - [Agent Skills](https://agentskills.io/) (modular capability packages):
-  - `safe-rm/` - Safe file deletion with git-aware backup
-  - `git-staging/` - Non-interactive git staging techniques
+    - `safe-rm/` - Safe file deletion with git-aware backup
+    - `git-staging/` - Non-interactive git staging techniques
 
 #### `.config/opencode/`
 
@@ -76,8 +76,8 @@ Claude Code configuration containing:
 - `command/` - Slash commands (mirrors `.claude/commands/`)
 - `agent/` - Sub-agents (mirrors `.claude/agents/`, plus `task-orchestrator`)
 - `plugin/` - JavaScript plugins:
-  - `env-protection.js` - Prevents exposure of environment variables
-  - `notification.js` - Desktop notifications for agent events
+    - `env-protection.js` - Prevents exposure of environment variables
+    - `notification.js` - Desktop notifications for agent events
 
 #### Command and Agent Delegation
 
@@ -94,9 +94,9 @@ See [AGENTS.md](AGENTS.md) for the detailed delegation pattern.
 ### Scripts (`bin/`)
 
 - **`ai-safe-rm`** - Git-aware safe file deletion script (used by safe-rm skill):
-  - Tracked+unmodified files: deleted directly (recoverable from git)
-  - Tracked+modified files: backed up to `.safe-rm/` with content hash
-  - Untracked files: backed up to `.safe-rm/` with content hash
+    - Tracked+unmodified files: deleted directly (recoverable from git)
+    - Tracked+modified files: backed up to `.safe-rm/` with content hash
+    - Untracked files: backed up to `.safe-rm/` with content hash
 - **`audit-npm-packages`** - Downloads npm tarballs with `npm pack --ignore-scripts`
   and emits a JSON security-audit summary covering npm metadata, lifecycle
   scripts, Pi extension metadata, dependency names, and simple risky source
@@ -104,7 +104,7 @@ See [AGENTS.md](AGENTS.md) for the detailed delegation pattern.
     - Example: `audit-npm-packages --output /tmp/audit.json pi-web-access pi-lens`
 - **`ccu`** - Runs the latest version of `ccusage` to monitor Claude Code usage statistics
 - **`ccul`** - Live monitoring of Claude Code usage with automatic refresh
-  every 5 seconds using blocks display format; although for *live* monitoring,
+  every 5 seconds using blocks display format; although for _live_ monitoring,
   I actually prefer [Claude Code Usage
   Monitor](https://github.com/Maciek-roboblog/Claude-Code-Usage-Monitor) (`uv
   tool install claude-monitor`) (not to be confused with `npx ccmonitor` from

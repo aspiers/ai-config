@@ -1,0 +1,191 @@
+#!/usr/bin/env node
+/**
+ * Audit npm packages at the tarball level.
+ *
+ * For each package name supplied on the command line, this script fetches npm
+ * registry metadata, downloads the exact latest tarball via `npm pack`, extracts
+ * it into a temporary directory, and emits a JSON summary covering package
+ * metadata, lifecycle scripts, pi extension metadata, dependency names, and
+ * simple source-pattern counts for higher-risk behaviours.
+ */
+
+import { execFileSync } from 'node:child_process';
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
+function usage() {
+  console.error(`Usage: audit-npm-packages [--output FILE] <pkg> [pkg...]
+
+Downloads npm tarballs with npm pack --ignore-scripts and writes JSON summary.
+`);
+}
+
+const args = process.argv.slice(2);
+let outputPath = null;
+const packages = [];
+for (let i = 0; i < args.length; i++) {
+  const arg = args[i];
+  if (arg === '--output' || arg === '-o') {
+    outputPath = args[++i];
+    if (!outputPath) {
+      usage();
+      process.exit(2);
+    }
+  } else if (arg === '--help' || arg === '-h') {
+    usage();
+    process.exit(0);
+  } else {
+    packages.push(arg);
+  }
+}
+
+if (packages.length === 0) {
+  usage();
+  process.exit(2);
+}
+
+function run(command, argsForCommand, options = {}) {
+  return execFileSync(command, argsForCommand, {
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+    ...options,
+  });
+}
+
+function walk(dir, out = []) {
+  for (const name of readdirSync(dir)) {
+    if (name === 'node_modules' || name === '.git') continue;
+    const path = join(dir, name);
+    const stat = statSync(path);
+    if (stat.isDirectory()) walk(path, out);
+    else out.push(path);
+  }
+  return out;
+}
+
+function sourcePatternCounts(dir) {
+  const patterns = {
+    child_process: /node:child_process|child_process|\bspawn\b|\bexecFile\b|\bexecSync\b|\bexec\(/,
+    fs_write: /writeFile|appendFile|rmSync|unlink|mkdir|rename|copyFile/,
+    fs_read: /readFile|readdir|existsSync|statSync|lstatSync/,
+    network: /\bfetch\b|node:http|node:https|WebSocket|EventSource|axios|undici|\.request\(/,
+    pi_tool: /registerTool|tool_call|tool_result|createBashTool|isToolCallEventType/,
+    browser: /playwright|puppeteer|chromium|browser|screenshot/,
+    env: /process\.env|getenv|\.env/,
+  };
+  const counts = Object.fromEntries(Object.keys(patterns).map((key) => [key, 0]));
+  const matches = [];
+
+  for (const file of walk(dir)) {
+    if (!/\.(m?[jt]s|cjs|jsx|tsx|json|md)$/.test(file)) continue;
+    let text = '';
+    try {
+      text = readFileSync(file, 'utf8');
+    } catch {
+      continue;
+    }
+    for (const [name, pattern] of Object.entries(patterns)) {
+      const count = (text.match(new RegExp(pattern.source, 'g')) || []).length;
+      counts[name] += count;
+      if (count && matches.length < 50 && /\.(m?[jt]s|cjs|jsx|tsx)$/.test(file)) {
+        matches.push(`${file.slice(dir.length + 1)}:${name}:${count}`);
+      }
+    }
+  }
+
+  return { counts, matches };
+}
+
+function lifecycleScripts(scripts) {
+  return Object.fromEntries(
+    Object.entries(scripts || {}).filter(([name]) => /^(pre|post)?install$|^prepare$/.test(name)),
+  );
+}
+
+function summarizePackage(root, name) {
+  const packageDirName = name.replaceAll('/', '__').replaceAll('@', '_');
+  const workDir = join(root, packageDirName);
+  mkdirSync(workDir, { recursive: true });
+
+  const result = { name, ok: false };
+  const view = JSON.parse(run('npm', ['view', name, '--json'], { cwd: workDir }));
+  result.version = view.version;
+  result.description = view.description;
+  result.license = view.license;
+  result.repository = view.repository;
+  result.maintainers = view.maintainers?.map((m) =>
+    typeof m === 'string' ? m : `${m.name || ''}<${m.email || ''}>`,
+  );
+  result.publishedAt = view.time?.[view.version];
+  result.gitHead = view.gitHead;
+  result.npmUser = typeof view._npmUser === 'string'
+    ? view._npmUser
+    : view._npmUser?.name || view._npmUser?.email;
+  result.dist = {
+    integrity: view.dist?.integrity,
+    shasum: view.dist?.shasum,
+    fileCount: view.dist?.fileCount,
+    unpackedSize: view.dist?.unpackedSize,
+    provenance: Boolean(view.dist?.attestations?.provenance),
+    trustedPublisher: Boolean(view._npmUser?.trustedPublisher),
+  };
+
+  const pack = JSON.parse(run('npm', ['pack', `${name}@${view.version}`, '--json', '--ignore-scripts'], { cwd: workDir }))[0];
+  result.pack = {
+    filename: pack.filename,
+    size: pack.size,
+    unpackedSize: pack.unpackedSize,
+    fileCount: pack.fileCount,
+    integrity: pack.integrity,
+  };
+
+  const packageDir = join(workDir, 'pkg');
+  mkdirSync(packageDir);
+  run('tar', ['-xzf', join(workDir, pack.filename), '-C', packageDir, '--strip-components=1']);
+  const packageJsonPath = join(packageDir, 'package.json');
+  if (!existsSync(packageJsonPath)) throw new Error(`No package.json in ${name} tarball`);
+
+  const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
+  const files = walk(packageDir).map((path) => path.slice(packageDir.length + 1));
+  result.pi = packageJson.pi;
+  result.packageScripts = packageJson.scripts || {};
+  result.lifecycleScripts = lifecycleScripts(packageJson.scripts || {});
+  result.dependencies = Object.keys(packageJson.dependencies || {});
+  result.peerDependencies = Object.keys(packageJson.peerDependencies || {});
+  result.topFiles = files.slice(0, 100);
+  result.hasTestsInTarball = files.some((file) => /test|spec|vitest|jest/i.test(file));
+  Object.assign(result, sourcePatternCounts(packageDir));
+  result.ok = true;
+  return result;
+}
+
+const root = mkdtempSync(join(tmpdir(), 'npm-package-audit-'));
+const results = [];
+try {
+  for (const name of packages) {
+    try {
+      const result = summarizePackage(root, name);
+      results.push(result);
+      console.error(`${name}: ok`);
+    } catch (error) {
+      results.push({ name, ok: false, error: error.stderr?.toString?.() || error.message || String(error) });
+      console.error(`${name}: ERROR`);
+    }
+  }
+} finally {
+  rmSync(root, { recursive: true, force: true });
+}
+
+const json = `${JSON.stringify(results, null, 2)}\n`;
+if (outputPath) writeFileSync(outputPath, json, 'utf8');
+else process.stdout.write(json);

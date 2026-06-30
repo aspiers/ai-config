@@ -97,6 +97,11 @@ See [AGENTS.md](AGENTS.md) for the detailed delegation pattern.
   - Tracked+unmodified files: deleted directly (recoverable from git)
   - Tracked+modified files: backed up to `.safe-rm/` with content hash
   - Untracked files: backed up to `.safe-rm/` with content hash
+- **`audit-npm-packages`** - Downloads npm tarballs with `npm pack --ignore-scripts`
+  and emits a JSON security-audit summary covering npm metadata, lifecycle
+  scripts, Pi extension metadata, dependency names, and simple risky source
+  pattern counts:
+    - Example: `audit-npm-packages --output /tmp/audit.json pi-web-access pi-lens`
 - **`ccu`** - Runs the latest version of `ccusage` to monitor Claude Code usage statistics
 - **`ccul`** - Live monitoring of Claude Code usage with automatic refresh
   every 5 seconds using blocks display format; although for *live* monitoring,

@@ -23,6 +23,27 @@ This includes invoices, bills, payments, bank transactions, contacts,
 manual journals, attachments, reconciliations, and any other record or
 artifact. If deletion seems like the cleanest fix, stop and ask first.
 
+## Authentication / Login
+
+The browser session **must already be logged in to Xero** before any of the
+report/automation workflows below will work. Otherwise `go.xero.com` simply
+redirects to `login.xero.com`.
+
+- **Browser-session login** (the relevant kind here): use the `agent-browser
+  auth` subcommand with the saved `xero` credential profile, if available. Run
+  `agent-browser auth login xero` — it waits for the login form fields, fills
+  them, and submits. (`agent-browser auth list` shows the available profiles;
+  a `xero` profile already exists. A profile is created in the first place
+  with `agent-browser auth save`.) After login, **wait a few seconds** for the
+  OIDC redirect to settle, then verify with `agent-browser eval
+  "location.href"` — it should land on the `go.xero.com` app homepage, not
+  `login.xero.com`.
+- **Xero MCP/API auth** (OAuth bearer tokens) is a **separate** thing, covered
+  by the [`xero-mcp`](../xero-mcp/SKILL.md) skill and its [authentication
+  reference](../xero-mcp/references/authentication.md).  MCP-token auth is
+  **not** the same as browser-session login: a fresh browser still needs its
+  own login even when the MCP tools work.
+
 ## Waiting
 
 **Never use** `agent-browser wait --load networkidle` — Xero never reaches networkidle.

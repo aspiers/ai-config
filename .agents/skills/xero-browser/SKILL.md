@@ -11,6 +11,16 @@ For Xero MCP server usage (OAuth, list-* tools, searching records by ID
 vs. pagination), see the separate [`xero-mcp`](../xero-mcp/SKILL.md)
 skill instead.
 
+## MCP vs browser — which to use (READ FIRST)
+
+**Before any Xero data task, read [`../xero-mcp/references/mcp-vs-browser.md`](../xero-mcp/references/mcp-vs-browser.md).**
+It is the single source of truth for choosing MCP tools vs the browser
+Account Transactions report (shared with the `xero-mcp` skill — do not
+duplicate its content here). Key rule: Xero MCP has **no per-account
+transaction endpoint**, so a single account's full ledger comes from the
+browser Account Transactions report (see "Searching Transactions By Date
+Range" below), never from paginating `list-manual-journals`.
+
 ## Fiduciary Responsibility
 
 This is accounting with fiduciary responsibility. **Always stop and report

@@ -11,6 +11,15 @@ Covers usage of the Xero MCP server, including authentication
 For browser-driven automation of the Xero web UI (not via MCP), see the
 separate [`xero-browser`](../xero-browser/SKILL.md) skill instead.
 
+## MCP vs browser — which to use (READ FIRST)
+
+**Before any Xero data task, read [`references/mcp-vs-browser.md`](references/mcp-vs-browser.md).**
+It is the single source of truth for choosing MCP tools vs the browser
+Account Transactions report (shared with the `xero-browser` skill — do
+not duplicate its content here). Key rule: Xero MCP has **no per-account
+transaction endpoint**, so a single account's full ledger comes from the
+browser report, never from paginating `list-manual-journals`.
+
 ## Authentication
 
 The Xero MCP server needs a valid bearer token

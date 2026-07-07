@@ -26,6 +26,34 @@ The Xero MCP server needs a valid bearer token
 (`XERO_CLIENT_BEARER_TOKEN`) in its environment. Tokens last ~30 minutes
 and must be refreshed via the `xero-oauth` helper script.
 
+### On a 401: STOP, refresh, ask for restart — do NOT limp to workarounds
+
+When any Xero MCP tool returns a **401 / auth error**, the correct
+response is a fixed sequence — not retrying and not falling back:
+
+1. **Stop.** Do NOT call the tool 2–3 more times hoping it recovers — a
+   401 is an expired token, it will not self-heal. Do NOT switch to a
+   browser / block-explorer / Cryptio workaround "to keep moving".
+2. **Refresh the token:** run `xero-oauth --refresh` (writes the new
+   token to `.mcp.json` / `opencode.json` / `.env`).
+3. **Ask the user to restart Claude Code.** A disk refresh does NOT reach
+   the *running* MCP server — it only picks up the new token on restart
+   (see `reference_xero_mcp_token_restart` / the note below). So a
+   long MCP workflow that 401s cannot self-heal mid-conversation; state
+   that plainly and request the restart.
+
+**Why this is the rule, not a suggestion:** the MCP path is far faster
+and more reliable than every workaround (browser Account Transactions
+report, block-explorer queries, Cryptio cross-checks). Burning turns on
+retries and then a slow browser workaround is worse on every axis than a
+30-second refresh + restart. The ONLY time a browser fallback is right is
+when the data genuinely isn't available via MCP at all (e.g. a per-account
+transaction ledger — see `references/mcp-vs-browser.md`), never merely
+because the token expired.
+
+A background job caches its token at *its own* startup; a main-session
+restart does not refresh a background job's token — kill + re-dispatch it.
+
 **Trigger to read [`references/authentication.md`](references/authentication.md):**
 
 - Xero MCP tools return authentication/authorization errors

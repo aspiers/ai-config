@@ -178,6 +178,35 @@ or bank pages one by one.
 25. Click `Update`.
 26. Read the transaction rows from the report table.
 
+### Accounts picker: click the `[onclick]` wrapper, not the combobox
+
+The Accounts picker trigger renders as **two stacked elements** in
+`agent-browser snapshot -i`:
+
+- an OUTER `generic "N accounts selected" [ref=eXX] clickable [onclick]`
+  — **this** is the click target (it carries the onclick handler)
+- an INNER `combobox "N accounts selected" [expanded=false, ref=eYY]`
+  — inert; clicking it does **nothing** (stays `expanded=false`)
+
+Click the **outer generic**, not the inner combobox. The `[onclick]`
+marker in the snapshot is the tell for which ref to click. (Same rule
+as elsewhere in this skill: click the ref that carries the handler for
+the visible label, not a nested inert element.)
+
+- **Toggle:** clicking the wrapper opens the picker; clicking it again
+  (or `Escape`) closes it. After selecting, close it, then click `Update`.
+- **Full list when open:** the open picker exposes the entire account
+  list as `checkbox "1234 - Account Name" [checked=true|false, ref=...]`
+  rows (plus a `Select all` button). Select the documented way —
+  `scrollintoview @rowRef` then `check @checkboxRef`. **Do NOT** try to
+  JS-match checkboxes by label text via `eval`: an attempt to bulk-check
+  that way silently failed / returned NOT FOUND while the real checkbox
+  refs were sitting right there in the snapshot.
+- **Refs:** checkbox refs stay stable while the picker stays open across
+  snapshots, but the **trigger's own wrapper ref changes** after the
+  report re-renders — re-snapshot to get a fresh wrapper ref each time
+  you open it.
+
 ### Notes
 
 - Treat each report setting as a small closed loop: open, change, confirm, close, then move on.

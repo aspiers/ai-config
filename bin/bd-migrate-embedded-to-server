@@ -1,0 +1,322 @@
+#!/usr/bin/env bash
+#
+# bd-migrate-embedded-to-server - Convert an existing Beads workspace from
+# embedded Dolt mode to server Dolt mode in the same project directory.
+#
+# This is intentionally a backup+recreate+restore wrapper, because bd 1.0.x
+# does not provide a native in-place embedded->server conversion command.
+# The original .beads directory is renamed, not deleted.
+
+set -euo pipefail
+
+SCRIPT_NAME=${0##*/}
+YES=false
+FALLBACK_JSONL=false
+PREFIX=""
+DATABASE=""
+BACKUP_DIR=""
+OLD_BEADS_DIR=""
+DRY_RUN=false
+
+usage() {
+    cat <<'EOF'
+Usage: bd-migrate-embedded-to-server [options]
+
+Safely migrate the current Beads workspace from Dolt embedded mode to Dolt
+server mode without moving the project directory.
+
+The script:
+  1. verifies the workspace is using embedded Dolt mode
+  2. creates a Dolt-native backup and a JSONL safety export
+  3. renames the original .beads directory to a timestamped backup name
+  4. runs bd init --server with the same database name and issue prefix
+  5. restores the Dolt backup into the new server-mode workspace
+  6. verifies the resulting workspace is in server mode
+
+Options:
+  --yes                 Actually perform the migration. Required unless --dry-run.
+  --dry-run             Show the planned values and commands, then exit.
+  --fallback-jsonl      If Dolt backup restore fails, reinitialize server mode
+                        again and import the JSONL export instead. This loses
+                        full Dolt history and non-issue tables, but preserves
+                        exported issue records.
+  --prefix PREFIX       Issue prefix to use for bd init --server. By default,
+                        infer from existing issue IDs, then config, then cwd.
+  --database NAME       Dolt database name. Defaults to bd context / metadata.
+  --backup-dir PATH     Backup directory. Defaults to
+                        .beads-migration-backups/<timestamp> under the cwd.
+  --old-beads-dir PATH  Where to move the original .beads directory. Defaults
+                        to .beads.embedded.<timestamp> under the cwd.
+  -h, --help            Show this help.
+
+Rollback:
+  If migration fails after the original .beads was renamed, inspect the error,
+  then restore manually with:
+
+      mv .beads .beads.failed-server-attempt   # if a new .beads exists
+      mv <old-beads-dir> .beads
+
+Requirements: bd, python3, and a working Dolt installation for server mode.
+EOF
+}
+
+fail() {
+    echo "Error: $*" >&2
+    exit 1
+}
+
+info() {
+    echo "==> $*"
+}
+
+quote_cmd() {
+    printf '%q ' "$@"
+    printf '\n'
+}
+
+json_get() {
+    local expr=$1
+    python3 -c 'import json, sys
+expr = sys.argv[1]
+data = json.load(sys.stdin)
+cur = data
+for part in expr.split("."):
+    if not part:
+        continue
+    if not isinstance(cur, dict) or part not in cur or cur[part] is None:
+        sys.exit(1)
+    cur = cur[part]
+print(cur)
+' "$expr"
+}
+
+infer_prefix_from_issues() {
+    bd list --status=all --json 2>/dev/null | python3 -c 'import json, re, sys
+try:
+    issues = json.load(sys.stdin)
+except Exception:
+    sys.exit(1)
+if not issues:
+    sys.exit(1)
+issue_id = issues[0].get("id", "")
+match = re.match(r"^(.+)-[^-]+$", issue_id)
+if not match:
+    sys.exit(1)
+print(match.group(1))
+'
+}
+
+infer_prefix_from_config() {
+    local value
+    value=$(bd config get issue-prefix 2>/dev/null || true)
+    if [[ -n "$value" && "$value" != *"(not set)"* ]]; then
+        printf '%s\n' "$value"
+        return 0
+    fi
+    return 1
+}
+
+infer_prefix_from_cwd() {
+    local base
+    base=$(basename "$(pwd)")
+    printf '%s\n' "$base" |
+        tr '[:upper:]' '[:lower:]' |
+        sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//'
+}
+
+require_command() {
+    command -v "$1" >/dev/null 2>&1 || fail "required command not found: $1"
+}
+
+run() {
+    echo "+ $(quote_cmd "$@")"
+    if [[ "$DRY_RUN" != true ]]; then
+        "$@"
+    fi
+}
+
+parse_args() {
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --yes)
+                YES=true
+                shift
+                ;;
+            --dry-run)
+                DRY_RUN=true
+                shift
+                ;;
+            --fallback-jsonl)
+                FALLBACK_JSONL=true
+                shift
+                ;;
+            --prefix)
+                [[ $# -ge 2 ]] || fail "--prefix requires a value"
+                PREFIX=$2
+                shift 2
+                ;;
+            --database)
+                [[ $# -ge 2 ]] || fail "--database requires a value"
+                DATABASE=$2
+                shift 2
+                ;;
+            --backup-dir)
+                [[ $# -ge 2 ]] || fail "--backup-dir requires a value"
+                BACKUP_DIR=$2
+                shift 2
+                ;;
+            --old-beads-dir)
+                [[ $# -ge 2 ]] || fail "--old-beads-dir requires a value"
+                OLD_BEADS_DIR=$2
+                shift 2
+                ;;
+            -h|--help)
+                usage
+                exit 0
+                ;;
+            *)
+                fail "unknown option: $1"
+                ;;
+        esac
+    done
+}
+
+restore_with_jsonl_fallback() {
+    local jsonl_export=$1
+    local failed_dir
+    failed_dir=".beads.failed-server-restore.$(date +%Y%m%d-%H%M%S)"
+
+    info "Dolt backup restore failed; falling back to JSONL import"
+    echo "    The failed server-mode workspace will be preserved as: $failed_dir"
+
+    run bd dolt stop || true
+    [[ ! -e "$failed_dir" ]] || fail "fallback destination already exists: $failed_dir"
+    run mv .beads "$failed_dir"
+    run bd init --server \
+        --database "$DATABASE" \
+        --prefix "$PREFIX" \
+        --non-interactive \
+        --skip-agents \
+        --skip-hooks
+    run bd import "$jsonl_export"
+}
+
+main() {
+    parse_args "$@"
+
+    require_command bd
+    require_command python3
+
+    if [[ "$DRY_RUN" != true && "$YES" != true ]]; then
+        usage >&2
+        fail "refusing to migrate without --yes (use --dry-run to preview)"
+    fi
+
+    local context metadata_mode beads_dir workspace_dir timestamp jsonl_export
+    context=$(bd context --json 2>/dev/null) || fail "not in a Beads workspace"
+    metadata_mode=$(printf '%s' "$context" | json_get dolt_mode) || \
+        fail "could not read dolt_mode from bd context"
+    beads_dir=$(printf '%s' "$context" | json_get beads_dir) || \
+        fail "could not read beads_dir from bd context"
+    workspace_dir=$(dirname "$beads_dir")
+
+    [[ "$metadata_mode" == "embedded" ]] || \
+        fail "workspace is not in embedded mode (dolt_mode=$metadata_mode)"
+    [[ -d "$beads_dir" ]] || fail "beads directory does not exist: $beads_dir"
+    [[ -d "$workspace_dir" ]] || fail "workspace directory does not exist: $workspace_dir"
+
+    cd "$workspace_dir"
+
+    if [[ -z "$DATABASE" ]]; then
+        DATABASE=$(printf '%s' "$context" | json_get database) || \
+            fail "could not infer database; pass --database"
+    fi
+
+    if [[ -z "$PREFIX" ]]; then
+        PREFIX=$(infer_prefix_from_issues || infer_prefix_from_config || \
+            infer_prefix_from_cwd)
+    fi
+    [[ -n "$PREFIX" ]] || fail "could not infer prefix; pass --prefix"
+
+    timestamp=$(date +%Y%m%d-%H%M%S)
+    if [[ -z "$BACKUP_DIR" ]]; then
+        BACKUP_DIR="$(pwd)/.beads-migration-backups/$timestamp"
+    fi
+    if [[ -z "$OLD_BEADS_DIR" ]]; then
+        OLD_BEADS_DIR="$(pwd)/.beads.embedded.$timestamp"
+    fi
+    jsonl_export="$BACKUP_DIR/issues-all.jsonl"
+
+    [[ ! -e "$BACKUP_DIR" ]] || fail "backup directory already exists: $BACKUP_DIR"
+    [[ ! -e "$OLD_BEADS_DIR" ]] || fail "old beads destination already exists: $OLD_BEADS_DIR"
+
+    cat <<EOF
+Migration plan
+  workspace:       $(pwd)
+  current .beads:  $beads_dir
+  old .beads ->    $OLD_BEADS_DIR
+  backup dir:      $BACKUP_DIR
+  JSONL export:    $jsonl_export
+  database:        $DATABASE
+  prefix:          $PREFIX
+  fallback JSONL:  $FALLBACK_JSONL
+  dry run:         $DRY_RUN
+EOF
+
+    if [[ "$DRY_RUN" == true ]]; then
+        echo
+        echo "Commands that would run:"
+    fi
+
+    run mkdir -p "$BACKUP_DIR"
+    run bd backup init "$BACKUP_DIR"
+    run bd backup sync
+    run bd export --all -o "$jsonl_export"
+
+    run mv "$beads_dir" "$OLD_BEADS_DIR"
+
+    run bd init --server \
+        --database "$DATABASE" \
+        --prefix "$PREFIX" \
+        --non-interactive \
+        --skip-agents \
+        --skip-hooks
+
+    if ! run bd backup restore --force "$BACKUP_DIR"; then
+        if [[ "$FALLBACK_JSONL" == true ]]; then
+            restore_with_jsonl_fallback "$jsonl_export"
+        else
+            cat >&2 <<EOF
+
+Dolt backup restore failed. The original embedded workspace is preserved at:
+  $OLD_BEADS_DIR
+
+Common cause: the external 'dolt' binary used by server mode is older than the
+Dolt library bundled into bd. Upgrade Dolt, then retry or restore manually.
+
+To use the lossy JSONL fallback, rerun with --fallback-jsonl, or manually import:
+  bd import $jsonl_export
+EOF
+            exit 1
+        fi
+    fi
+
+    if [[ "$DRY_RUN" == true ]]; then
+        info "Dry run complete"
+        exit 0
+    fi
+
+    local new_context new_mode
+    new_context=$(bd context --json)
+    new_mode=$(printf '%s' "$new_context" | json_get dolt_mode)
+    [[ "$new_mode" == "server" ]] || fail "migration did not end in server mode"
+
+    info "Migration complete"
+    bd dolt status || true
+    echo
+    echo "Original embedded workspace preserved at: $OLD_BEADS_DIR"
+    echo "Backup preserved at: $BACKUP_DIR"
+    echo "You can now run: perles"
+}
+
+main "$@"

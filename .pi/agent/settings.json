@@ -94,7 +94,10 @@
     },
     "npm:@gotgenes/pi-github-tools",
     "npm:@gotgenes/pi-autoformat",
-    "npm:pi-sandbox",
+    {
+      "source": "npm:pi-sandbox",
+      "extensions": []
+    },
     "npm:@spences10/pi-skill-importer"
   ],
   "hideThinkingBlock": false,
@@ -157,7 +160,8 @@
   "vstack": {
     "extensionManager": {
       "disabledItems": [
-        "package:pi-recap"
+        "package:pi-recap",
+        "package:pi-sandbox"
       ],
       "config": {
         "@vanillagreen/pi-tool-renderer": {

@@ -415,6 +415,16 @@ contain the full form somewhere nearby (typically the first time the journal
 is mentioned). The sequential `#NNNNN` is acceptable as transient context
 inside a single conversation, but never write it down anywhere durable.
 
+**This applies to CHAT with the user too, not only persisted artefacts.** When
+you name a journal (or any transaction) in a message to the user, its FIRST
+mention must carry **date/timestamp + a human-readable description of what it
+does (DR/CR + amount + purpose) + the click-through URL** — never a bare
+`#NNNNN` or bare UUID on its own. The user cannot resolve opaque IDs and is
+left "flying blind" by them. This holds for Cryptio transactions and on-chain
+hashes as well (give the Cryptio both-params link / block-explorer URL +
+timestamp + what it is). Only after the full, described form has been given
+once may a short prefix be used for repeat mentions in the same message thread.
+
 ### ExtJS autocomplete dropdowns (general)
 
 Xero uses ExtJS for many autocomplete/combo dropdowns throughout the application,

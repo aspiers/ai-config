@@ -57,7 +57,11 @@ redirects to `login.xero.com`.
 ## Waiting
 
 **Never use** `agent-browser wait --load networkidle` — Xero never reaches networkidle.
-Use `agent-browser wait 3000` instead.
+Use a fixed wait instead. **~3 s (`wait 3000`) is the ceiling, not the
+default** — for most in-app interactions (menu open, picker toggle,
+snapshot after a click) 1–2 s is plenty; reserve 3 s for full report
+re-renders after `Update`. Waiting more than 3 s to "let a page settle"
+is overkill.
 
 ## Searching Transactions By Description / Free Text
 

@@ -5,6 +5,7 @@
   "sortMode": "updated",
   "reloadBehavior": "notice",
   "pinned": [],
+  "disabledExternalSkills": [],
   "packagePreviewLimit": 5,
   "searchIncludeDescription": true,
   "searchIncludePath": true,
@@ -36,14 +37,6 @@
       "path": "~/.config/opencode/skills",
       "enabled": false,
       "integration": "skill-root"
-    }
-  ],
-  "exposedResources": [
-    {
-      "scope": "user",
-      "category": "extensions",
-      "package": "npm:amp-themes",
-      "path": "node_modules/pi-tool-display/index.ts"
     }
   ]
 }

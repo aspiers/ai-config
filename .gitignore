@@ -9,3 +9,5 @@
 /.pi/agent/auth.json
 /.pi-lens/projects/
 /.opencode/package-lock.json
+/.beads/backup/
+/.beads/embeddeddolt/

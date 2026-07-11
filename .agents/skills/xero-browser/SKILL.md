@@ -54,6 +54,23 @@ redirects to `login.xero.com`.
   **not** the same as browser-session login: a fresh browser still needs its
   own login even when the MCP tools work.
 
+### "Access Denied" / 404 error pages mid-session → hand off to user for manual login
+
+If, during a session, a page lands on an Akamai **"Access Denied"**
+edge-block (`errors.edgesuite.net`, `Reference #...`) or an
+`/app/.../errors/404` page — even after a seemingly successful login —
+the browser session has lost its Xero auth. **Do NOT try to re-auth
+yourself.** Stop, and prompt the user to intercede and manually log in
+at **https://login.xero.com/**. Wait for them to confirm login is
+complete, then re-verify with `eval "location.href"` — it should land
+on `go.xero.com/app/...`, not `login.xero.com`. Do not treat these
+error pages as a dead end or switch to a workaround; hand off and wait.
+
+**2FA is part of this and is the user's step.** Manual login usually
+routes through a `login.xero.com/.../two-factor/authenticate` page. Do
+NOT try to complete 2FA yourself — it is entirely the user's to do.
+After a successful login+2FA the URL settles on `go.xero.com/app/...`.
+
 ## Waiting
 
 **Never use** `agent-browser wait --load networkidle` — Xero never reaches networkidle.

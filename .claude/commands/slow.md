@@ -1,6 +1,6 @@
 ---
 description: Run long-running commands with output captured to tmp/ for repeated analysis
-allowed-tools: Skill(slow-commands)
+allowed-tools: Skill(slow-command-running)
 ---
 
-Use the `slow-commands` skill for long-running operations.
+Use the `slow-command-running` skill for long-running operations.

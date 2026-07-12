@@ -122,10 +122,10 @@
   without re-fetching.  **Do NOT use** `browser_navigate`, `browser_snapshot`,
   or other playwright tools unless specifically requested by the user.
 
-- **Use the slow-commands skill for long-running operations**: Commands that
-  take >5 seconds or need multiple analyses of output should use the
-  slow-commands skill (load with `skill slow-commands`) and pipe through tee(1)
-  to a file in the repository's `tmp/` directory.
+- **Use the slow-command-running skill for long-running operations**: Commands
+  that take >5 seconds or need multiple analyses of output should use the
+  slow-command-running skill and pipe through tee(1) to a file in the
+  repository's `tmp/` directory.
 
 - **Avoid truncating output carelessly**: When running long or important
   commands, avoid using head(1) which can hide errors. Use tee(1) to capture

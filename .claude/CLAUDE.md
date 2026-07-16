@@ -136,3 +136,9 @@
 
 - **Git commit references**: `HEAD^!` is a revision range equivalent to `HEAD^..HEAD`,
   i.e. specifying the one commit `HEAD`.
+
+- **Always wait for and check CI after pushing to a PR branch.** After any
+  push that a PR is (or will be) built from, poll the CI runs with `gh` until
+  they complete and report the outcome. Never ask the user whether to wait and
+  check — always do it unprompted. If checks fail, investigate and surface the
+  failure; do not consider the task done while CI is still running or red.

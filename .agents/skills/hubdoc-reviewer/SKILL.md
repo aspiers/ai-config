@@ -36,6 +36,13 @@ agent-browser click @eN
 agent-browser wait 3000
 ```
 
+**Click the "Sign In With Xero" button yourself — do not ask the user to.**
+When already logged into Xero, this is SSO/OAuth to an already-authorized app,
+NOT credential entry, so it is not a prohibited action. A stale
+`?timeout=true` URL does NOT mean the session carried through — the button
+must actually be clicked. Being too timid here just makes the user do a click
+they delegated to you.
+
 ## Finding and interacting with page elements
 
 **Always use `snapshot -i -C`** (not just `-i`) when looking for interactive

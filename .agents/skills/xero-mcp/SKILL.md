@@ -36,11 +36,20 @@ response is a fixed sequence — not retrying and not falling back:
    browser / block-explorer / Cryptio workaround "to keep moving".
 2. **Refresh the token:** run `xero-oauth --refresh` (writes the new
    token to `.mcp.json` / `opencode.json` / `.env`).
-3. **Ask the user to restart Claude Code.** A disk refresh does NOT reach
-   the *running* MCP server — it only picks up the new token on restart
-   (see `reference_xero_mcp_token_restart` / the note below). So a
-   long MCP workflow that 401s cannot self-heal mid-conversation; state
-   that plainly and request the restart.
+3. **Ask the user to restart Claude Code, then END YOUR TURN.** A disk
+   refresh does NOT reach the *running* MCP server — it only picks up the
+   new token on restart (see `reference_xero_mcp_token_restart` / the note
+   below). So a long MCP workflow that 401s cannot self-heal
+   mid-conversation; state that plainly and request the restart.
+
+   **Do not do ANY other work after requesting the restart** — not even
+   tasks needing no Xero access. The restart kills the process you are
+   running in, so there is no "meanwhile": you cannot work *while* the
+   user restarts you. Continuing either gets thrown away by the restart,
+   or stalls it because the user is waiting for you to stop. The only
+   permitted action between the refresh and the restart is persisting
+   resume state (exact retry params) so the fresh session can pick up
+   where you left off. Then stop, in the same turn.
 
 **Why this is the rule, not a suggestion:** the MCP path is far faster
 and more reliable than every workaround (browser Account Transactions

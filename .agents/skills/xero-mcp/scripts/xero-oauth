@@ -100,7 +100,26 @@ function saveTokens(tokens) {
   }
 
   console.log(`Note: access_token expires in ${tokens.expires_in} seconds (~30 min).`);
-  console.log('Restart Claude Code or OpenCode to pick up the new token.');
+  console.log('');
+  console.log('==================================================================');
+  console.log('AGENTS: STOP WORK IMMEDIATELY. Do not call any further tools.');
+  console.log('');
+  console.log('The new token is on disk, but the RUNNING MCP server still holds');
+  console.log('the OLD one. Only a restart picks it up — and that restart KILLS');
+  console.log('THE PROCESS YOU ARE RUNNING IN.');
+  console.log('');
+  console.log('You therefore CANNOT work "while" the user restarts: the restart');
+  console.log('terminates you mid-turn. Any work you start now is either thrown');
+  console.log('away, or it prevents the user from restarting at all because they');
+  console.log('are waiting for you to stop. Continuing is strictly worse than');
+  console.log('stopping, even for tasks needing no Xero access.');
+  console.log('');
+  console.log('Do exactly this, in order:');
+  console.log('  1. If a fresh session would need state to resume (e.g. exact');
+  console.log('     retry parameters), persist it NOW — and only that.');
+  console.log('  2. End your turn with a short message asking the user to');
+  console.log('     restart. No other tool calls. No "meanwhile" work.');
+  console.log('==================================================================');
 }
 
 async function refresh(credentials) {
@@ -193,7 +212,14 @@ Writes (in the current working directory):
   .mcp.json               mcpServers.xero.env.XERO_CLIENT_BEARER_TOKEN
   .env                    XERO_REFRESH_TOKEN (rotated)
 
-Restart your agent session after running so the new bearer token is picked up by the Xero MCP server.
+The agent session MUST be restarted after running this, so that the Xero MCP
+server picks up the new bearer token. A running server never re-reads the
+token from disk.
+
+AGENTS: the restart kills the process you run in, so once you have run this,
+STOP. Persist any resume state, then end your turn asking the user to restart.
+Do not start other work "while" they restart — that is impossible, and it only
+delays the restart you are waiting on.
 `);
 }
 

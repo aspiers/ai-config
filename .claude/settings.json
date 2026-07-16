@@ -1,5 +1,69 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "agentPushNotifEnabled": true,
+  "alwaysThinkingEnabled": false,
+  "effortLevel": "high",
+  "enabledPlugins": {
+    "beads@beads-marketplace": true,
+    "caveman@caveman": true,
+    "context-mode@context-mode": true,
+    "ruby-lsp@claude-plugins-official": true
+  },
+  "extraKnownMarketplaces": {
+    "caveman": {
+      "source": {
+        "repo": "JuliusBrussee/caveman",
+        "source": "github"
+      }
+    }
+  },
+  "feedbackSurveyState": {
+    "lastShownTime": 1754076415986
+  },
+  "hooks": {
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "command": "printf '\\a' \u003e /dev/tty",
+            "type": "command"
+          },
+          {
+            "command": "mplayer -volume 50 /usr/share/sounds/Oxygen-Sys-App-Positive.ogg",
+            "type": "command"
+          },
+          {
+            "command": "notify-send 'Claude Code finished'",
+            "type": "command"
+          }
+        ],
+        "matcher": ""
+      }
+    ],
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "command": "/home/adam/.local/bin/dcg",
+            "type": "command"
+          }
+        ],
+        "matcher": "Bash"
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "command": "bash '/home/adam/.claude/hooks/herdr-agent-state.sh' session",
+            "timeout": 10,
+            "type": "command"
+          }
+        ],
+        "matcher": "*"
+      }
+    ]
+  },
   "permissions": {
     "allow": [
       "Read",
@@ -190,90 +254,28 @@
       "mcp__plugin_beads_beads__stats",
       "mcp__plugin_beads_beads__update"
     ],
+    "defaultMode": "default",
     "deny": [
       "Bash(pkill:*)",
       "Bash(killall:*)",
       "Bash(bd init)",
       "Bash(bd init:*)"
-    ],
-    "defaultMode": "default"
-  },
-  "model": "opus",
-  "hooks": {
-    "Notification": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "printf '\\a' > /dev/tty"
-          },
-          {
-            "type": "command",
-            "command": "mplayer -volume 50 /usr/share/sounds/Oxygen-Sys-App-Positive.ogg"
-          },
-          {
-            "type": "command",
-            "command": "notify-send 'Claude Code finished'"
-          }
-        ]
-      }
-    ],
-    "PreCompact": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bd prime"
-          }
-        ]
-      }
-    ],
-    "SessionStart": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bd prime"
-          }
-        ]
-      }
-    ],
-    "PreToolUse": [
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/home/adam/.local/bin/dcg"
-          }
-        ]
-      }
     ]
   },
-  "enabledPlugins": {
-    "beads@beads-marketplace": true,
-    "ruby-lsp@claude-plugins-official": true,
-    "caveman@caveman": true
+  "preferredNotifChannel": "terminal_bell",
+  "remoteControlAtStartup": false,
+  "skipAutoPermissionPrompt": true,
+  "skipWorkflowUsageWarning": true,
+  "statusLine": {
+    "command": "bash /home/adam/.claude/statusline-command.sh",
+    "type": "command"
   },
-  "extraKnownMarketplaces": {
-    "caveman": {
-      "source": {
-        "source": "github",
-        "repo": "JuliusBrussee/caveman"
-      }
-    }
-  },
-  "alwaysThinkingEnabled": false,
-  "effortLevel": "medium",
-  "voiceEnabled": true,
+  "theme": "auto",
+  "tui": "fullscreen",
+  "verbose": true,
   "voice": {
     "enabled": true,
     "mode": "hold"
   },
-  "feedbackSurveyState": {
-    "lastShownTime": 1754076415986
-  }
+  "voiceEnabled": true
 }

@@ -42,14 +42,19 @@ response is a fixed sequence — not retrying and not falling back:
    below). So a long MCP workflow that 401s cannot self-heal
    mid-conversation; state that plainly and request the restart.
 
-   **Do not do ANY other work after requesting the restart** — not even
-   tasks needing no Xero access. The restart kills the process you are
-   running in, so there is no "meanwhile": you cannot work *while* the
-   user restarts you. Continuing either gets thrown away by the restart,
-   or stalls it because the user is waiting for you to stop. The only
-   permitted action between the refresh and the restart is persisting
-   resume state (exact retry params) so the fresh session can pick up
-   where you left off. Then stop, in the same turn.
+   After running `xero-oauth --refresh`, your **very next output** must
+   be one short line asking the user to restart. Then end the turn.
+
+   **NO further tool calls. NO saving state. NO notes or beads. NO
+   summary. NO explanation.** There are no exceptions — not even work
+   needing no Xero access. The restart kills the process you are running
+   in, so there is no "meanwhile": every extra token delays the restart
+   the user is waiting to perform, and anything you start is discarded.
+
+   **"Let me just persist state first" is the most common excuse for
+   disobeying this, and it is wrong.** A fresh session re-reads the same
+   files and issue tracker you already have. If state genuinely mattered,
+   it was already saved before the 401.
 
 **Why this is the rule, not a suggestion:** the MCP path is far faster
 and more reliable than every workaround (browser Account Transactions

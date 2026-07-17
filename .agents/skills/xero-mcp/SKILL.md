@@ -34,33 +34,20 @@ response is a fixed sequence — not retrying and not falling back:
 1. **Stop.** Do NOT call the tool 2–3 more times hoping it recovers — a
    401 is an expired token, it will not self-heal. Do NOT switch to a
    browser / block-explorer / Cryptio workaround "to keep moving".
+
 2. **Refresh the token:** run `xero-oauth --refresh` (writes the new
    token to `.mcp.json` / `opencode.json` / `.env`).
 
    **NEVER pipe `xero-oauth` through `tail`, `head`, `grep`, or anything
-   else that crops its output. Run it bare and read ALL of it.** The
+   else that crops its output. Run it bare, read ALL of the output.** The
    success/failure indication, and any error, warning, or instruction, are
    printed across the whole output — crop it and you cannot honestly tell
    the user whether the refresh worked. Step 3 has you tell the user to
    restart, which is only sound if you KNOW the refresh succeeded.
 
-   Evidence (2026-07-17): `xero-oauth --refresh 2>&1 | tail -3` returned a
-   3-line fragment of advisory text containing no status at all. The agent
-   reported "Token refreshed" regardless — an unverified assumption that
-   happened to be true by luck. This also violates the user's global rule
-   against careless output truncation ("avoid using head(1) which can hide
-   errors").
-
-   If the output is genuinely long, tee(1) it to a file under `tmp/` and
-   read it whole (see the `slow-command-running` skill) — never crop it.
-3. **Ask the user to restart Claude Code, then END YOUR TURN.** A disk
-   refresh does NOT reach the *running* MCP server — it only picks up the
-   new token on restart (see `reference_xero_mcp_token_restart` / the note
-   below). So a long MCP workflow that 401s cannot self-heal
-   mid-conversation; state that plainly and request the restart.
-
-   After running `xero-oauth --refresh`, your **very next output** must
-   be one short line asking the user to restart. Then end the turn.
+3. After successfully running `xero-oauth --refresh`, your **very next
+   output** must be one short line asking the user to restart. Then end the
+   turn.
 
    **NO further tool calls. NO saving state. NO notes or beads. NO
    summary. NO explanation.** There are no exceptions — not even work

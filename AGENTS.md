@@ -5,7 +5,70 @@
 - This repository contains configs for AI agents such as Claude Code, OpenCode
   etc., as well as associated shell scripts and other utility files.
 
+- **⚠️ THIS REPOSITORY IS PUBLIC.** Its skills and configs are published for
+  consumption by people other than the author. Read "Public repository — no
+  private or sensitive content" below BEFORE adding or editing anything.
+
 - Editorconfig: @.editorconfig
+
+## Public repository — no private or sensitive content
+
+**This repo is PUBLIC and its skills are used by other people.** Anything
+committed here is world-readable, permanently, via the git history —
+deleting it later does NOT unpublish it.
+
+### NEVER commit sensitive content
+
+Not in any file, not in an example, not in a "temporary" note:
+
+- **Credentials** — API keys, tokens, bearer tokens, passwords, OAuth client
+  secrets, session cookies, private keys, `.env` contents
+- **Personal data** — home/email addresses, phone numbers, bank account or
+  card numbers (including partial/masked digits)
+- **Financial data** — balances, transaction amounts, supplier relationships,
+  invoice/bill references, tax positions, capitalisation thresholds
+- **Identifiers that resolve to real records** — Xero/Hubdoc organisation,
+  contact, invoice, account or document IDs; real UUIDs from live systems
+- Anything under a confidentiality obligation
+
+If a credential ever does land here, treat it as **compromised**: rotate it,
+don't merely delete it.
+
+### Author-specific facts need a CLEAR WARNING, or they don't belong
+
+A skill must be **useful and correct for a stranger**. Content that only
+applies to the author's own setup is a defect unless clearly marked.
+
+Prefer, in order:
+
+1. **Generalise it.** Describe the mechanism, not the author's instance:
+   "consult your organisation's account-code conventions" — not a table of
+   the author's suppliers and codes.
+2. **Point at a kind of location, not at contents.** "conventions may live in
+   a notes file, `$ACCOUNTING_NOTES`, or a project CLAUDE.md" — never inline
+   a personal absolute path as though it were universal.
+3. **If it genuinely must be specific, MARK IT LOUDLY** and scope it:
+
+   > **⚠️ AUTHOR-SPECIFIC:** the following applies to the author's own setup.
+   > Substitute your own conventions.
+
+Otherwise a reader silently inherits someone else's accounting rules,
+supplier list, or card numbers as though they were general truth — wrong for
+them, and a leak by the author.
+
+### Private/author-specific material belongs elsewhere
+
+Put it in a **private repo** (e.g. the relevant project's own
+`.claude/skills/`), in agent memory, or in the issue tracker — not here.
+Project-level skills in a private repo are the right home for
+organisation-specific conventions.
+
+**Evidence (2026-07-17):** an agent editing a skill in this repo inlined the
+author's personal notes path, a table of the author's real suppliers mapped
+to account codes, the author's capitalisation threshold, and the name of the
+author's accountancy firm — plus an adviser lock date in another skill. None
+of it was useful to anyone else, and the author had to catch it. AGENTS.md
+gave no indication the repo was public, which is why this section exists.
 
 ## Adding/Changing Allowed Commands
 

@@ -54,6 +54,31 @@ XERO_REFRESH_TOKEN=<refresh-token>   # only needed for --refresh
 
 ## Usage
 
+### NEVER crop `xero-oauth` output
+
+**Run every `xero-oauth` invocation bare, and read the output IN FULL.**
+Do not pipe it through `tail`, `head`, `grep`, `sed`, or anything else
+that crops it.
+
+The status of the refresh — and any error, warning, or instruction the
+script prints — is spread across the whole output. If you crop it you
+cannot tell success from failure, and so cannot honestly report to the
+user whether the token refreshed or tell them to restart.
+
+Evidence (2026-07-17): `xero-oauth --refresh 2>&1 | tail -3` yielded only
+
+```
+already have. If state genuinely mattered, it was already saved
+before you ran this.
+==================================================================
+```
+
+— a fragment of advisory prose with no status in it. "Token refreshed"
+was reported to the user anyway, purely as an assumption.
+
+If output is genuinely long, tee(1) it to a file under the repo's `tmp/`
+and read the file whole (see the `slow-command-running` skill).
+
 ### Token refresh (no browser — preferred)
 
 Use when `XERO_REFRESH_TOKEN` is already in `.env`:

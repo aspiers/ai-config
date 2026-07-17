@@ -100,12 +100,59 @@ section. They are not interchangeable.
 
 ## Account code guidance
 
-Before guessing an account code, consult the local accounting guidance
-for your workspace — typically a file under your project's notes
-directory, an environment variable like `$ACCOUNTING_NOTES`, or a
-project-level CLAUDE.md / AGENTS.md entry. Account-code conventions
-vary per Xero organisation, so never rely on memorised codes from
-another tenant.
+### FIND the written conventions and READ them — do not guess, do not ask first
+
+Account-code conventions are **organisation-specific** and are usually
+already **written down somewhere**. Locate that source and read it *before*
+choosing a code — and before asking the user, who will rightly point you at
+the file you failed to read.
+
+Typical locations, in order of likelihood:
+
+- a notes file under the user's notes directory (search for
+  "Accounting", "accounts", "codes")
+- an env var such as `$ACCOUNTING_NOTES`
+- the project's `CLAUDE.md` / `AGENTS.md`, or a project-level skill
+- the private project repo's own `.claude/skills/`
+
+```bash
+# Search likely sources for the supplier or a keyword:
+grep -rinE "<supplier>|<keyword>" "$ACCOUNTING_NOTES" ~/notes ~/org 2>/dev/null
+```
+
+Record the location in the **project's own private skill or memory** once
+found — not here (see AGENTS.md: this repo is public).
+
+### Rules of thumb — VERIFY against the organisation's own conventions
+
+These are common patterns, **not** authority. The organisation's written
+conventions always win:
+
+- **Capital equipment vs expense is threshold-based.** Many organisations
+  capitalise equipment above some value (to a fixed-asset account such as
+  *Computer Equipment*) and expense it below (to a repairs/maintenance or
+  general account). **Find the threshold; never invent one.**
+- **A part-payment can be ambiguous — flag it, don't silently decide.** When
+  a deposit or instalment is *below* the threshold but the equipment's total
+  cost is *above* it, the convention may not say which governs. Both readings
+  are arguable: per-payment keeps each transaction self-consistent;
+  per-item keeps one asset in one account instead of splitting it. **Surface
+  the ambiguity to the user** rather than picking one and presenting it as
+  the rule.
+- **"IT Software and Consumables"-style accounts are for software and
+  subscriptions — not hardware.** Hardware misfiled there is a common error.
+- Fixed-asset accounts pair with an accumulated-depreciation account, so
+  coding there has real tax/accounting consequences. If capitalise-vs-expense
+  is genuinely unresolved by the written conventions, **stop and ask** — it
+  is the adviser's call, not yours.
+
+**Evidence (2026-07-17):** two hardware bills sat on an IT-software account.
+The agent presented account options to the user instead of first locating the
+organisation's written conventions — despite this section already saying to
+consult local guidance. The file existed and answered it unambiguously.
+
+Never rely on memorised codes from another tenant, and never guess when a
+written convention exists.
 
 ## References
 

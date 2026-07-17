@@ -33,6 +33,50 @@ This includes invoices, bills, payments, bank transactions, contacts,
 manual journals, attachments, reconciliations, and any other record or
 artifact. If deletion seems like the cleanest fix, stop and ask first.
 
+## Verifying write operations — READ THE PAGE, don't grep past the error
+
+**A click that reports `✓ Done` proves nothing.** `agent-browser click`
+reports success when it dispatched the click, NOT when Xero accepted the
+change. Xero frequently renders a **refusal as ordinary page text** rather
+than an exception, so the automation layer sees nothing wrong.
+
+**After every write (void, edit, post, reconcile, delete), you MUST:**
+
+1. **Read the page unfiltered** — `agent-browser snapshot` with NO grep, or
+   grep that explicitly INCLUDES `error|reason|locked|cannot|denied|invalid`.
+   A grep written only for the expected *success* text will silently filter
+   the error out of your own view.
+2. **Independently confirm the new state**, ideally via MCP
+   (`list-invoices invoiceNumbers=[...]`) — check `Status` AND `Last Updated`.
+   An unchanged `Last Updated` means the write never landed.
+
+**Never invent an explanation for a failed write before reading the page.**
+
+**Evidence (2026-07-17):** voiding a bill — Bill Options → Void →
+confirmation dialog → OK. Every click reported `✓ Done`, a real dialog
+appeared. The bill was unchanged. The agent grepped for
+`void|status|awaiting`, saw nothing, and fabricated a stale-ref theory. Xero
+had rendered the actual reason on the page all along:
+
+> An error occurred for the following reason:
+> • Your accounts are locked by your adviser up until &lt;date&gt;.
+>   Your action must occur after this date.
+
+### Period lock (adviser lock) — a common silent refusal
+
+An adviser/accountant can **lock the books up to a date**. Any write to a
+record dated *before* that lock date is refused with the message above, no
+matter how correct the action is. This blocks void, edit, delete, and payment
+changes alike.
+
+- **Check the record's DATE against the lock before attempting a write.** A
+  bill dated in a locked period cannot be voided, full stop.
+- Standard remedies, all requiring the user's decision: a **credit note
+  dated after the lock date** to reverse it; asking the adviser to lift the
+  lock; or leaving the record and adding a **note** explaining it.
+- Do NOT retry the same write, and do NOT look for a way around the lock —
+  it is a deliberate accounting control, not a UI bug.
+
 ## Authentication / Login
 
 The browser session **must already be logged in to Xero** before any of the

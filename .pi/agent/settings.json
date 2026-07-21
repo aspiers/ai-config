@@ -32,7 +32,6 @@
     "npm:@aliou/pi-processes",
     "npm:@zenobius/pi-worktrees",
     "npm:pi-tmux-window-name",
-    "npm:pi-workbench",
     {
       "source": "https://github.com/aspiers/pi-status@fix/pi-status-title-renames",
       "extensions": [

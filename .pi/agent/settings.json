@@ -97,7 +97,8 @@
       "source": "npm:pi-sandbox",
       "extensions": []
     },
-    "npm:@spences10/pi-skill-importer"
+    "npm:@spences10/pi-skill-importer",
+    "git:github.com/justcyl/pi-herdr-tab-sync"
   ],
   "hideThinkingBlock": false,
   "powerline": {

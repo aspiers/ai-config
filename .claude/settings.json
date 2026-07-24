@@ -1,69 +1,5 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
-  "agentPushNotifEnabled": true,
-  "alwaysThinkingEnabled": false,
-  "effortLevel": "high",
-  "enabledPlugins": {
-    "beads@beads-marketplace": true,
-    "caveman@caveman": true,
-    "context-mode@context-mode": true,
-    "ruby-lsp@claude-plugins-official": true
-  },
-  "extraKnownMarketplaces": {
-    "caveman": {
-      "source": {
-        "repo": "JuliusBrussee/caveman",
-        "source": "github"
-      }
-    }
-  },
-  "feedbackSurveyState": {
-    "lastShownTime": 1754076415986
-  },
-  "hooks": {
-    "Notification": [
-      {
-        "hooks": [
-          {
-            "command": "printf '\\a' \u003e /dev/tty",
-            "type": "command"
-          },
-          {
-            "command": "mplayer -volume 50 /usr/share/sounds/Oxygen-Sys-App-Positive.ogg",
-            "type": "command"
-          },
-          {
-            "command": "notify-send 'Claude Code finished'",
-            "type": "command"
-          }
-        ],
-        "matcher": ""
-      }
-    ],
-    "PreToolUse": [
-      {
-        "hooks": [
-          {
-            "command": "/home/adam/.local/bin/dcg",
-            "type": "command"
-          }
-        ],
-        "matcher": "Bash"
-      }
-    ],
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "command": "bash '/home/adam/.claude/hooks/herdr-agent-state.sh' session",
-            "timeout": 10,
-            "type": "command"
-          }
-        ],
-        "matcher": "*"
-      }
-    ]
-  },
   "permissions": {
     "allow": [
       "Read",
@@ -254,28 +190,114 @@
       "mcp__plugin_beads_beads__stats",
       "mcp__plugin_beads_beads__update"
     ],
-    "defaultMode": "default",
     "deny": [
       "Bash(pkill:*)",
       "Bash(killall:*)",
       "Bash(bd init)",
       "Bash(bd init:*)"
+    ],
+    "defaultMode": "default"
+  },
+  "model": "opus[1m]",
+  "hooks": {
+    "Notification": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "printf '\\a' > /dev/tty"
+          },
+          {
+            "type": "command",
+            "command": "mplayer -volume 50 /usr/share/sounds/Oxygen-Sys-App-Positive.ogg"
+          },
+          {
+            "type": "command",
+            "command": "notify-send 'Claude Code finished'"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/adam/.local/bin/dcg"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash '/home/adam/.claude/hooks/herdr-agent-state.sh' session",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "/home/adam/bin/herdr-claude-title-watch",
+            "args": [],
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/adam/bin/herdr-claude-title-watch",
+            "args": [
+              "--stop"
+            ],
+            "timeout": 10
+          }
+        ]
+      }
     ]
   },
-  "preferredNotifChannel": "terminal_bell",
-  "remoteControlAtStartup": false,
-  "skipAutoPermissionPrompt": true,
-  "skipWorkflowUsageWarning": true,
   "statusLine": {
-    "command": "bash /home/adam/.claude/statusline-command.sh",
-    "type": "command"
+    "type": "command",
+    "command": "bash /home/adam/.claude/statusline-command.sh"
   },
-  "theme": "auto",
+  "enabledPlugins": {
+    "beads@beads-marketplace": true,
+    "caveman@caveman": true,
+    "context-mode@context-mode": true,
+    "ruby-lsp@claude-plugins-official": true
+  },
+  "extraKnownMarketplaces": {
+    "caveman": {
+      "source": {
+        "source": "github",
+        "repo": "JuliusBrussee/caveman"
+      }
+    }
+  },
+  "alwaysThinkingEnabled": false,
+  "effortLevel": "high",
   "tui": "fullscreen",
-  "verbose": true,
   "voice": {
     "enabled": true,
     "mode": "hold"
   },
-  "voiceEnabled": true
+  "skipWorkflowUsageWarning": true,
+  "theme": "auto",
+  "verbose": true,
+  "preferredNotifChannel": "terminal_bell",
+  "remoteControlAtStartup": false,
+  "agentPushNotifEnabled": true,
+  "skipAutoPermissionPrompt": true,
+  "voiceEnabled": true,
+  "feedbackSurveyState": {
+    "lastShownTime": 1754076415986
+  }
 }

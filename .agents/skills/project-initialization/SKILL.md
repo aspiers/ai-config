@@ -10,8 +10,9 @@ Improve the results of running the `/init` command to create AI agent rules.
 ## When to Use This Skill
 
 Use this skill when:
+
 - Setting up a new repository for AI agent collaboration
-- Neither `CLAUDE.md` nor `AGENTS.md` exists
+- Either `CLAUDE.md` or `AGENTS.md` is missing
 - The `/init` command has been run but needs improvement
 - You want AI agent rules to be discoverable by multiple agents
 

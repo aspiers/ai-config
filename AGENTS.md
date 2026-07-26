@@ -94,13 +94,14 @@ bundling instructions, scripts, and resources. They work across multiple
 platforms including Claude Code, OpenCode, Cursor, Amp, Letta, Goose,
 GitHub Copilot, VS Code, and Claude.ai.
 
-**Official specification**: https://agentskills.io/specification
+**Official specification**: <https://agentskills.io/specification>
 
 ### Skill Structure
 
 Every skill is a directory containing a `SKILL.md` file with:
 
 1. **YAML Frontmatter (required)**:
+
    ```yaml
    ---
    name: skill-name
@@ -174,7 +175,7 @@ When you need to delete files safely:
 
 ### Best Practices
 
-See https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices
+See <https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices>
 for a full description.  Short summary:
 
 - Keep SKILL.md concise; use referenced files for detailed docs
@@ -225,6 +226,7 @@ The `ai-safe-rm` script handles three cases:
 ai-safe-rm src/old-component.ts
 ai-safe-rm src/legacy/*.js
 ```
+
 ```
 
 **Key structural elements:**
@@ -261,7 +263,7 @@ Subagents are specialized AI agents that delegate to skills. They follow the nam
 convention of **agent nouns** with the **-er suffix** ("one who does X"):
 
 | Subagent | Purpose |
-|----------|---------|
+| ---------- | --------- |
 | `code-deduplicator` | Remove code duplication |
 | `code-linter` | Run linters |
 | `code-refactorer` | Refactor large code units |
@@ -318,6 +320,7 @@ Use the `<skill-name>` skill to accomplish this task.
 ### Anti-Pattern to Avoid
 
 Commands or agents with:
+
 - Full implementation steps beyond "Use the X skill"
 - Duplicated content between Claude and OpenCode versions
 - More than ~20 lines of content beyond frontmatter and delegation instruction
@@ -341,6 +344,7 @@ is NOT complete until `git push` succeeds.
 2. **Run quality gates** (if code changed) - Tests, linters, builds
 3. **Update issue status** - Close finished work, update in-progress items
 4. **PUSH TO REMOTE** - This is MANDATORY:
+
    ```bash
    git pull --rebase
    bd export -i .beads/issues.jsonl  # ONLY if using beads Dolt backend
@@ -348,11 +352,13 @@ is NOT complete until `git push` succeeds.
    git push
    git status  # MUST show "up to date with origin"
    ```
+
 5. **Clean up** - Clear stashes, prune remote branches
 6. **Verify** - All changes committed AND pushed
 7. **Hand off** - Provide context for next session
 
 **CRITICAL RULES:**
+
 - Work is NOT complete until `git push` succeeds
 - NEVER stop before pushing - that leaves work stranded locally
 - NEVER say "ready to push when you are" - YOU must push
@@ -378,7 +384,7 @@ bd close <id>         # Complete work
 - Run `bd prime` for detailed command reference and session close protocol
 - Use `bd remember` for persistent knowledge — do NOT use MEMORY.md files
 
-**Architecture in one line:** issues live in a local Dolt DB; sync uses `refs/dolt/data` on your git remote; `.beads/issues.jsonl` is a passive export. See https://github.com/gastownhall/beads/blob/main/docs/SYNC_CONCEPTS.md for details and anti-patterns.
+**Architecture in one line:** issues live in a local Dolt DB; sync uses `refs/dolt/data` on your git remote; `.beads/issues.jsonl` is a passive export. See <https://github.com/gastownhall/beads/blob/main/docs/SYNC_CONCEPTS.md> for details and anti-patterns.
 
 ## Agent Context Profiles
 
@@ -396,6 +402,7 @@ This protocol applies when ending a Beads implementation workflow. It is subordi
 2. **Run quality gates** (if code changed) - Tests, linters, builds
 3. **Update issue status** - Close finished work, update in-progress items
 4. **Handle git/sync by active profile**:
+
    ```bash
    # Conservative/minimal/default: report status and proposed commands; wait for approval.
    git status
@@ -405,9 +412,11 @@ This protocol applies when ending a Beads implementation workflow. It is subordi
    git push
    git status
    ```
+
 5. **Hand off** - Summarize changes, validation, issue status, and any blocked sync/commit/push step
 
 **Critical rules:**
+
 - Explicit user or orchestrator instructions override this Beads block.
 - Do not commit or push without clear authority from the active profile or the current user request.
 - If a required sync or push is blocked, stop and report the exact command and error.
@@ -434,5 +443,5 @@ bd prime                # Refresh Beads context
 - Run `bd prime` when Beads context is missing or stale. Codex 0.129.0+ can load Beads context automatically through native hooks; use `/hooks` to inspect or toggle them.
 - Keep persistent project memory in Beads via `bd remember`; do not create ad hoc memory files.
 
-**Architecture in one line:** issues live in a local Dolt DB; sync uses `refs/dolt/data` on your git remote; `.beads/issues.jsonl` is a passive export. See https://github.com/gastownhall/beads/blob/main/docs/SYNC_CONCEPTS.md for details and anti-patterns.
+**Architecture in one line:** issues live in a local Dolt DB; sync uses `refs/dolt/data` on your git remote; `.beads/issues.jsonl` is a passive export. See <https://github.com/gastownhall/beads/blob/main/docs/SYNC_CONCEPTS.md> for details and anti-patterns.
 <!-- END BEADS CODEX SETUP -->

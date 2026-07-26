@@ -1,0 +1,1 @@
+{"id":"int-d45a1b649af499b95b102330c0a3c1dd","kind":"field_change","created_at":"2026-07-26T18:38:05.96571182Z","actor":"Adam Spiers","issue_id":"ai-7e9","extra":{"field":"status","new_value":"closed","old_value":"in_progress","reason":"Implemented and validated beads-solo policy and progressive-disclosure refactor"}}

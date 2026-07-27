@@ -107,13 +107,7 @@ print(match.group(1))
 }
 
 infer_prefix_from_config() {
-    local value
-    value=$(bd config get issue-prefix 2>/dev/null || true)
-    if [[ -n "$value" && "$value" != *"(not set)"* ]]; then
-        printf '%s\n' "$value"
-        return 0
-    fi
-    return 1
+    current_prefix
 }
 
 infer_prefix_from_cwd() {
@@ -179,6 +173,65 @@ parse_args() {
                 ;;
         esac
     done
+}
+
+# Print the issue prefix bd will actually use, or return non-zero when unset.
+#
+# Read this ONLY via the underscore key. 'bd config get issue-prefix' (hyphen)
+# returns "(not set)" unconditionally, even when the prefix is present, so it
+# silently misreports a working workspace as broken. Exit status is 0 either
+# way, so the "(not set)" marker must be matched textually.
+#
+# Ground truth is the database 'config' table, which is what bd's own strict
+# "database not initialized: issue_prefix config is missing" check consults:
+#
+#     bd sql "SELECT value FROM config WHERE \`key\`='issue_prefix'"
+#
+# ('key' is a SQL reserved word and must be backquoted.) A prefix present only
+# in .beads/config.yaml is NOT sufficient: reads work but 'bd create' fails.
+# 'bd config show' distinguishes the two, printing (database) or (config.yaml)
+# provenance. See upstream steveyegge/beads#3494 and BEADS-UPSTREAM.md.
+current_prefix() {
+    local value
+    value=$(bd config get issue_prefix 2>/dev/null) || return 1
+    [[ -n "$value" && "$value" != *"(not set)"* ]] || return 1
+    printf '%s\n' "$value"
+}
+
+# Reapply the requested prefix if the restored database lacks one.
+#
+# 'bd backup restore' replaces the whole database, so a source workspace that
+# never had an issue_prefix yields a restored database without one, discarding
+# what 'bd init --prefix' wrote moments earlier.
+#
+# bd refuses 'bd config set issue_prefix', and 'bd rename-prefix' cannot run
+# without an existing prefix to rename from ("failed to get current prefix"),
+# so a local re-initialization is the only sanctioned repair. Upstream
+# steveyegge/beads#4827 documents a raw-SQL escape hatch as an alternative.
+restore_prefix() {
+    local existing
+
+    if [[ "$DRY_RUN" == true ]]; then
+        echo "+ # verify issue_prefix survived restore; reinit if not"
+        return 0
+    fi
+
+    if existing=$(current_prefix); then
+        if [[ "$existing" == "$PREFIX" ]]; then
+            return 0
+        fi
+        info "Restored database uses prefix '$existing', not '$PREFIX'; keeping it"
+        return 0
+    fi
+
+    info "Restore left issue_prefix unset; reapplying '$PREFIX'"
+    run bd init --server \
+        --reinit-local \
+        --database "$DATABASE" \
+        --prefix "$PREFIX" \
+        --non-interactive \
+        --skip-agents \
+        --skip-hooks
 }
 
 restore_with_jsonl_fallback() {
@@ -301,6 +354,13 @@ EOF
         fi
     fi
 
+    # 'bd backup restore' replaces the whole database, including the
+    # issue_prefix that 'bd init --prefix' just wrote. When the source
+    # workspace had no prefix of its own, the restored database has none
+    # either, and 'bd create' fails with "issue_prefix config is missing"
+    # even though the migration otherwise succeeded. Reapply it afterwards.
+    restore_prefix
+
     if [[ "$DRY_RUN" == true ]]; then
         info "Dry run complete"
         exit 0
@@ -310,6 +370,9 @@ EOF
     new_context=$(bd context --json)
     new_mode=$(printf '%s' "$new_context" | json_get dolt_mode)
     [[ "$new_mode" == "server" ]] || fail "migration did not end in server mode"
+
+    current_prefix >/dev/null || \
+        fail "migration left issue_prefix unset; 'bd create' will not work"
 
     info "Migration complete"
     bd dolt status || true

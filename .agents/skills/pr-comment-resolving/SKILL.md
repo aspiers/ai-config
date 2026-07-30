@@ -255,8 +255,8 @@ relevant section — GitHub has no "reply to review summary" primitive.
 
 ### 8. Resolve threads
 
-**Default to resolving** when the reply is a "Fixed in `<sha>`" or "Already
-addressed in `<sha>`" closeout — leaving these open clutters the PR and
+**Default to resolving** when the reply is a "Fixed in <sha>" or "Already
+addressed in <sha>" closeout — leaving these open clutters the PR and
 forces the user to do another pass. The user can always re-open if they
 disagree with the fix.
 
@@ -316,12 +316,23 @@ particular surfaces real issues.
 
 Each reply should be one of:
 
-- **Fixed**: "Fixed in `<sha>`. `<one-line explanation>`."
-- **Already addressed**: "Addressed earlier in `<sha>` — `<brief>`."
-- **Deferred**: "Out of scope for this PR. Filed as `<issue link or note>`."
-- **Disagreed**: "`<reasoning>`. Leaving as-is."
+- **Fixed**: "Fixed in <sha>. <one-line explanation>."
+- **Already addressed**: "Addressed earlier in <sha> — <brief>."
+- **Deferred**: "Out of scope for this PR. Filed as <issue link or note>."
+- **Disagreed**: "<reasoning>. Leaving as-is."
 
 Keep replies terse. Link to commits / issues rather than restating changes.
+
+**Never wrap a commit SHA in backticks.** GitHub autolinks a bare SHA to the
+commit (rendering it as a short clickable ref); inside backticks it is inert
+literal text, so the reader cannot click through to the diff being cited.
+Write `Fixed in 46a3aa4`, not ``Fixed in `46a3aa4` ``. The same applies to
+issue and PR references — write `#75`, not `` `#75` `` — and to `owner/repo#N`
+and full GitHub URLs.
+
+Backticks are still correct for everything that is *not* an autolink target:
+file paths, identifiers, error strings, scope strings, config keys. The rule
+is specifically about references GitHub would otherwise turn into links.
 
 ## Gotchas
 

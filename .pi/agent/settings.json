@@ -9,7 +9,6 @@
     "npm:pi-mcp-adapter",
     "npm:pi-markdown-preview",
     "npm:@juicesharp/rpiv-btw",
-    "npm:pi-ask-user",
     "npm:pi-agent-browser-native",
     "npm:pi-mermaid",
     {
@@ -101,7 +100,8 @@
       "extensions": []
     },
     "npm:@spences10/pi-skill-importer",
-    "git:github.com/justcyl/pi-herdr-tab-sync"
+    "git:github.com/justcyl/pi-herdr-tab-sync",
+    "git:github.com/aspiers/pi-ask-user@f83e0267c8980056c19609a4ddf1cf0301b30ef7"
   ],
   "hideThinkingBlock": false,
   "powerline": {

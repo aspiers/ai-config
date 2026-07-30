@@ -36,36 +36,36 @@ Claude Code configuration containing:
 - `CLAUDE.md` - Global instructions and coding rules
 - `settings.json` - Permission configuration for allowed bash commands
 - `commands/` - Custom slash commands:
-    - `commit` - Intelligent git commit workflow
-    - `do` - Task execution helper
-    - `dry` - Dry-run mode for testing changes
-    - `gen-prp` - Generate PR descriptions
-    - `gen-tasks` - Generate task lists from specifications
-    - `init2` - Project initialization
-    - `iter` - Iterative development workflow
-    - `lint` - Code linting
-    - `obs` - Obsidian integration
-    - `reflect` - Self-reflection prompt
-    - `review` - Code review
-    - `small` - Small change workflow
-    - `stage` - Git staging helper
-    - `test` - Test runner
+  - `commit` - Intelligent git commit workflow
+  - `do` - Task execution helper
+  - `dry` - Dry-run mode for testing changes
+  - `gen-prp` - Generate PR descriptions
+  - `gen-tasks` - Generate task lists from specifications
+  - `init2` - Project initialization
+  - `iter` - Iterative development workflow
+  - `lint` - Code linting
+  - `obs` - Obsidian integration
+  - `reflect` - Self-reflection prompt
+  - `review` - Code review
+  - `small` - Small change workflow
+  - `stage` - Git staging helper
+  - `test` - Test runner
 - `agents/` - Specialized sub-agents:
-    - `code-deduplicator` - Remove code duplication
-    - `code-linter` - Automated linting
-    - `code-refactorer` - Refactor large code units
-    - `code-reviewer` - Code review analysis
-    - `doc-updater` - Update documentation based on learnings
-    - `git-committer` - Commit message generation
-    - `git-stager` - Selective git staging
-    - `prp-generator` - Generate Product Requirements Prompts
-    - `task-generator` - Generate tasks from PRPs
-    - `task-implementer` - Task implementation
-    - `task-orchestrator` - Complete workflow orchestration
-    - `test-runner` - Test execution
+  - `code-deduplicator` - Remove code duplication
+  - `code-linter` - Automated linting
+  - `code-refactorer` - Refactor large code units
+  - `code-reviewer` - Code review analysis
+  - `doc-updater` - Update documentation based on learnings
+  - `git-committer` - Commit message generation
+  - `git-stager` - Selective git staging
+  - `prp-generator` - Generate Product Requirements Prompts
+  - `task-generator` - Generate tasks from PRPs
+  - `task-implementer` - Task implementation
+  - `task-orchestrator` - Complete workflow orchestration
+  - `test-runner` - Test execution
 - `skills/` - [Agent Skills](https://agentskills.io/) (modular capability packages):
-    - `safe-rm/` - Safe file deletion with git-aware backup
-    - `git-staging/` - Non-interactive git staging techniques
+  - `safe-rm/` - Safe file deletion with git-aware backup
+  - `git-staging/` - Non-interactive git staging techniques
 
 #### `.config/opencode/`
 
@@ -76,8 +76,59 @@ Claude Code configuration containing:
 - `command/` - Slash commands (mirrors `.claude/commands/`)
 - `agent/` - Sub-agents (mirrors `.claude/agents/`, plus `task-orchestrator`)
 - `plugin/` - JavaScript plugins:
-    - `env-protection.js` - Prevents exposure of environment variables
-    - `notification.js` - Desktop notifications for agent events
+  - `env-protection.js` - Prevents exposure of environment variables
+  - `notification.js` - Desktop notifications for agent events
+
+#### `.pi/agent/`
+
+[Pi](https://github.com/badlogic/pi-mono/tree/main/packages/coding-agent)
+configuration containing:
+
+- `settings.json` - Provider, model, package, status-line, tool-rendering, and
+  extension settings
+- `keybindings.json` - Emacs-style editor bindings and local key overrides
+- `prompts/` - Slash-command prompt templates, mostly thin wrappers which
+  delegate to the shared skills under `.agents/skills/`
+- `extensions/desktop-theme-sync.ts` - Watches `$XDG_CONFIG_HOME/theme` and
+  maps its `light` or `dark` value to the themes configured in
+  `theme-sync.json`; `/theme-sync` reports the current synchronization state
+- `extensions/herdr-agent-state.ts` - Herdr-managed integration which reports
+  Pi sessions as working, idle, or blocked; reinstalling Herdr may overwrite
+  it
+- `extensions/quotas.json` and `extensions/powerline-footer/theme.json` -
+  Quota display and powerline presentation settings
+- `pi-resource-center-settings.json` - Resource-center display and external
+  skill-source settings
+
+Skills are not maintained directly under `.pi/agent/`. The shared,
+cross-platform skill sources live under `.agents/skills/` and Pi discovers
+them through its configured packages and importers.
+
+##### Local-only state
+
+Authentication data, sessions, downloaded Git packages, caches, and extension
+logs are intentionally excluded by `.gitignore`. They must not be added to
+this public repository.
+
+##### Author-specific integrations and package sources
+
+> **⚠️ AUTHOR-SPECIFIC:** The following choices support the author's desktop
+> and Herdr setup. Other users should substitute their own integrations and
+> normally use published package releases.
+
+- `git:github.com/justcyl/pi-herdr-tab-sync` installs the Herdr tab and agent
+  state integration used by `extensions/herdr-agent-state.ts`.
+- `pi-ask-user` is temporarily installed from
+  [aspiers/pi-ask-user at f83e026](https://github.com/aspiers/pi-ask-user/commit/f83e0267c8980056c19609a4ddf1cf0301b30ef7)
+  instead of npm. It emits `herdr:blocked` while `ask_user` waits for input,
+  allowing Herdr to report that the agent is blocked rather than working. It
+  is based on
+  [upstream PR #27](https://github.com/edlsh/pi-ask-user/pull/27). Once that
+  change is released, replace the Git commit pin with `npm:pi-ask-user`.
+- `pi-status` is installed from the author's
+  [fix/pi-status-title-renames branch](https://github.com/aspiers/pi-status/tree/fix/pi-status-title-renames),
+  which reapplies the configured title after Pi's `/name` command or
+  `pi-tmux-window-name`'s asynchronous `/rename` command changes it.
 
 #### Command and Agent Delegation
 
@@ -94,14 +145,14 @@ See [AGENTS.md](AGENTS.md) for the detailed delegation pattern.
 ### Scripts (`bin/`)
 
 - **`ai-safe-rm`** - Git-aware safe file deletion script (used by safe-rm skill):
-    - Tracked+unmodified files: deleted directly (recoverable from git)
-    - Tracked+modified files: backed up to `.safe-rm/` with content hash
-    - Untracked files: backed up to `.safe-rm/` with content hash
+  - Tracked+unmodified files: deleted directly (recoverable from git)
+  - Tracked+modified files: backed up to `.safe-rm/` with content hash
+  - Untracked files: backed up to `.safe-rm/` with content hash
 - **`audit-npm-packages`** - Downloads npm tarballs with `npm pack --ignore-scripts`
   and emits a JSON security-audit summary covering npm metadata, lifecycle
   scripts, Pi extension metadata, dependency names, and simple risky source
   pattern counts:
-    - Example: `audit-npm-packages --output /tmp/audit.json pi-web-access pi-lens`
+  - Example: `audit-npm-packages --output /tmp/audit.json pi-web-access pi-lens`
 - **`ccu`** - Runs the latest version of `ccusage` to monitor Claude Code usage statistics
 - **`ccul`** - Live monitoring of Claude Code usage with automatic refresh
   every 5 seconds using blocks display format; although for _live_ monitoring,

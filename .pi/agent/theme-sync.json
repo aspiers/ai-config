@@ -1,6 +1,6 @@
 {
   "themes": {
-    "light": "amp-light",
+    "light": "catppuccin-latte",
     "dark": "catppuccin-mocha"
   }
 }

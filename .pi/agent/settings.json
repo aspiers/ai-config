@@ -69,7 +69,10 @@
       ]
     },
     "npm:@sherif-fanous/pi-catppuccin",
-    "npm:@sherif-fanous/pi-theme-sync",
+    {
+      "source": "npm:@sherif-fanous/pi-theme-sync",
+      "extensions": []
+    },
     "npm:@siesing/pi-shortcuts",
     {
       "source": "npm:pi-recap",

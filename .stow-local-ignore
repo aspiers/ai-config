@@ -72,6 +72,7 @@ COPYING
 node_modules
 ^/root-etc-stow-pkg
 ^/\.agents/skills/allow-commands
+^/\.agents/skills/beads
 ^/tests
 ^/\.beads
 ^/\.claude/settings.local.json

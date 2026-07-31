@@ -333,36 +333,16 @@ Commands or agents with:
 
 **Always run tests and verification commands before completing any code change.**
 
-## Landing the Plane (Session Completion) when using beads
+## Beads Solo
 
-**When ending a beads work session**, you MUST complete ALL steps below. Work
-is NOT complete until `git push` succeeds.
+Use the `beads-solo` skill for Beads setup and maintainer policy in this
+repository. Use the `beads` skill for the standard Beads workflow.
 
-**MANDATORY WORKFLOW:**
-
-1. **File issues for remaining work** - Create issues for anything that needs follow-up
-2. **Run quality gates** (if code changed) - Tests, linters, builds
-3. **Update issue status** - Close finished work, update in-progress items
-4. **PUSH TO REMOTE** - This is MANDATORY:
-
-   ```bash
-   git pull --rebase
-   bd export -i .beads/issues.jsonl  # ONLY if using beads Dolt backend
-   bd sync  # ONLY if still using the old SQLite beads backend; it's a no-op if using Dolt!
-   git push
-   git status  # MUST show "up to date with origin"
-   ```
-
-5. **Clean up** - Clear stashes, prune remote branches
-6. **Verify** - All changes committed AND pushed
-7. **Hand off** - Provide context for next session
-
-**CRITICAL RULES:**
-
-- Work is NOT complete until `git push` succeeds
-- NEVER stop before pushing - that leaves work stranded locally
-- NEVER say "ready to push when you are" - YOU must push
-- If push fails, resolve and retry until it succeeds
+This repository opts into the Beads **team-maintainer** profile for issue
+management and commits. Unless a current user or orchestrator instruction
+says otherwise, agents may manage issues and make atomic commits as work
+progresses. They must not push Git branches or sync or push Dolt state unless
+explicitly requested.
 
 <!-- BEGIN BEADS INTEGRATION v:1 profile:minimal hash:6cd5cc61 -->
 ## Beads Issue Tracker

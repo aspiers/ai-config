@@ -62,3 +62,11 @@
 # - github.repo
 
 export.auto: true
+
+no-push: true
+
+export.path: "issues.jsonl"
+
+export.git-add: false
+
+import.path: "issues.jsonl"

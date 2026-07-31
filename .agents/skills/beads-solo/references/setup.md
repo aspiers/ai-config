@@ -101,7 +101,25 @@ an enrollment request alone.
    `bd dolt pull`. Report stale commands to the user rather than silently
    rewriting surrounding policy.
 
-7. Track the marker and governance files before initialization.
+7. Decide the JSONL publication policy before configuring recovery state.
+   Read the repository governance files to determine whether the repository is
+   public. If that is not explicit, ask the owner. Explain that tracking
+   `.beads/issues.jsonl` publishes regular issue titles, descriptions, labels,
+   dependencies, and comments to everyone who can read the Git repository.
+   Memories and infrastructure beads are excluded by default, but ordinary
+   issue content can still be sensitive.
+
+   Ask the user to choose explicitly between:
+
+   - **tracked recovery export:** publish the issue export through Git; or
+   - **private local export:** retain local import/export recovery while
+     preventing Git from staging the file.
+
+   For a public repository, recommend the private option unless publication is
+   intentional. Do not infer consent from an existing file, ignore rule, Beads
+   configuration, or the repository's general use of issue tracking.
+
+8. Track the marker and governance files before initialization.
 
 ## Initialize in Server Mode
 
@@ -247,22 +265,39 @@ rely on remote-URL heuristics.
 
 ## Configure JSONL Recovery State
 
-Use Beads' built-in auto-export and auto-staging:
+Apply the publication decision recorded during enrollment. For either choice,
+configure local automatic export and import:
 
 ```bash
 bd config set export.path issues.jsonl
 bd config set export.auto true
-bd config set export.git-add true
 bd config set import.path issues.jsonl
 bd config set import.auto true
 bd hooks install
 ```
 
-Track `.beads/config.yaml`, `.beads/metadata.json`, and
-`.beads/issues.jsonl` when it exists. The JSONL contains regular issues,
-labels, dependencies, and comments. It intentionally excludes memories,
-infrastructure beads, templates, and ephemeral records; do not publish those
-through a custom hook.
+For a **tracked recovery export**:
+
+1. Set `bd config set export.git-add true`.
+2. Generate a fresh export with `bd export -o .beads/issues.jsonl` and inspect
+   it for credentials, personal data, confidential material, private URLs, and
+   author-specific facts that the repository policy forbids publishing.
+3. If an ignore rule currently protects the file, obtain specific approval
+   before removing that protection; changing it expands what can be committed.
+4. Track `.beads/issues.jsonl` only after the review passes.
+
+For a **private local export**:
+
+1. Set `bd config set export.git-add false`.
+2. Keep `.beads/issues.jsonl` untracked and ignored. Preserve an existing
+   `.git/info/exclude` rule; if none exists, add one there so the privacy choice
+   remains local rather than changing published ignore policy unexpectedly.
+3. Never use `git add -f` on the export.
+
+Track `.beads/config.yaml` and `.beads/metadata.json` for either choice. The
+JSONL contains regular issues, labels, dependencies, and comments. It excludes
+memories, infrastructure beads, templates, and ephemeral records by default;
+do not publish those through a custom hook.
 
 This export is an issue-level recovery path, not a full backup. It does not
 preserve Dolt branches, commit history, working sets, or every database table.
@@ -284,8 +319,9 @@ changes, obtain explicit approval before applying it.
 
 The expected result is:
 
-- track `.beads/.gitignore`, `.beads/config.yaml`, `.beads/metadata.json`, and
-  `.beads/issues.jsonl` when it exists;
+- track `.beads/.gitignore`, `.beads/config.yaml`, and
+  `.beads/metadata.json`; track `.beads/issues.jsonl` only when its publication
+  was explicitly approved, and otherwise keep it untracked and ignored;
 - ignore Dolt data, native backups, credentials, environment files, locks,
   sockets, logs, PIDs, export state, and legacy databases;
 - retain root safeguards such as `.dolt/`, `*.db`,
@@ -315,6 +351,9 @@ Also verify:
 - `.beads-solo` is tracked, empty, and regular;
 - `.beads/metadata.json` selects server mode;
 - `no-push` is `true`;
+- `export.git-add` matches the explicit publication choice;
+- a tracked export exists and passed sensitive-content review, or a private
+  export remains untracked and ignored;
 - `AGENTS.md` contains the skill declaration and team-maintainer opt-in;
 - any tracked `CLAUDE.md` is byte-for-byte identical to `AGENTS.md`; and
 - the declaration withholds Git push and Dolt sync/push authority.

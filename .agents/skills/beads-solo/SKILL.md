@@ -11,7 +11,9 @@ description: >-
 # Beads Solo
 
 This is a policy layer. Use the [`beads`](../beads/SKILL.md) skill for normal
-Beads workflow and CLI guidance; do not duplicate it here.
+Beads workflow and CLI guidance, and apply
+[`beads-best-practices`](../beads-best-practices/SKILL.md) to every Beads
+interaction. Do not duplicate either skill here.
 
 ## Apply on Every Use
 

@@ -5,7 +5,13 @@ description: Use when working in a repository that uses bd or Beads for durable 
 
 # Beads
 
-Use Beads as the shared project task system. Local plans, scratch files, and personal memories are useful, but they are not the durable source of truth for project work.
+Use Beads as the shared project task system. Local plans, scratch files, and
+personal memories are useful, but they are not the durable source of truth for
+project work.
+
+Always load and apply
+[`beads-best-practices`](../beads-best-practices/SKILL.md) for issue content,
+comments, chronological updates, and readable Markdown formatting.
 
 ## First Step
 
@@ -35,25 +41,29 @@ bd list --status=open
 bd list --status=in_progress
 ```
 
-2. Inspect before editing:
+1. Inspect before editing:
 
 ```bash
 bd show <id>
 ```
 
-3. Claim work atomically:
+1. Claim work atomically:
 
 ```bash
 bd update <id> --claim
 ```
 
-4. Create durable follow-up work when implementation reveals new tasks:
+1. Create durable follow-up work when implementation reveals new tasks:
 
 ```bash
-bd create "Short title" --description="Why this exists and what needs to be done" --type=task --priority=2
+bd create --title="Short title" --type=task --priority=2 --body-file - <<'EOF'
+## Context
+
+Why this exists and what needs to be done.
+EOF
 ```
 
-5. Close completed work:
+1. Close completed work:
 
 ```bash
 bd close <id> --reason="Completed"

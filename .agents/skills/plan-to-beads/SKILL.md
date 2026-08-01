@@ -6,9 +6,11 @@ description: Decompose an approved implementation plan into self-contained beads
 # Plan to Beads
 
 You are taking an approved implementation plan and decomposing it into beads
-(bd) issues. Each bead must be **100% self-contained** so that any agent
-picking it up has zero questions and needs zero assumptions. However it should
-also reference the plan file(s) and other relevant resources it was based on.
+(bd) issues. Apply
+[`beads-best-practices`](../beads-best-practices/SKILL.md) throughout. Each bead
+must be **100% self-contained** so that any agent picking it up has zero
+questions and needs zero assumptions. However it should also reference the
+plan file(s) and other relevant resources it was based on.
 
 ## Workflow
 
@@ -39,7 +41,7 @@ descriptions.
 
 Break the plan into granular implementation tasks. For each proposed bead, show:
 
-```
+```text
 [1] <title>
     Depends on: (none | bead numbers)
     Files: <file paths>
@@ -163,7 +165,7 @@ tightly coupled).
 
 Every bead description MUST follow this structure:
 
-```
+```markdown
 ## Context
 
 [Why this task exists. Reference the broader goal and any relevant issue IDs and resources.]

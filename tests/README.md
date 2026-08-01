@@ -1,6 +1,17 @@
 # Test Suite
 
-This directory contains test suites for the AI configuration scripts.
+This directory contains test suites for the AI configuration scripts and
+deployment contracts.
+
+## AI Cockpit Contract Tests
+
+`test_ai_cockpit_contract.py` validates the target-neutral orchestrator contract,
+placeholder-only environment inventory, required security prohibitions, stable
+volume names, and absence of common instance-specific identifiers.
+
+```bash
+python3 tests/test_ai_cockpit_contract.py
+```
 
 ## ai-safe-rm Tests
 

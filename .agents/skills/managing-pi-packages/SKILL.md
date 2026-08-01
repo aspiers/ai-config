@@ -14,8 +14,8 @@ compatibility: >-
 # Managing Pi Packages
 
 Manage Pi packages safely from discovery through verification and durable
-recording. Treat auditing as a mandatory gate within package management, not
-as a separate optional activity.
+recording. Treat auditing as a mandatory gate within package management unless
+the explicitly invoked maintainer-authored fork exception below applies.
 
 Pi calls these **packages** because one source can provide extensions, skills,
 prompt templates, and themes. All can influence agent behavior; extensions
@@ -24,9 +24,10 @@ run with full user privileges.
 ## Required references
 
 - Read [the audit procedure](references/auditing.md) **completely before every
-  install or upgrade**, and whenever the user requests an audit. It contains
-  the non-execution rules, npm/Git evidence workflow, completeness standard,
-  dependency review, and verdict definitions.
+  install or upgrade** unless the operation qualifies for the
+  maintainer-authored fork exception below, and whenever the user requests an
+  audit. It contains the non-execution rules, npm/Git evidence workflow,
+  completeness standard, dependency review, and verdict definitions.
 - Read [reporting and package notes](references/reporting.md) **completely
   before finalizing an audit or any audited package change**. It defines the
   persistent Markdown/HTML report and package-inventory update.
@@ -44,6 +45,28 @@ Do not partially sample a reference and infer the remainder.
   Obtain a new explicit decision before overriding one of those results.
 - Preserve unrelated settings and package state. Never broaden package filters
   or activate additional resources merely because they share a package.
+
+## Maintainer-authored fork exception
+
+> **⚠️ AUTHOR-SPECIFIC:** For the author's own forks, when the author explicitly
+> states that the target code is their own authored or reviewed work and does
+> not need another audit, do not perform a redundant source-code audit or
+> generate an audit verdict/report for that code.
+
+Apply this exception only after the author explicitly invokes it; ownership of
+an account or repository is not enough to infer consent. Still:
+
+- verify the configured fork URL, branch/ref, and resolved commit;
+- inspect manifests and changed-file metadata for unexpected third-party,
+  generated, binary, dependency, or lifecycle payloads;
+- audit any such material payload not covered by the author's statement;
+- validate installation, resource scope, tests, and rollback after the source
+  change; and
+- record the resolved commit because a mutable branch can move later.
+
+This exception changes the evidence required for trusted maintainer-authored
+code; it does not make arbitrary code safe merely because it is hosted in a
+fork.
 
 ## Development forks
 
@@ -175,7 +198,8 @@ package-notes inventory after the final state is known.
 ## Completion
 
 A management operation is complete only when the requested final state is
-verified, the audit/report obligations are satisfied, package notes reflect
-that state, and rollback/removal guidance is explicit. Report changed files
+verified, applicable audit/report or maintainer-attestation obligations are
+satisfied, package notes reflect that state, and rollback/removal guidance is
+explicit. Report changed files
 and settings clearly; do not claim the current Pi process loaded a newly
 installed package when restart or `/reload` is still pending.

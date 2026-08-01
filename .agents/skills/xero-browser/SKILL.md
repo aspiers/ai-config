@@ -6,6 +6,9 @@ description: General Xero browser automation notes. Use when automating any Xero
 # Xero Browser Automation
 
 General notes for automating Xero with `agent-browser`.
+Load [`agent-browser-local`](../agent-browser-local/SKILL.md) alongside this
+skill for cross-site viewport, stale-ref, tab-safety, waiting, and widget
+guidance.
 
 For Xero MCP server usage (OAuth, list-* tools, searching records by ID
 vs. pagination), see the separate [`xero-mcp`](../xero-mcp/SKILL.md)
@@ -60,7 +63,7 @@ had rendered the actual reason on the page all along:
 
 > An error occurred for the following reason:
 > • Your accounts are locked by your adviser up until &lt;date&gt;.
->   Your action must occur after this date.
+> Your action must occur after this date.
 
 ### Period lock (adviser lock) — a common silent refusal
 
@@ -105,7 +108,7 @@ edge-block (`errors.edgesuite.net`, `Reference #...`) or an
 `/app/.../errors/404` page — even after a seemingly successful login —
 the browser session has lost its Xero auth. **Do NOT try to re-auth
 yourself.** Stop, and prompt the user to intercede and manually log in
-at **https://login.xero.com/**. Wait for them to confirm login is
+at **<https://login.xero.com/>**. Wait for them to confirm login is
 complete, then re-verify with `eval "location.href"` — it should land
 on `go.xero.com/app/...`, not `login.xero.com`. Do not treat these
 error pages as a dead end or switch to a workaround; hand off and wait.
@@ -117,8 +120,9 @@ After a successful login+2FA the URL settles on `go.xero.com/app/...`.
 
 ## Waiting
 
-**Never use** `agent-browser wait --load networkidle` — Xero never reaches networkidle.
-Use a fixed wait instead. **~3 s (`wait 3000`) is the ceiling, not the
+Apply the general waiting guidance from `agent-browser-local`. Xero's
+persistent background requests never reach network idle, so use a concrete
+state or fixed wait instead. **~3 s (`wait 3000`) is the ceiling, not the
 default** — for most in-app interactions (menu open, picker toggle,
 snapshot after a click) 1–2 s is plenty; reserve 3 s for full report
 re-renders after `Update`. Waiting more than 3 s to "let a page settle"
@@ -368,69 +372,22 @@ full-list method becomes unreliable on a specific page state.
 
 ## Viewport
 
-The default viewport (1280x720) is too short for many Xero pages, causing
-elements to overlap or scroll unexpectedly. Before starting Xero
-automation, fit the agent-browser window to the current screen using the
-[`agent-browser-viewport`](../agent-browser-viewport/SKILL.md) skill:
-
-```bash
-.agents/skills/agent-browser-viewport/scripts/fit-viewport.py
-```
-
-### Notes
-
-- `window-screen-info -n .agent-browser-data` locates the agent-browser
-  Chromium window (WM_CLASS instance `.agent-browser-data`) and reports
-  dimensions of the screen it occupies — works on multi-monitor setups.
-- Reported screen dims are device pixels. `agent-browser set viewport`
-  also takes device pixels. At `devicePixelRatio > 1` the in-page
-  `window.innerWidth` / `innerHeight` will be smaller (CSS pixels =
-  device pixels ÷ DPR), which is expected.
-- Takes effect immediately on the current session — no reload needed.
+Xero's dense pages benefit from fitting the browser before automation. Follow
+the `agent-browser-local` viewport guidance, which delegates to the standalone
+`agent-browser-viewport` helper.
 
 ## Non-standard UI Elements
 
 Xero uses non-standard HTML for many interactive elements.
 
-### Dropdown menus (`dl`/`dt`/`dd` pattern)
+### Options menus
 
-Xero renders dropdown menus as `<dl>` elements (e.g. Options menus on payment/transaction pages).
-The `<dt>` is the visible trigger; the `<dd>` contains the `<ul>` of items.
-
-**IMPORTANT: The `dl` element ID varies by page** (e.g. `ext-gen18`, `paymentOptions`, etc.).
-Never hardcode the ID.
-
-**Preferred approach: snapshot first, click the ref.**
-
-```bash
-agent-browser snapshot -i
-# Look for a ref matching the Options dt or the menu items, then click it directly.
-agent-browser click @eN
-```
-
-**Fallback (if snapshot refs don't work): find by text, force the `dd` visible, click via JS.**
-
-CSS hover/class toggling can make the `dd` invisible — in that case force it open:
-
-```bash
-# 1. Force open the dd and inspect available actions
-agent-browser eval --stdin <<'EVALEOF'
-const dl = Array.from(document.querySelectorAll('dl')).find(el => el.innerText.trim().startsWith('Options'));
-const dd = dl.querySelector('dd');
-dd.style.display = 'block';
-dd.style.visibility = 'visible';
-dd.style.opacity = '1';
-dd.innerHTML
-EVALEOF
-
-# 2. Click the desired item by matching its onclick attribute
-agent-browser eval --stdin <<'EVALEOF'
-const dl = Array.from(document.querySelectorAll('dl')).find(el => el.innerText.trim().startsWith('Options'));
-dl.querySelector('dd a[onclick*="FUNCTION_NAME"]').click()
-EVALEOF
-```
+Xero payment and transaction pages use the generic `dl`/`dt`/`dd` pattern
+documented in `agent-browser-local`. Their generated ids vary, so locate the
+menu by its visible `Options` label.
 
 Common `onclick` patterns seen on payment/transaction pages:
+
 - `showUnrecWarning` or `singleUnrecWarning` — Unreconcile (varies by page type)
 - `DeleteTransaction` — Remove & Redo
 - `PrintPopup` — View Receipt (PDF)
@@ -490,49 +447,12 @@ hashes as well (give the Cryptio both-params link / block-explorer URL +
 timestamp + what it is). Only after the full, described form has been given
 once may a short prefix be used for repeat mentions in the same message thread.
 
-### ExtJS autocomplete dropdowns (general)
+### ExtJS autocomplete dropdowns
 
-Xero uses ExtJS for many autocomplete/combo dropdowns throughout the application,
-not just the account field on manual journals. The pattern below applies generally.
-
-Examples include the account field on manual journals, tax rate fields, and
-other combo fields throughout Xero. The dropdown is **not visible in snapshots** (neither `-i`,
-`-i -C`, nor plain `snapshot`) as a clickable ref — it appears only as a bare
-`StaticText` at the bottom of the full snapshot with no ref assigned.
-
-`agent-browser find text "..." click` does NOT work — it clicks the text node
-itself, not the containing element that has the click handler.
-
-**Correct approach:**
-
-1. Snapshot `-i` to get the account cell ref (it will be an empty cell after the description cell)
-2. Click the account cell to activate the textbox
-3. Snapshot `-i` again to confirm the textbox ref (e.g. e58)
-4. `agent-browser type @eN "6999"` — use `type` not `fill`
-5. Wait 800ms for the dropdown to appear
-6. Click the item via JS targeting `.x-combo-list-item` by text:
-
-```bash
-agent-browser eval "Array.from(document.querySelectorAll('.x-combo-list-item')).find(el => el.innerText.trim() === '6999 - Realised currency gains or losses').click()"
-```
-
-7. Snapshot `-i` to confirm the account cell now shows the account name
-
-**Why JS and not `find text`?** The click handler is on the `.x-combo-list-item`
-div, not the text node. `find text` clicks the text node which doesn't bubble
-correctly. The JS approach finds the correct container element by text and
-calls `.click()` on it directly.
-
-**Note on refs between snapshots:** Ref IDs (e.g. `@e58`) can be
-reassigned every time the page updates. So to be safe, always
-re-snapshot before using a ref — never reuse refs from a previous
-snapshot.
-
-### Confirmation dialogs
-
-After triggering an action that produces a confirmation dialog, use `agent-browser snapshot -i`
-to get fresh refs, then click the relevant ref directly. Do not assume element types or use
-text-based selectors.
+Xero account and tax-rate fields use the ExtJS combo pattern documented in
+`agent-browser-local`. On manual journals, activate the empty account cell,
+`type` the account code, select the exact `.x-combo-list-item`, and verify that
+the cell displays the chosen account.
 
 ## Bank Reconciliation — Find & Match
 

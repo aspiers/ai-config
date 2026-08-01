@@ -45,6 +45,39 @@ Do not partially sample a reference and infer the remainder.
 - Preserve unrelated settings and package state. Never broaden package filters
   or activate additional resources merely because they share a package.
 
+## Development forks
+
+Pi-managed Git checkouts are runtime installation state, not development
+working trees. Do not create feature branches, change remotes, or develop code
+inside `~/.pi/agent/git/`; keep a separately managed development checkout.
+Changing the package source used by Pi is a distinct, audited source change and
+must not happen merely because development work was requested.
+
+> **⚠️ AUTHOR-SPECIFIC:** On the author's machines, place a third-party
+> development checkout at `~/.GIT/3rd-party/<repository-name>` and register it
+> in `~/.config/mr/groups.d/26-AI`. Other users must substitute their own
+> source-tree and repository-manager conventions.
+
+Follow the existing remote scheme in that `mr` group file rather than
+inventing new remote names. For the author's upstream-plus-personal-fork
+layout, the canonical upstream is `origin` and the personal fork is the
+read-write `github` remote. Register that layout using the existing `mr`
+helpers. For example:
+
+```ini
+[$HOME/.GIT/3rd-party/example]
+checkout = github_clone
+remotes =
+    auto_remotes
+    github_readwrite_remote <fork-owner>
+lib =
+    set_git_origin_user <upstream-owner>
+```
+
+Before cloning, check whether the directory and `mr` entry already exist.
+Keep the Pi-managed checkout unchanged until a separately requested and audited
+installation or source-switch test is ready.
+
 ## Lifecycle workflow
 
 ### 1. Inventory effective state

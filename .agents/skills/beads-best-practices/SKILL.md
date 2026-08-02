@@ -55,6 +55,25 @@ workflow explicitly requires overlapping tracked work. Do not bulk-claim a
 label, epic, milestone, search result, or requested task set merely because all
 items are in scope.
 
+## Pair IDs with Human-Readable Titles
+
+Never refer to a bead in human-facing prose solely by its opaque ID. Pair the
+ID with its title or a concise human-readable description so readers do not
+have to look it up to understand the reference.
+
+Prefer either of these forms:
+
+```markdown
+- `ai-wt0` — **Handle expired sessions**
+- Handle expired sessions (`ai-wt0`)
+```
+
+Apply this to conversation responses, progress reports, comments, handoffs,
+blocker explanations, commit summaries, and lists of related work. When a bead
+has already been introduced in the immediate context, use its readable title
+rather than falling back to the bare ID. Bare IDs remain appropriate in
+machine-facing commands such as `bd show ai-wt0`.
+
 ## Track Every Work Item
 
 All substantive project work must be represented by a bead. Do not perform

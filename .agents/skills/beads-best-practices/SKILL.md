@@ -26,8 +26,9 @@ bd show "$id"
 bd update "$id" --claim
 ```
 
-Do not edit code, change project state, or begin the task while its bead remains
-unclaimed. Claiming makes ownership visible and prevents duplicated work.
+Do not edit code, change project state, or begin the task while its bead
+remains unclaimed. Claiming makes ownership visible and prevents duplicated
+work.
 
 If another worker already owns the bead, do not overwrite the assignee or work
 on it in parallel without coordination. Stop and resolve ownership through the
@@ -61,8 +62,8 @@ When a distinct work item emerges during another task:
 
 4. Add blocking dependencies when the new work must finish before the active
    bead can continue.
-5. Return to the active bead, or explicitly claim the new bead before switching
-   to it.
+5. Return to the active bead, or explicitly claim the new bead before
+   switching to it.
 
 Create the bead even when the work will be deferred or handed to someone else.
 Do not silently expand the active bead's scope. Routine steps already required
@@ -88,6 +89,46 @@ turn sequences or sets of facts into lists. Do not rely on renderer word wrap
 or single newlines inside one paragraph to provide structure.
 
 Keep titles concise plain text; put detail in the Markdown body.
+
+### Link Every Relevant Reference
+
+Represent GitHub issues, pull requests, documentation, dashboards, and other
+relevant web references as descriptive Markdown hyperlinks. Do not leave a
+bare URL or an unlinked textual reference when its target is available.
+
+Use direct links and labels that identify the destination. Format technical
+identifiers inside link labels as inline code:
+
+```markdown
+- Issue: [`owner/repository#123`][issue]
+- Pull request: [`owner/repository#456`][pull-request]
+- Reference: [Beads sync concepts][sync-concepts]
+
+[issue]: https://github.com/owner/repository/issues/123
+[pull-request]: https://github.com/owner/repository/pull/456
+[sync-concepts]: https://example.com/beads/sync-concepts
+```
+
+Resolve the canonical target before posting. Do not fabricate a URL when the
+link target is unknown; find it first, or state clearly that it could not be
+resolved.
+
+### Format Technical Text as Code
+
+Enclose code, technical symbols, and identifiers in backticks. This includes:
+
+- function, class, method, variable, and type names;
+- file and directory paths;
+- commands, subcommands, arguments, and flags;
+- environment variables and configuration keys;
+- package names, versions, branches, tags, and commit identifiers;
+- Beads IDs and other issue identifiers; and
+- API routes, HTTP methods, field names, and literal values.
+
+Use inline code for short items such as `bd update`, `--claim`,
+`src/auth/session.ts`, `refreshToken`, and `ai-wt0`. Use a fenced code block
+with an appropriate language for multiline commands, code, structured data,
+or logs. Do not use backticks merely for emphasis around ordinary prose.
 
 ## Preserve Real Line Breaks
 
@@ -157,7 +198,8 @@ Use comments for:
 - changes in approach or scope
 
 Keep every active bead regularly updated. Post a comment at meaningful
-checkpoints rather than waiting until the task is complete. At minimum, comment:
+checkpoints rather than waiting until the task is complete. At minimum,
+comment:
 
 - after substantial progress or a significant discovery or decision;
 - whenever the blocker, scope, approach, or next step changes; and
@@ -168,10 +210,11 @@ milestone has completed, so the latest comment still explains the current
 state and next step. Do not comment after every command or create noise; the
 cadence should make the work resumable by another person or agent.
 
-Do not append a running journal to `notes`. The notes field is not timestamped.
-Reserve it, if used at all, for timeless supplementary information representing
-the issue's current state and safe to replace as a whole. When in doubt, post
-a comment.
+Do not append a running journal to `notes`. The notes field is not
+timestamped.
+Reserve it, if used at all, for timeless supplementary information that
+represents the issue's current state and is safe to replace as a whole. When
+in doubt, post a comment.
 
 ## Keep Updates Useful
 

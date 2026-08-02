@@ -17,6 +17,58 @@ When the repository opts into the solo-maintainer policy, also load and follow
 setup, storage, and governance; this skill controls reusable issue-writing and
 update practices. Neither supersedes the other.
 
+## Claim Before Starting Work
+
+Inspect the bead, then claim it before beginning substantive work:
+
+```bash
+bd show "$id"
+bd update "$id" --claim
+```
+
+Do not edit code, change project state, or begin the task while its bead remains
+unclaimed. Claiming makes ownership visible and prevents duplicated work.
+
+If another worker already owns the bead, do not overwrite the assignee or work
+on it in parallel without coordination. Stop and resolve ownership through the
+active project workflow. Re-running `--claim` is acceptable when the bead is
+already assigned to the current worker.
+
+## Track Every Work Item
+
+All substantive project work must be represented by a bead. Do not perform
+untracked work merely because it is small, related to the active task, or a
+tangent discovered along the way.
+
+When a distinct work item emerges during another task:
+
+1. Create a new bead before pursuing it.
+2. Explain the discovery and the work clearly in its Markdown body.
+3. Link it to the active bead, normally with `discovered-from`:
+
+   ```bash
+   bd create --title="Newly discovered work" \
+       --deps="discovered-from:$active_id" --body-file - <<'EOF'
+   ## Context
+
+   Discovered while working on the originating bead.
+
+   ## Task
+
+   Describe the distinct follow-up work.
+   EOF
+   ```
+
+4. Add blocking dependencies when the new work must finish before the active
+   bead can continue.
+5. Return to the active bead, or explicitly claim the new bead before switching
+   to it.
+
+Create the bead even when the work will be deferred or handed to someone else.
+Do not silently expand the active bead's scope. Routine steps already required
+by its stated task and acceptance criteria remain in that bead and do not need
+separate per-command issues.
+
 ## Write Human-facing Content as Markdown
 
 Treat every human-facing text field as Markdown:
@@ -103,6 +155,18 @@ Use comments for:
 - blockers and unblock events
 - test or review results
 - changes in approach or scope
+
+Keep every active bead regularly updated. Post a comment at meaningful
+checkpoints rather than waiting until the task is complete. At minimum, comment:
+
+- after substantial progress or a significant discovery or decision;
+- whenever the blocker, scope, approach, or next step changes; and
+- before pausing, handing off, or ending a work session.
+
+For long-running work, add periodic checkpoint comments even when no major
+milestone has completed, so the latest comment still explains the current
+state and next step. Do not comment after every command or create noise; the
+cadence should make the work resumable by another person or agent.
 
 Do not append a running journal to `notes`. The notes field is not timestamped.
 Reserve it, if used at all, for timeless supplementary information representing

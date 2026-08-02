@@ -101,7 +101,7 @@
     },
     "npm:@spences10/pi-skill-importer",
     "git:github.com/justcyl/pi-herdr-tab-sync",
-    "git:github.com/aspiers/pi-ask-user@f83e0267c8980056c19609a4ddf1cf0301b30ef7"
+    "git:github.com/aspiers/pi-ask-user@fix/number-custom-response"
   ],
   "hideThinkingBlock": false,
   "powerline": {

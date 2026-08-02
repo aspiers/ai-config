@@ -118,13 +118,12 @@ this public repository.
 
 - `git:github.com/justcyl/pi-herdr-tab-sync` installs the Herdr tab and agent
   state integration used by `extensions/herdr-agent-state.ts`.
-- `pi-ask-user` is temporarily installed from
-  [aspiers/pi-ask-user at f83e026](https://github.com/aspiers/pi-ask-user/commit/f83e0267c8980056c19609a4ddf1cf0301b30ef7)
-  instead of npm. It emits `herdr:blocked` while `ask_user` waits for input,
-  allowing Herdr to report that the agent is blocked rather than working. It
-  is based on
-  [upstream PR #27](https://github.com/edlsh/pi-ask-user/pull/27). Once that
-  change is released, replace the Git commit pin with `npm:pi-ask-user`.
+- `pi-ask-user` is temporarily installed from the author's
+  [fix/number-custom-response branch](https://github.com/aspiers/pi-ask-user/tree/fix/number-custom-response)
+  instead of npm. The branch numbers the custom-response option and lets its
+  number key open the freeform editor without changing canned-answer number-key
+  behavior. Once that enhancement is released upstream, replace the Git branch
+  pin with `npm:pi-ask-user`.
 - `pi-status` is installed from the author's
   [fix/pi-status-title-renames branch](https://github.com/aspiers/pi-status/tree/fix/pi-status-title-renames),
   which reapplies the configured title after Pi's `/name` command or

@@ -35,6 +35,26 @@ on it in parallel without coordination. Stop and resolve ownership through the
 active project workflow. Re-running `--claim` is acceptable when the bead is
 already assigned to the current worker.
 
+## Keep Work-in-Progress Status Honest
+
+Treat `in_progress` as evidence of work happening now, not as a reservation for
+a batch of issues you intend to address later. By default, claim exactly one
+bead at a time and leave related or queued work `open` while you inspect or
+sequence it.
+
+Before switching to another bead:
+
+1. Close the current bead if its acceptance criteria are complete; or
+2. Post a checkpoint comment and return it to `open` (or defer it) if work is
+   pausing.
+3. Then inspect and claim the next bead immediately before starting it.
+
+Multiple beads may be `in_progress` only when work is genuinely concurrent,
+such as separate workers actively owning independent tasks, or when the active
+workflow explicitly requires overlapping tracked work. Do not bulk-claim a
+label, epic, milestone, search result, or requested task set merely because all
+items are in scope.
+
 ## Track Every Work Item
 
 All substantive project work must be represented by a bead. Do not perform

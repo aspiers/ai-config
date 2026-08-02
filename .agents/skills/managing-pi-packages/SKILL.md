@@ -48,25 +48,42 @@ Do not partially sample a reference and infer the remainder.
 
 ## Maintainer-authored fork exception
 
-> **⚠️ AUTHOR-SPECIFIC:** For the author's own forks, when the author explicitly
-> states that the target code is their own authored or reviewed work and does
-> not need another audit, do not perform a redundant source-code audit or
-> generate an audit verdict/report for that code.
+> **⚠️ AUTHOR-SPECIFIC:** Do not perform a full package audit or generate an
+> audit verdict/report when the configured source is one of the author's own
+> verified forks. No separate opt-out statement is required: the fork source
+> itself invokes this exception. Full audits remain required for canonical
+> upstream repositories and other third-party sources.
 
-Apply this exception only after the author explicitly invokes it; ownership of
-an account or repository is not enough to infer consent. Still:
+For an author-owned fork change, still:
 
 - verify the configured fork URL, branch/ref, and resolved commit;
 - inspect manifests and changed-file metadata for unexpected third-party,
   generated, binary, dependency, or lifecycle payloads;
-- audit any such material payload not covered by the author's statement;
+- audit any unexpected material payload that is not part of the author's
+  branch work;
 - validate installation, resource scope, tests, and rollback after the source
   change; and
 - record the resolved commit because a mutable branch can move later.
 
-This exception changes the evidence required for trusted maintainer-authored
-code; it does not make arbitrary code safe merely because it is hosted in a
-fork.
+This exception applies only to verified author-owned fork sources; it does not
+make arbitrary code safe merely because it is hosted in a fork.
+
+> **⚠️ AUTHOR-SPECIFIC — BRANCH PIN POLICY:** When the author configures one
+> of their own extension forks as a Pi package, pin the source to a named branch,
+> not to a commit SHA. If one source branch contains every required fork change,
+> pin that branch directly. If required changes live on multiple branches, load
+> and follow the `git-branch-mixer` skill: configure a mix whose base is the
+> canonical upstream branch, mix the required source branches down to
+> `working`, test the mixed result, push `working` to the author's fork, and pin
+> the Pi package to `working`. The author explicitly permits publishing that
+> mixdown branch for this package-integration purpose; do not use `working` as
+> an upstream pull-request branch—submit each independent source branch
+> separately. A branch pin intentionally lets `pi update --extensions`
+> reconcile later fixes without editing settings after every commit. Still
+> record the mix inputs and exact installed commit during each audit or update
+> so provenance and rollback remain reproducible. This mutable-branch policy is
+> specific to the author's reviewed forks; do not generalize it to third-party
+> package sources.
 
 ## Development forks
 

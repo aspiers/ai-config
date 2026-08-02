@@ -1,85 +1,39 @@
 ---
 name: code-linting
-description: Run linters according to repository guidelines. Use immediately after creating or modifying code, or before committing changes.
+description: Discover and run the linters and format checks relevant to changed code. Use after code edits or when the user asks for lint, formatting, or static-analysis validation.
 ---
 
 # Code Linting
 
-Run all appropriate linters according to repository guidelines.
+Use the repository's own quality gates and scope them to the change when that
+provides reliable coverage.
 
-## When to Use This Skill
+## Workflow
 
-Use this skill:
-- Immediately after creating new source code files
-- Immediately after modifying existing code (functions, classes, imports, etc.)
-- Immediately after completing a feature, refactor, or bug fix
-- Before staging files for commit
-- When build/compilation succeeds but linting hasn't been checked
-- Proactively, whenever code changes are made
+1. Read applicable agent instructions and project documentation, then inspect
+   build configuration for the authoritative lint commands.
+2. Select checks relevant to the changed languages and files. Prefer a
+   repository-provided aggregate command when it is clearly intended as the
+   gate.
+3. Determine whether a command mutates files. Run check mode first unless the
+   user or repository workflow authorizes automatic fixes.
+4. Run the checks and fix findings caused by the current work when feasible.
+5. Re-run affected checks after edits and report exact commands and outcomes.
 
-**Don't use:**
-- When you've already run linting and it passed
+Do not guess a command from language alone when project configuration provides
+a different interface. If no lint workflow exists, state what you inspected
+and use judgement about whether a standard tool can be run safely.
 
-## Linter Discovery
+## Interpret results
 
-First look for linting commands in the following order:
+Distinguish:
 
-1. Directives to AI agents (`CLAUDE.md`, `.cursorrules`, `.ai-rules`,
-   `AGENTS.md`, `AGENT.md`, `GEMINI.md`, and similar)
-2. Repository documentation (`README.md`, `docs/`, etc.)
-3. Package configuration (`package.json`, `Makefile`, `pyproject.toml`, etc.)
-4. Standard linter patterns for the project type
+- findings introduced by the current change;
+- pre-existing findings outside the changed scope;
+- tool or environment failures; and
+- warnings that are intentionally permitted by project policy.
 
-If no linting guidelines are found or they are unclear, ask the user
-for clarification.
-
-## Common Linter Commands
-
-```bash
-# JavaScript/TypeScript
-npm run lint
-yarn run lint
-pnpm run lint
-npx eslint .
-
-# Python
-ruff check .
-pylint .
-flake8 .
-black --check .
-make lint
-
-# Shell
-shellcheck .
-
-# Multiple/Generic
-npm run format
-yarn run format
-pnpm run format
-```
-
-## Linting Process
-
-For each linter found:
-
-1. If it has an auto-fix mode (e.g., `prettier`, `eslint --fix`, `black`, `ruff check --fix`), run that first
-2. Run the linter in check mode to see if there are any remaining issues
-3. If issues can't be fixed automatically, report them clearly
-
-## Important Rules
-
-**CRITICAL: Do NOT ignore unfixed issues!**
-
-- All linting issues MUST be resolved before considering the task complete
-- The only exception is if the user explicitly gives permission to defer resolution
-- Document any issues that couldn't be auto-fixed for the user to review
-
-## Output
-
-Report results organized by:
-
-1. **Auto-fixed issues**: What was automatically corrected
-2. **Remaining issues**: Issues requiring manual attention (list each with file, line, and description)
-3. **Recommendation**: What the developer should do next
-
-If all linting passes, simply confirm: "All linters passed."
+Do not claim success when the command failed or covered only part of the
+requested scope. Do not silently broaden the task to repair unrelated legacy
+findings; report them and follow repository or user guidance on whether they
+block completion.

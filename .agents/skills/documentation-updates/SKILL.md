@@ -1,68 +1,39 @@
 ---
 name: documentation-updates
-description: Update documentation based on lessons learned. Use after completing work to capture learnings and prevent future issues.
+description: Capture durable project or workflow knowledge discovered during work. Use when a mistake, hidden constraint, repeated question, or changed behavior reveals a documentation gap.
 ---
 
 # Documentation Updates
 
-Update documentation based on lessons learned from the conversation.
+Record knowledge where future readers will naturally look for it, without
+turning instruction files into a transcript or catch-all memory store.
 
-## When to Use This Skill
+## Workflow
 
-Use this skill when:
+1. Identify the durable lesson and who needs it.
+2. Find the authoritative home: nearby code or tests, project documentation,
+   an applicable agent rule, a focused skill, or the project's task/memory
+   system.
+3. Update the smallest relevant source. Link to existing detail rather than
+   duplicating it.
+4. Check for conflicting or stale guidance and update it in the same scope.
+5. Validate examples, commands, links, and any generated or mirrored files.
+6. Summarize what changed and why.
 
-- You made a mistake or misunderstanding that could have been prevented
-- You discovered something that should be documented for future reference
-- The user asks you to "reflect" on what happened
-- After completing work where documentation gaps were discovered
+## Include
 
-## Process
+- non-obvious constraints and operational gotchas;
+- decisions that remain true beyond the current session;
+- reliable recovery or verification procedures; and
+- changed user-facing behavior that belongs in product documentation.
 
-Momentarily pause any other actions to review the conversation and
-reflect on any mistakes or misunderstandings. Update any/all of the
-following as appropriate:
+## Exclude
 
-### Files to Update
+- ordinary facts visible from the codebase;
+- chronological work logs better suited to issues or comments;
+- credentials, personal data, or confidential context;
+- speculative rules based on a single unexplained failure; and
+- global guidance when the lesson is project-specific.
 
-1. **Project-level documentation**:
-   - `AGENTS.md` in the current project
-   - `CLAUDE.md` in the current project
-   - Any project-specific documentation
-
-2. **Global documentation**:
-   - Global `AGENTS.md` (`~/.claude/AGENTS.md` or similar)
-   - Global `CLAUDE.md`
-
-3. **Agent settings**:
-   - Per-project settings (`.claude/settings.json`, `opencode.json`)
-   - Per-project agent skills in `.agents/skills`
-   - Global settings (`~/.config/opencode/opencode.json`, `~/.claude/settings.json`)
-   - Global agent skills in `~/.agents/skills`
-
-4. **Other project documentation**:
-   - README.md
-   - Design documents
-   - Architecture guides
-
-Bear in mind that many global files for agent config and skills are stowed
-via GNU Stow using symlinks which point back to a git repo somewhere.
-
-### What to Document
-
-- Common pitfalls encountered and how to avoid them
-- Important constraints or requirements discovered
-- Useful patterns or approaches found effective
-- Mistakes made and what should have been done differently
-- Configuration or setup nuances
-
-## Important Rule
-
-Do NOT resume ANY previous actions until the user is satisfied that the
-docs have been appropriately updated.
-
-## Output
-
-After updating documentation:
-- List the files that were modified
-- Summarize the changes made
-- Confirm with the user that the updates are adequate
+Do not block unrelated work for a documentation review unless the user asked
+for an approval checkpoint or the documentation is required for safe use.

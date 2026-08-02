@@ -1,58 +1,28 @@
 ---
 name: code-refactoring-dry
-description: Remove code duplication by extracting shared logic into reusable components. Use when the same logic appears in multiple places.
+description: Evaluate repeated code and consolidate duplication when a shared abstraction improves correctness or maintenance. Use after introducing similar logic or when repeated changes reveal a missing source of truth.
 ---
 
-# Code Refactoring: Don't Repeat Yourself
+# Refactoring Duplication
 
-Remove code duplication you just introduced by refactoring duplicated code to follow the DRY principle.
+Remove harmful duplication without replacing clear local code with a forced
+abstraction.
 
-## When to Use This Skill
+## Workflow
 
-Use this skill when:
-- You notice the same logic appearing in multiple places
-- Code has been copied and pasted with minor variations
-- A change needs to be made in multiple locations
-- Following the "NO DUPLICATED CODE!" rule from code review
+1. Compare the repeated code and the reasons each copy exists.
+2. Decide whether the copies represent one concept that should change together
+   or merely look similar today.
+3. If one concept exists, choose the smallest natural shared boundary in the
+   repository: a function, data structure, type, module, or generated source.
+4. Refactor all relevant call sites while preserving behavior and useful local
+   differences.
+5. Run focused tests and repository quality gates appropriate to the change.
 
-## Instructions
+Prefer an abstraction when it creates a real source of truth, prevents drift,
+or makes future changes safer. Keep duplication when sharing would couple
+independent concepts, obscure control flow, or add more indirection than value.
 
-### Step 1: Identify the Duplication
-
-Review the files you have been working on in this session to find:
-- Duplicated code patterns
-- Duplicated logic or structures
-- Copied and pasted blocks with minor variations
-
-### Step 2: Clarify Scope (If Needed)
-
-If the duplication is not obvious, ask the user to clarify which specific
-duplication they want addressed before proceeding.
-
-### Step 3: Refactor
-
-Once the duplication is identified:
-- Extract shared logic into reusable functions, classes, or modules
-- Replace duplicated code with calls to the shared implementation
-- Ensure the refactoring maintains the same functionality
-- Update all call sites to use the new shared implementation
-
-### Step 4: Verify
-
-After refactoring:
-- Run tests if available
-- Verify the code still works as expected
-- Check that the solution is cleaner and more maintainable
-
-## Goal
-
-Eliminate unnecessary duplication while maintaining code clarity and
-functionality. The refactored code should be easier to maintain and modify
-in the future.
-
-## Benefits of DRY
-
-- **Single source of truth**: Changes only need to be made in one place
-- **Easier maintenance**: Bug fixes propagate automatically
-- **Reduced risk**: Consistency is enforced
-- **Better testing**: Test shared logic once
+Do not broaden a focused request into a repository-wide deduplication project.
+Report nearby opportunities separately unless they are necessary for a sound
+refactor.

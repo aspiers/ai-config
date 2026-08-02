@@ -1,73 +1,46 @@
 ---
 name: code-reviewing
-description: Review code for quality, security, and maintainability. Use after code changes are completed and ready for review.
+description: Review changed code for correctness, security, maintainability, and verification gaps. Use when code is ready for independent review or before handoff, staging, or merge.
 ---
 
 # Code Review
 
-Review code for quality, security, and maintainability.
+Review the change in its repository context and report actionable findings,
+not a generic style checklist.
 
-## When to Use This Skill
+## Establish scope
 
-Use this skill:
-- After code changes are completed and ready for review
-- Before staging changes for commit
-- As a proactive quality check during development
+Inspect the request, applicable project guidance, working-tree state, staged
+and unstaged diffs, and relevant surrounding code. Use history when it helps
+explain local conventions or intent.
 
-## Context
+If the review target is ambiguous, state the assumed range or ask one focused
+question. Do not mix unrelated pre-existing code into the findings without
+labelling it.
 
-When invoked, examine:
+## Review priorities
 
-- Current git status: `git status`
-- Current git diff (staged and unstaged changes): `git diff --no-ext-diff HEAD`
-- Current branch: `git branch --show-current`
-- Recent commits: `git log --oneline -40`
+Use judgement based on the change's risk. Consider:
 
-## Review Checklist
+- correctness, edge cases, and error handling;
+- security, privacy, trust boundaries, and secret exposure;
+- compatibility, migrations, and public contracts;
+- concurrency, state consistency, resource use, and performance;
+- maintainability in the repository's existing idiom; and
+- whether tests and other verification support the claimed behavior.
 
-Examine all modified files and check:
+Duplication, function length, and naming are signals rather than universal
+failures. Recommend refactoring only when it makes this code clearer or safer.
 
-- **NO DUPLICATED CODE!** - Extract common logic into reusable functions
-- **Functions 30 lines or shorter** - Break down complex functions
-- **Well-named functions and variables** - Clear, descriptive names
-- **Simple and readable code** - Avoid unnecessary complexity
-- **Proper error handling** - Handle edge cases and failures gracefully
-- **No exposed secrets or API keys** - Use environment variables or config
-- **Input validation implemented** - Validate all external inputs
-- **Good test coverage** - Tests for critical paths
-- **Performance considerations** - No obvious O(n²) or worse patterns
+## Findings
 
-## Feedback Organization
+Lead with findings ordered by severity. For each one include:
 
-Provide feedback organized by priority:
+- the precise file and line or symbol;
+- the behavior or risk;
+- why it matters in a realistic scenario; and
+- a concrete direction for resolution when useful.
 
-1. **Critical issues (MUST FIX)**: Security vulnerabilities, bugs, broken functionality
-2. **Warnings (SHOULD FIX)**: Code quality, maintainability concerns
-3. **Suggestions (CONSIDER)**: Improvements that would be nice to have
-
-For each issue, include:
-- Specific location (file, line number)
-- Description of the problem
-- Example of how to fix it
-
-## Output
-
-Provide a structured review:
-
-```
-## Critical Issues
-
-- [File:line] Description of issue
-  - How to fix: ...
-
-## Warnings
-
-- [File:line] Description of concern
-  - Suggestion: ...
-
-## Suggestions
-
-- [File:line] Nice-to-have improvement
-```
-
-If no issues found: "Code review passed. No issues identified."
+Separate blocking defects from non-blocking suggestions. Avoid praise,
+restating the diff, or speculative concerns without a plausible failure mode.
+If no findings remain, say so and identify any important verification limits.

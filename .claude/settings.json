@@ -196,7 +196,7 @@
       "Bash(bd init)",
       "Bash(bd init:*)"
     ],
-    "defaultMode": "default"
+    "defaultMode": "auto"
   },
   "model": "opus[1m]",
   "hooks": {

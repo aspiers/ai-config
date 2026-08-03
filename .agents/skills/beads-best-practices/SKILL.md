@@ -109,6 +109,39 @@ Do not silently expand the active bead's scope. Routine steps already required
 by its stated task and acceptance criteria remain in that bead and do not need
 separate per-command issues.
 
+## Choose Grouping Deliberately
+
+Labels and epics are different mechanisms, and they compose. Applying a label
+to every bead in a set is nearly always right; adding an epic parent is a
+separate decision.
+
+Use a **label** for an attribute or a perpetual category with no end state,
+such as `area:auth`, `tech-debt`, or `needs-review`. A bead can carry several,
+they cross-cut unrelated work, and they can be applied retroactively without
+restructuring anything.
+
+Use an **epic** for a bounded deliverable with a done condition. An epic is a
+real issue, so it carries status, priority, and a description holding the
+feature-level narrative and acceptance criteria; it reports roll-up progress
+through `bd epic status`; and it can itself block or be blocked. In exchange
+it is an extra issue to maintain and close, and each bead has only one parent.
+
+An epic whose done condition never arrives is worse than no epic. When a set
+of work has no feature-level completion state, group it with a label alone.
+
+### Hierarchy Is Not Dependency
+
+`--parent` records presentational hierarchy only. It imposes no ordering
+whatsoever.
+
+The value of Beads is an arbitrary dependency graph, so never let a parent
+tree stand in for it. Record every real ordering constraint explicitly with
+`bd dep add`, including dependencies between children of the same epic, which
+may depend on one another in any shape the work requires.
+
+Note also that epics appear in `bd ready` alongside actionable work. Filter
+them out with `bd ready --exclude-type=epic` when that is noisy.
+
 ## Reference the Bead in Every Commit
 
 When a commit implements, advances, or closes tracked work, name the bead in

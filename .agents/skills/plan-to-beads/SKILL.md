@@ -61,6 +61,7 @@ Present the proposed beads and ask for feedback if anything is not clear:
 - Should any be merged?
 - Are dependencies correct?
 - Missing anything?
+- Does this set warrant an epic parent (see step 6)?
 
 Iterate until the user approves.
 
@@ -79,10 +80,46 @@ If any results are returned, choose a different label (e.g., append a version:
 `fiscal-host-v2`). Reusing an existing label would mix unrelated beads
 together.
 
-### 6. Create Beads
+### 6. Decide Whether to Create an Epic
+
+The label is mandatory. An epic parent is **optional and additional** — decide
+per plan. See [Choose Grouping
+Deliberately](../beads-best-practices/SKILL.md#choose-grouping-deliberately)
+for the general tradeoffs.
+
+Create an epic when the plan is a **bounded deliverable** that benefits from:
+
+- A place to hold the narrative (goal, design decisions, overall acceptance
+  criteria) beyond what a label can carry
+- Queryable roll-up progress via `bd epic status`
+- The whole feature participating in the dependency graph as one node (e.g.
+  another issue is blocked by "the whole of feature X")
+
+Skip the epic when the plan is small (roughly <5 beads), or is a set of
+loosely related cleanups with no single done-condition. The label alone is
+enough.
+
+### 7. Create Beads
+
+If using an epic, create it first:
+
+```bash
+cat << 'BEAD_EOF' | bd create "Feature X" --type epic --priority 2 --labels <feature-slug> --body-file -
+## Goal
+...
+
+## Plan
+Based on `path/to/plan.md`.
+
+## Acceptance Criteria
+[Feature-level, not task-level.]
+BEAD_EOF
+```
 
 For each approved bead, create it using `--body-file -` to pipe the multi-line
-description. **Every bead must** carry the feature label.
+description. **Every bead must** carry the feature label. Add
+`--parent <epic-id>` when an epic was created — children inherit the parent's
+labels, so `--labels` may then be omitted (keep it explicit if you prefer).
 
 **Do NOT heredoc into `bd create` directly — it does not read stdin without `--body-file -`.**
 
@@ -103,6 +140,11 @@ BEAD_EOF
 ```
 
 Then set dependencies with `bd dep add`.
+
+This applies even when an epic is used: parenting imposes no ordering, so
+children of the same epic still need their inter-dependencies wired
+explicitly. See [Hierarchy Is Not
+Dependency](../beads-best-practices/SKILL.md#hierarchy-is-not-dependency).
 
 ## Bead Quality Standard
 
@@ -202,7 +244,8 @@ Every bead description MUST follow this structure:
 - **ALWAYS include relevant issue references** in each bead's Context section when available
 - **ALWAYS include the plan file path** in each bead's Context section for traceability
 - Use `bd create --type task --priority 2 --labels <feature-slug>` as the default. Adjust priority based on dependency order (earlier = higher priority)
-- **NEVER use `--parent` or create epic parent beads** — use labels for grouping and `bd dep add` for ordering
-- **ALWAYS apply a consistent, unique label** (short kebab-case feature name) to every bead in the set
+- **NEVER express ordering via `--parent`** — hierarchy is not dependency; all ordering goes in `bd dep add`, including between children of the same epic
+- **ALWAYS apply a consistent, unique label** (short kebab-case feature name) to every bead in the set, whether or not an epic is used
+- Create an epic parent only for a bounded deliverable with a feature-level done-condition; otherwise the label alone suffices
 - **Every bead MUST have at least one label** — beads without labels are rejected
 - After creating all beads, show a summary with bead IDs, titles, labels, and dependency graph

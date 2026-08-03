@@ -109,6 +109,38 @@ Do not silently expand the active bead's scope. Routine steps already required
 by its stated task and acceptance criteria remain in that bead and do not need
 separate per-command issues.
 
+## Reference the Bead in Every Commit
+
+When a commit implements, advances, or closes tracked work, name the bead in
+its message. A commit that leaves no trace of its bead forces readers to
+reconstruct the link from timestamps, and the rationale recorded in the bead
+becomes unreachable from the code history.
+
+Use the trailer form unless the repository already uses another convention:
+
+```
+Refs: bead ai-wt0
+```
+
+Determine the convention from the repository rather than assuming, and prefer
+an explicit documented rule over inference:
+
+1. Check the project's agent instructions for a stated commit convention.
+2. Otherwise search the history for existing references, rather than reading
+   only the last handful of commits:
+
+   ```bash
+   git log --format='%h|%s|%b' | grep -iE '\b(refs|closes|fixes)\b.*[a-z]+-[a-z0-9]+' | head
+   ```
+
+Sampling only recent commits is unreliable: a convention applied
+inconsistently, or omitted from the most recent work, will look absent. Treat a
+single documented or historical example as establishing the convention, and
+raise the inconsistency rather than silently following the omission.
+
+When no convention exists anywhere, add the `Refs:` trailer and say so, so the
+maintainer can confirm or correct it.
+
 ## Write Human-facing Content as Markdown
 
 Treat every human-facing text field as Markdown:

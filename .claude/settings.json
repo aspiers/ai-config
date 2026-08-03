@@ -272,7 +272,8 @@
     "beads@beads-marketplace": true,
     "caveman@caveman": true,
     "context-mode@context-mode": true,
-    "ruby-lsp@claude-plugins-official": true
+    "ruby-lsp@claude-plugins-official": true,
+    "clangd-lsp@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
     "caveman": {

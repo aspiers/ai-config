@@ -206,15 +206,15 @@
         "hooks": [
           {
             "type": "command",
-            "command": "printf '\\a' > /dev/tty"
+            "command": "[ \"${HERDR_ENV:-}\" = 1 ] || printf '\\a' > /dev/tty"
           },
           {
             "type": "command",
-            "command": "mplayer -volume 50 /usr/share/sounds/Oxygen-Sys-App-Positive.ogg"
+            "command": "[ \"${HERDR_ENV:-}\" = 1 ] || mplayer -volume 50 /usr/share/sounds/Oxygen-Sys-App-Positive.ogg"
           },
           {
             "type": "command",
-            "command": "notify-send 'Claude Code finished'"
+            "command": "[ \"${HERDR_ENV:-}\" = 1 ] || notify-send 'Claude Code finished'"
           }
         ]
       }

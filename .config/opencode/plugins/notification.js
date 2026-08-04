@@ -119,8 +119,17 @@ export const NotificationPlugin = async ({ $, client, directory, worktree }) => 
         }
     };
 
+    // Herdr surfaces agent idleness itself, and Collie covers off-machine
+    // alerting, so every notification here is redundant under Herdr.
+    const underHerdr = () => process.env.HERDR_ENV === '1';
+
     const handleSessionIdle = async (event) => {
         logWithDate(`Started handling ${event.type} event`);
+
+        if (underHerdr()) {
+            logWithDate('running under herdr, skipping all notifications');
+            return;
+        }
 
         attempt('bell', ringBell);
 

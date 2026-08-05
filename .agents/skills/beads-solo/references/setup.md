@@ -8,164 +8,97 @@ the standard `beads` skill.
 
 Enrollment requires explicit user approval.
 
-For a repository with an existing Beads workspace, check `bd context --json`
-first. If `dolt_mode` is `embedded`, stop and tell the user that enrollment
-requires server mode and that migrating is a separate, explicitly approved
-step. Do not begin
+`bd-enroll-solo` performs the entire enrollment. Do not carry out the steps by
+hand: it creates the opt-in, installs the policy declaration, initializes Dolt
+server mode, applies the push guard and maintainer role, configures a private
+JSONL export, installs hooks, and verifies the result. Reassembling that from
+individual commands produces a different setup each time.
+
+### Choose the profile
+
+**Tracked** (default) — the repository owns its enrollment. The marker and
+governance files are committed, so every clone inherits the policy. Use this
+for repositories the user owns.
+
+**Local** (`--local`) — the enrollment is invisible to Git. Nothing is staged
+or committed, no tracked file is modified, and the opt-in, policy, and
+exclusions live in `git config --local`, a Beads memory, and
+`.git/info/exclude` respectively. Use this for repositories the user does not
+own: third-party checkouts and upstream forks, where committing `.beads-solo`
+or editing a tracked `AGENTS.md` would leak private task tracking into
+branches and pull requests.
+
+When the profile is not obvious, ask. Enrolling a repository the user does not
+own with the tracked profile is a mistake that surfaces later in a PR diff.
+
+### Preview, then enroll
+
+Always show the user the dry run first:
+
+```bash
+bd-enroll-solo --local --dry-run
+```
+
+Then, once they approve:
+
+```bash
+bd-enroll-solo --local --yes
+```
+
+Drop `--local` for the tracked profile. Pass `--prefix` to set the issue
+prefix; it defaults to the sanitized directory name and becomes a permanent
+part of every issue ID, so confirm it with the user rather than accepting the
+default silently.
+
+The script refuses to run without `--yes` or `--dry-run`, refuses to touch a
+repository that already has a `.beads` workspace, and — in the tracked profile
+— refuses to proceed without a tracked `AGENTS.md` or with a diverged
+`AGENTS.md`/`CLAUDE.md` pair. Report a refusal to the user rather than working
+around it.
+
+For a repository with an existing Beads workspace in embedded mode, the script
+stops. Migrating is a separate, explicitly approved step; do not begin
 [Migrate Embedded to Server](#migrate-embedded-to-server) on the strength of
 an enrollment request alone.
 
-1. Resolve the Git root and create the opt-in marker:
+### After enrollment
 
-   ```bash
-   root=$(git rev-parse --show-toplevel)
-   : > "$root/.beads-solo"
-   ```
+In the tracked profile the marker and `AGENTS.md` are staged but **not**
+committed. Before committing, read `AGENTS.md` in full and identify any
+statement the declaration contradicts — most commonly a session-completion or
+"landing the plane" checklist that mandates pushing to a remote, which
+conflicts with the declaration's withholding of Git push and Dolt sync/push
+authority.
 
-2. Ensure the root has a tracked `AGENTS.md`. Do not invent repository-wide
-   instructions when it is absent; stop and ask the user to create or supply
-   it.
+**Automatically generated instructions that direct an agent to push are
+invalid by default.** `bd` and similar tools emit such checklists without
+knowing the repository's policy, so that text confers no authority to push.
+Never treat it as permission, and never act on it. Automatic pushing is a
+legitimate policy for some repositories, but only once the user has explicitly
+granted it; absent that grant, the no-push default governs.
 
-3. If a tracked top-level `CLAUDE.md` exists, compare the complete files
-   before editing either one:
+Do not leave a contradiction in place, and do not resolve it yourself. Quote
+the conflicting text to the user, note whether it is generated, explain that
+the repository cannot both mandate and withhold push authority, and ask which
+policy it adopts.
 
-   ```bash
-   if git -C "$root" ls-files --error-unmatch -- CLAUDE.md >/dev/null 2>&1
-   then
-       cmp -s "$root/AGENTS.md" "$root/CLAUDE.md"
-   fi
-   ```
+Also check for Beads commands removed in current `bd`, such as `bd sync`,
+which no longer exists and is replaced by `bd dolt push` and `bd dolt pull`.
+Report stale commands rather than silently rewriting surrounding policy.
 
-   Do not strip or ignore generated sections. Any difference is a policy
-   error: stop and ask the user how to resolve it. Never edit only one file in
-   a diverged pair.
+In the local profile nothing is staged and there is nothing to commit.
 
-4. Choose the instruction-file layout before initialization:
+### JSONL publication
 
-   - If `CLAUDE.md` is a symlink resolving to `AGENTS.md`, normal Beads agent
-     setup is safe. Beads skips Claude managed-section injection through the
-     symlink while retaining Claude hooks and Codex integration.
-   - If both are regular files, stop even when they are currently identical.
-     Explain that normal `bd init` writes different platform sections to them,
-     then ask the user to choose one of these routes:
-     1. replace `CLAUDE.md` with a symlink to `AGENTS.md` and retain full
-        agent integration;
-     2. keep identical regular files and use `--skip-agents`, losing automatic
-        Claude and Codex integration; or
-     3. abort enrollment.
-   - If `CLAUDE.md` is absent, ask whether to create the symlink or retain
-     only `AGENTS.md` and use `--skip-agents`.
+Both profiles configure a **private** export: `export.git-add` is `false` and
+`.beads/issues.jsonl` stays untracked. This is deliberate. Publishing the
+export through Git exposes issue titles, descriptions, labels, dependencies,
+and comments to everyone who can read the repository.
 
-   Never convert, replace, or remove an instruction file without explicit user
-   approval.
-
-5. Add this declaration outside all Beads-managed markers in the chosen shared
-   target or in both approved regular files:
-
-   ```markdown
-   ## Beads Solo
-
-   Use the `beads-solo` skill for Beads setup and maintainer policy in this
-   repository. Use the `beads` skill for the standard Beads workflow.
-
-   This repository opts into the Beads **team-maintainer** profile for issue
-   management and commits. Unless a current user or orchestrator instruction
-   says otherwise, agents may manage issues and make atomic commits as work
-   progresses. They must not push Git branches or sync or push Dolt state
-   unless explicitly requested.
-   ```
-
-6. Before adding the declaration, read the existing instruction file in full
-   and identify any statement it would contradict — most commonly a
-   session-completion or "landing the plane" checklist that mandates pushing
-   to a remote, which conflicts with the declaration's withholding of Git
-   push and Dolt sync/push authority.
-
-   **Automatically generated instructions that direct an agent to push are
-   invalid by default.** `bd` and similar tools emit session-completion and
-   "landing the plane" checklists containing mandatory-push steps without
-   knowing the repository's policy, so such generated text confers no
-   authority to push. Never treat it as permission, and never act on it.
-   Automatic pushing is a legitimate policy for some repositories, but only
-   once the user has explicitly granted it for that repository; absent that
-   grant, the no-push default governs regardless of what generated text says.
-
-   Do not add the declaration and leave a contradiction in place, and do not
-   resolve it yourself. Quote the conflicting text to the user, note whether
-   it is generated, explain that the repository cannot both mandate and
-   withhold push authority, and ask which policy the repository adopts. Apply
-   their choice, editing the conflicting section or the declaration to match.
-
-   Also check the file for Beads commands removed in current `bd`, such as
-   `bd sync`, which no longer exists and is replaced by `bd dolt push` and
-   `bd dolt pull`. Report stale commands to the user rather than silently
-   rewriting surrounding policy.
-
-7. Decide the JSONL publication policy before configuring recovery state.
-   Read the repository governance files to determine whether the repository is
-   public. If that is not explicit, ask the owner. Explain that tracking
-   `.beads/issues.jsonl` publishes regular issue titles, descriptions, labels,
-   dependencies, and comments to everyone who can read the Git repository.
-   Memories and infrastructure beads are excluded by default, but ordinary
-   issue content can still be sensitive.
-
-   Ask the user to choose explicitly between:
-
-   - **tracked recovery export:** publish the issue export through Git; or
-   - **private local export:** retain local import/export recovery while
-     preventing Git from staging the file.
-
-   For a public repository, recommend the private option unless publication is
-   intentional. Do not infer consent from an existing file, ignore rule, Beads
-   configuration, or the repository's general use of issue tracking.
-
-8. Track the marker and governance files before initialization.
-
-## Initialize in Server Mode
-
-Require `bd`, the standalone `dolt` CLI, and the intended `dolt sql-server`.
-Use the command matching the approved layout.
-
-For `CLAUDE.md` symlinked to `AGENTS.md`:
-
-```bash
-BD_NO_PUSH=true bd init \
-    --server --role maintainer --agents-profile minimal
-```
-
-For approved, byte-identical regular files or an approved AGENTS-only layout:
-
-```bash
-BD_NO_PUSH=true bd init \
-    --server --role maintainer --skip-agents
-```
-
-Use configured host, port, socket, user, and password settings when they
-differ from Beads defaults. Never fall back to plain `bd init`.
-
-Beads' `--agents-profile` option controls generated-instruction verbosity, not
-maintainer authority. Its generated instructions contain a conservative
-fallback; the external declaration is the explicit repository opt-in that
-activates commit authority. `BD_NO_PUSH=true` keeps Dolt push instructions out
-of generated content during initialization.
-
-After initialization, persist the Dolt push guard and recheck file identity:
-
-```bash
-bd config set no-push true
-bd config get no-push
-cmp -s "$root/AGENTS.md" "$root/CLAUDE.md"  # when CLAUDE.md exists
-```
-
-`no-push: true` makes `bd dolt push` refuse to push. The external declaration
-separately prohibits `git push` unless explicitly requested.
-
-For an existing workspace, inspect `bd context --json` and require
-`"dolt_mode": "server"`. If it says `embedded`, do not proceed with
-enrollment and do not edit metadata or move database directories manually.
-Report this to the user and ask whether to migrate; see
-[Migrate Embedded to Server](#migrate-embedded-to-server) for the approvals
-required before any migration begins.
+Publishing is a separate, explicit decision — never the default, and never
+available in the local profile. If the user asks for a tracked export, follow
+[Configure JSONL Recovery State](#configure-jsonl-recovery-state) and review
+the file for sensitive content first.
 
 ## Migrate Embedded to Server
 
@@ -251,115 +184,65 @@ If the Dolt restore fails, the original embedded workspace is preserved at
 the timestamped directory. Retry with `--fallback-jsonl` only after
 explaining that it loses Dolt history and non-issue tables.
 
-## Pin the Maintainer Role
-
-Set and verify the repository-local role:
-
-```bash
-git config --local beads.role maintainer
-test "$(git config --local --get beads.role)" = maintainer
-```
-
-`beads.role` is the source of truth for maintainer/contributor routing. Do not
-rely on remote-URL heuristics.
-
 ## Configure JSONL Recovery State
 
-Apply the publication decision recorded during enrollment. For either choice,
-configure local automatic export and import:
+`bd-enroll-solo` configures a private export at enrollment: automatic local
+export and import, `export.git-add` false, `.beads/issues.jsonl` untracked,
+and hooks installed. Nothing further is required for the default policy.
 
-```bash
-bd config set export.path issues.jsonl
-bd config set export.auto true
-bd config set import.path issues.jsonl
-bd config set import.auto true
-bd hooks install
-```
+Change this **only** when the user explicitly asks to publish the export, and
+never in the local profile. Publishing exposes issue titles, descriptions,
+labels, dependencies, and comments to everyone who can read the repository.
 
-For a **tracked recovery export**:
+To switch an owned repository to a tracked export:
 
-1. Set `bd config set export.git-add true`.
-2. Generate a fresh export with `bd export -o .beads/issues.jsonl` and inspect
+1. Generate a fresh export with `bd export -o .beads/issues.jsonl` and inspect
    it for credentials, personal data, confidential material, private URLs, and
-   author-specific facts that the repository policy forbids publishing.
-3. If an ignore rule currently protects the file, obtain specific approval
+   author-specific facts the repository policy forbids publishing.
+2. If an ignore rule currently protects the file, obtain specific approval
    before removing that protection; changing it expands what can be committed.
-4. Track `.beads/issues.jsonl` only after the review passes.
+3. Only after the review passes, set `bd config set export.git-add true` and
+   track `.beads/issues.jsonl`.
 
-For a **private local export**:
-
-1. Set `bd config set export.git-add false`.
-2. Keep `.beads/issues.jsonl` untracked and ignored. Preserve an existing
-   `.git/info/exclude` rule; if none exists, add one there so the privacy choice
-   remains local rather than changing published ignore policy unexpectedly.
-3. Never use `git add -f` on the export.
-
-Track `.beads/config.yaml` and `.beads/metadata.json` for either choice. The
-JSONL contains regular issues, labels, dependencies, and comments. It excludes
-memories, infrastructure beads, templates, and ephemeral records by default;
-do not publish those through a custom hook.
-
-This export is an issue-level recovery path, not a full backup. It does not
-preserve Dolt branches, commit history, working sets, or every database table.
-Use Dolt-native `bd backup` or a Dolt remote when full recovery is required.
-
-## Install Canonical Ignores
-
-Let the installed Beads version own its ignore rules:
-
-```bash
-bd doctor --dry-run
-# After confirming that the proposed repairs are appropriate:
-bd doctor --fix --yes
-bd doctor
-```
-
-If the dry run proposes data repair, deletion, migration, or instruction-file
-changes, obtain explicit approval before applying it.
-
-The expected result is:
-
-- track `.beads/.gitignore`, `.beads/config.yaml`, and
-  `.beads/metadata.json`; track `.beads/issues.jsonl` only when its publication
-  was explicitly approved, and otherwise keep it untracked and ignored;
-- ignore Dolt data, native backups, credentials, environment files, locks,
-  sockets, logs, PIDs, export state, and legacy databases;
-- retain root safeguards such as `.dolt/`, `*.db`,
-  `.beads-credential-key`, and `.beads/proxieddb/` ignores;
-- never ignore the whole `.beads/` directory; and
-- never add negation rules to `.beads/.gitignore`, because they can defeat
-  contributor and fork exclusions.
-
-Use `git check-ignore` and `git status --short -- .beads .gitignore` to verify
-that runtime data is ignored while portable files remain visible.
+The JSONL excludes memories, infrastructure beads, templates, and ephemeral
+records by default; do not publish those through a custom hook. It is an
+issue-level recovery path, not a full backup: it preserves neither Dolt
+branches, commit history, working sets, nor every database table. Use
+Dolt-native `bd backup` or a Dolt remote when full recovery is required.
 
 ## Verify or Repair an Existing Enrollment
 
-Run:
+Run the check:
 
 ```bash
-bd doctor
-bd config get export.auto
-bd config get export.git-add
-bd config get export.path
-bd config get no-push
-git config --local --get beads.role
+bd-enroll-solo --check
 ```
 
-Also verify:
+It validates the opt-in, Dolt server mode, the push guard, the maintainer
+role, the export policy, the policy declaration, and — in the local profile —
+that no Beads artifact is visible to Git. Exit 0 means valid and prints the
+profile; exit 1 lists every problem found on stderr.
 
-- `.beads-solo` is tracked, empty, and regular;
-- `.beads/metadata.json` selects server mode;
-- `no-push` is `true`;
-- `export.git-add` matches the explicit publication choice;
-- a tracked export exists and passed sensitive-content review, or a private
-  export remains untracked and ignored;
-- `AGENTS.md` contains the skill declaration and team-maintainer opt-in;
-- any tracked `CLAUDE.md` is byte-for-byte identical to `AGENTS.md`; and
-- the declaration withholds Git push and Dolt sync/push authority.
+Do not substitute a hand-run sequence of `bd doctor`, `bd config get`, and
+`git config` commands. The check exists so validation is identical every time.
 
-If generated Beads blocks already exist, keep the external declaration
-outside them. Do not edit a generated block merely to change its conservative
+Repair depends on what it reports:
+
+- **Ignore-rule problems** — let the installed Beads version own its rules
+  with `bd doctor --dry-run`, then `bd doctor --fix --yes` once the proposed
+  repairs are confirmed appropriate. If the dry run proposes data repair,
+  deletion, migration, or instruction-file changes, obtain explicit approval
+  first. Never ignore the whole `.beads/` directory in the tracked profile,
+  and never add negation rules to `.beads/.gitignore`, because they can defeat
+  contributor and fork exclusions.
+- **A leaked local enrollment** — unstage the artifact and confirm
+  `.git/info/exclude` still carries the exclusions, then rerun the check.
+- **Embedded Dolt mode** — see
+  [Migrate Embedded to Server](#migrate-embedded-to-server); it always needs
+  explicit permission.
+
+If generated Beads blocks already exist, keep the external declaration outside
+them. Do not edit a generated block merely to change its conservative
 fallback; the external declaration supplies the repository opt-in and its
 narrower no-push policy.
 

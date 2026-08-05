@@ -1,0 +1,648 @@
+#!/usr/bin/env bash
+#
+# bd-enroll-solo - Enroll a repository into the beads-solo maintainer profile.
+#
+# Replaces the hand-executed enrollment checklist in the beads-solo skill with
+# a deterministic script, so setup is reproducible rather than reconstructed
+# probabilistically per session.
+#
+# Two profiles:
+#
+#   tracked (default)  The repository owns its Beads enrollment. The marker
+#                      and governance files are committed, so every clone and
+#                      collaborator inherits the policy.
+#
+#   --local            The enrollment is invisible to Git. Nothing is staged,
+#                      nothing is committed, and no tracked file is modified.
+#                      The opt-in lives in --local Git config, the policy
+#                      declaration lives in a Beads memory, and every Beads
+#                      artifact is excluded via .git/info/exclude.
+#
+# The --local profile exists for repositories you do not own -- third-party
+# checkouts and upstream forks -- where committing .beads-solo and editing a
+# tracked AGENTS.md would leak private task tracking into branches and PRs.
+
+set -euo pipefail
+
+YES=false
+DRY_RUN=false
+LOCAL_MODE=false
+CHECK_MODE=false
+PREFIX=""
+ROOT=""
+
+# 'git status' as it stood before enrollment. In --local mode the invariant is
+# that enrollment leaves it byte-for-byte identical.
+STATUS_BEFORE=""
+
+# Memory key for the policy declaration in --local mode. Stable so that
+# re-enrolling updates in place rather than accumulating duplicates.
+MEMORY_KEY="beads-solo-policy"
+
+# Paths excluded in --local mode. '.beads/' covers the whole workspace: in
+# local mode nothing under it is ever published, so a blanket rule is correct
+# here even though the tracked profile must never ignore all of .beads.
+LOCAL_EXCLUDES=(
+    '.beads/'
+    '.beads-solo'
+)
+
+# Whether the repository had its own root .gitignore before enrollment.
+# 'bd init' creates one; in --local mode that file is ours, not the
+# repository's, and must not become visible to Git.
+GITIGNORE_PREEXISTING=false
+
+usage() {
+    cat <<'EOF'
+Usage: bd-enroll-solo [options]
+
+Enroll the current repository into the beads-solo maintainer profile,
+initializing Beads in Dolt server mode with push authority withheld.
+
+The script:
+  1. verifies prerequisites and that no conflicting enrollment exists
+  2. records the opt-in (tracked marker file, or --local Git config)
+  3. installs the policy declaration (AGENTS.md, or a Beads memory)
+  4. runs bd init --server --role maintainer with pushing disabled
+  5. pins beads.role, configures private JSONL export, installs hooks
+  6. verifies the resulting enrollment
+
+Options:
+  --check           Validate an existing enrollment instead of creating one.
+                    Prints "profile: tracked" or "profile: local" and exits 0
+                    when valid; exits 1 when absent or malformed. This is the
+                    only validation the beads-solo skill needs to run.
+  --yes             Actually perform the enrollment. Required unless --dry-run.
+  --dry-run         Show the planned values and commands, then exit.
+  --local           Enroll invisibly to Git: no tracked files are created or
+                    modified, and no Beads artifact is staged. Use for
+                    repositories you do not own.
+  --prefix PREFIX   Issue prefix. Defaults to the sanitized directory name.
+                    Becomes a permanent part of every issue ID.
+  -h, --help        Show this help.
+
+The --local profile stores its opt-in in 'git config --local beads.solo.local'
+and its policy declaration in a Beads memory keyed 'beads-solo-policy', then
+excludes .beads/ and .beads-solo via .git/info/exclude. Because .git/info/
+exclude is never published, a clone of the repository sees no trace of it.
+
+Both profiles set 'bd config set no-push true' and leave the JSONL export
+untracked. Neither grants authority to run 'git push' or 'bd dolt push'.
+EOF
+}
+
+fail() {
+    echo "Error: $*" >&2
+    exit 1
+}
+
+info() {
+    echo "==> $*"
+}
+
+warn() {
+    echo "Warning: $*" >&2
+}
+
+quote_cmd() {
+    printf '%q ' "$@"
+    printf '\n'
+}
+
+require_command() {
+    command -v "$1" >/dev/null 2>&1 || fail "required command not found: $1"
+}
+
+run() {
+    echo "+ $(quote_cmd "$@")"
+    if [[ "$DRY_RUN" != true ]]; then
+        "$@"
+    fi
+}
+
+parse_args() {
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --yes)
+                YES=true
+                shift
+                ;;
+            --dry-run)
+                DRY_RUN=true
+                shift
+                ;;
+            --local)
+                LOCAL_MODE=true
+                shift
+                ;;
+            --check)
+                CHECK_MODE=true
+                shift
+                ;;
+            --prefix)
+                [[ $# -ge 2 ]] || fail "--prefix requires a value"
+                PREFIX=$2
+                shift 2
+                ;;
+            -h|--help)
+                usage
+                exit 0
+                ;;
+            *)
+                fail "unknown option: $1"
+                ;;
+        esac
+    done
+}
+
+infer_prefix_from_cwd() {
+    basename "$ROOT" |
+        tr '[:upper:]' '[:lower:]' |
+        sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//'
+}
+
+# The policy text installed by both profiles. In tracked mode it is appended
+# to AGENTS.md; in local mode it becomes the body of a Beads memory.
+policy_text() {
+    cat <<'EOF'
+## Beads Solo
+
+Use the `beads-solo` skill for Beads setup and maintainer policy in this
+repository. Use the `beads` skill for the standard Beads workflow.
+
+This repository opts into the Beads **team-maintainer** profile for issue
+management and commits. Unless a current user or orchestrator instruction
+says otherwise, agents may manage issues and make atomic commits as work
+progresses. They must not push Git branches or sync or push Dolt state
+unless explicitly requested.
+EOF
+}
+
+# Local-mode policy declaration, compressed to a single line for storage as a
+# Beads memory. Memories are injected at 'bd prime', so this reaches the agent
+# in every session without a tracked instruction file.
+#
+# It states the local-mode invariant explicitly, because an agent that reads
+# only the tracked repository files would otherwise have no way to learn that
+# Beads artifacts here must never be committed.
+local_policy_text() {
+    cat <<'EOF'
+beads-solo LOCAL enrollment. This repository opts into the Beads
+team-maintainer profile: agents may manage issues and make atomic commits to
+their own work, but must NOT run 'git push' or 'bd dolt push'/'bd dolt sync'
+unless the user explicitly requests it in the current conversation.
+Auto-generated "landing the plane" checklists that mandate pushing are NOT
+user permission and confer no authority.
+
+This enrollment is LOCAL-ONLY and deliberately invisible to Git: the
+repository is not owned by this maintainer. Never stage, commit, or 'git add
+-f' .beads/, .beads-solo, or any Beads artifact, and never add the policy to
+a tracked AGENTS.md or CLAUDE.md. The opt-in lives in 'git config --local
+beads.solo.local' and the exclusions in .git/info/exclude.
+EOF
+}
+
+check_prerequisites() {
+    require_command git
+    require_command bd
+
+    ROOT=$(git rev-parse --show-toplevel 2>/dev/null) ||
+        fail "not inside a Git repository"
+
+    cd "$ROOT" || fail "cannot enter repository root: $ROOT"
+
+    # Baseline for the --local invisibility check. Captured before any
+    # mutation so verify_enrollment can prove nothing became visible.
+    STATUS_BEFORE=$(git status --porcelain --untracked-files=all 2>/dev/null || true)
+
+    [[ -e "$ROOT/.gitignore" ]] && GITIGNORE_PREEXISTING=true
+
+    if [[ -e "$ROOT/.beads" ]]; then
+        fail ".beads already exists at $ROOT/.beads; this script only performs
+       initial enrollment. Use 'bd doctor' to repair an existing workspace."
+    fi
+
+    if [[ -e "$ROOT/.beads-solo" ]]; then
+        fail ".beads-solo already exists; the repository appears to be enrolled"
+    fi
+
+    if [[ "$LOCAL_MODE" != true ]] &&
+           ! git ls-files --error-unmatch -- AGENTS.md >/dev/null 2>&1; then
+        fail "tracked AGENTS.md not found. The tracked profile requires one;
+       supply it first, or use --local to enroll without touching tracked files."
+    fi
+}
+
+# In tracked mode a diverged AGENTS.md/CLAUDE.md pair is a policy error: bd
+# init writes different platform sections to each, so enrolling would deepen
+# the divergence. A symlinked CLAUDE.md is safe and is the recommended layout.
+check_instruction_files() {
+    [[ "$LOCAL_MODE" == true ]] && return 0
+
+    git ls-files --error-unmatch -- CLAUDE.md >/dev/null 2>&1 || return 0
+
+    if [[ -L "$ROOT/CLAUDE.md" ]]; then
+        info "CLAUDE.md is a symlink; managed-section injection is safe"
+        return 0
+    fi
+
+    cmp -s "$ROOT/AGENTS.md" "$ROOT/CLAUDE.md" ||
+        fail "tracked AGENTS.md and CLAUDE.md differ. Resolve this first;
+       never edit only one file in a diverged pair."
+
+    fail "AGENTS.md and CLAUDE.md are identical regular files. 'bd init' would
+       write different platform sections to each. Replace CLAUDE.md with a
+       symlink to AGENTS.md, or re-run with --local."
+}
+
+# Append the exclusion rules to .git/info/exclude, which is per-clone and
+# never published. Idempotent: existing identical rules are left alone.
+install_local_excludes() {
+    local exclude_file="$ROOT/.git/info/exclude"
+    local pattern missing=()
+
+    for pattern in "${LOCAL_EXCLUDES[@]}"; do
+        if [[ -f "$exclude_file" ]] &&
+               grep -qxF "$pattern" "$exclude_file" 2>/dev/null; then
+            continue
+        fi
+        missing+=("$pattern")
+    done
+
+    if [[ ${#missing[@]} -eq 0 ]]; then
+        info "Exclusions already present in .git/info/exclude"
+        return 0
+    fi
+
+    info "Excluding Beads artifacts via .git/info/exclude"
+
+    if [[ "$DRY_RUN" == true ]]; then
+        echo "+ # append to .git/info/exclude: ${missing[*]}"
+        return 0
+    fi
+
+    mkdir -p "$(dirname "$exclude_file")"
+    {
+        printf '\n# beads-solo local enrollment (bd-enroll-solo --local)\n'
+        printf '%s\n' "${missing[@]}"
+    } >>"$exclude_file"
+}
+
+record_opt_in() {
+    if [[ "$LOCAL_MODE" == true ]]; then
+        info "Recording local opt-in in Git config"
+        run git config --local beads.solo.local true
+        install_local_excludes
+        return 0
+    fi
+
+    info "Creating tracked .beads-solo marker"
+    if [[ "$DRY_RUN" == true ]]; then
+        echo "+ : > .beads-solo"
+    else
+        : >"$ROOT/.beads-solo"
+    fi
+    run git add -- .beads-solo
+}
+
+install_policy_declaration() {
+    if [[ "$LOCAL_MODE" == true ]]; then
+        # Deferred until after bd init: 'bd remember' needs a live database.
+        return 0
+    fi
+
+    if grep -Fq 'Use the `beads-solo` skill' "$ROOT/AGENTS.md" 2>/dev/null; then
+        info "Policy declaration already present in AGENTS.md"
+        return 0
+    fi
+
+    info "Appending policy declaration to AGENTS.md"
+
+    if [[ "$DRY_RUN" == true ]]; then
+        echo "+ # append Beads Solo declaration to AGENTS.md"
+    else
+        {
+            printf '\n'
+            policy_text
+        } >>"$ROOT/AGENTS.md"
+    fi
+
+    run git add -- AGENTS.md
+
+    warn "Review AGENTS.md for statements the declaration contradicts,"
+    warn "particularly generated 'landing the plane' checklists that mandate"
+    warn "pushing. Such text is not user permission and must not be acted on."
+}
+
+install_local_memory() {
+    [[ "$LOCAL_MODE" == true ]] || return 0
+
+    info "Storing policy declaration as Beads memory '$MEMORY_KEY'"
+
+    if [[ "$DRY_RUN" == true ]]; then
+        echo "+ bd remember <local policy> --key $MEMORY_KEY"
+        return 0
+    fi
+
+    bd remember "$(local_policy_text)" --key "$MEMORY_KEY" ||
+        fail "failed to store policy memory; enrollment is incomplete"
+}
+
+initialize_workspace() {
+    info "Initializing Beads in server mode (prefix: $PREFIX)"
+
+    # BD_NO_PUSH keeps Dolt push instructions out of generated content.
+    # --skip-agents in local mode: bd would otherwise write managed sections
+    # into tracked instruction files, which local mode must never touch.
+    if [[ "$LOCAL_MODE" == true ]]; then
+        run env BD_NO_PUSH=true bd init \
+            --server --role maintainer --skip-agents --prefix "$PREFIX"
+    else
+        run env BD_NO_PUSH=true bd init \
+            --server --role maintainer --agents-profile minimal \
+            --prefix "$PREFIX"
+    fi
+}
+
+# 'bd init' creates a root .gitignore holding its canonical ignore rules. In
+# --local mode that file is an artifact of our private enrollment, not the
+# repository's own policy, so leaving it would break invisibility -- it shows
+# up as an untracked file, or worse, edits a .gitignore the project tracks.
+#
+# When the repository had no .gitignore, fold bd's rules into
+# .git/info/exclude and remove the file. When it already had one, bd may have
+# appended to it; that is a tracked-file modification we must not make, so
+# restore the original content from Git and re-home the rules.
+absorb_bd_gitignore() {
+    [[ "$LOCAL_MODE" == true ]] || return 0
+
+    local gitignore="$ROOT/.gitignore"
+
+    if [[ "$DRY_RUN" == true ]]; then
+        echo "+ # fold any bd-created .gitignore into .git/info/exclude"
+        return 0
+    fi
+
+    [[ -e "$gitignore" ]] || return 0
+
+    if [[ "$GITIGNORE_PREEXISTING" != true ]]; then
+        info "Folding bd's .gitignore into .git/info/exclude"
+        {
+            printf '\n# beads-solo local enrollment: rules from bd init\n'
+            cat "$gitignore"
+        } >>"$ROOT/.git/info/exclude"
+        rm -f "$gitignore"
+        return 0
+    fi
+
+    # Pre-existing .gitignore: only act if bd actually modified it.
+    git diff --quiet -- .gitignore 2>/dev/null && return 0
+
+    info "Reverting bd's changes to the pre-existing .gitignore"
+
+    local added
+    added=$(git diff --unified=0 -- .gitignore 2>/dev/null |
+                sed -n 's/^+\([^+].*\)$/\1/p' || true)
+
+    if [[ -n "$added" ]]; then
+        {
+            printf '\n# beads-solo local enrollment: rules from bd init\n'
+            printf '%s\n' "$added"
+        } >>"$ROOT/.git/info/exclude"
+    fi
+
+    git checkout -- .gitignore ||
+        fail "could not restore the pre-existing .gitignore; resolve manually"
+}
+
+configure_workspace() {
+    info "Applying push guard and role"
+    run bd config set no-push true
+    run git config --local beads.role maintainer
+
+    info "Configuring private JSONL export"
+    run bd config set export.path issues.jsonl
+    run bd config set export.auto true
+    run bd config set import.path issues.jsonl
+    run bd config set import.auto true
+
+    # Never true for either profile here: publishing the export is a separate,
+    # explicitly reviewed decision, and in local mode it must never happen.
+    run bd config set export.git-add false
+    run bd hooks install
+}
+
+verify_enrollment() {
+    if [[ "$DRY_RUN" == true ]]; then
+        info "Dry run complete; no changes were made"
+        return 0
+    fi
+
+    info "Verifying enrollment"
+
+    local mode
+    mode=$(bd context --json 2>/dev/null |
+               python3 -c 'import json,sys; print(json.load(sys.stdin).get("dolt_mode",""))' \
+               2>/dev/null) || mode=""
+    [[ "$mode" == "server" ]] ||
+        fail "workspace is not in server mode (got: ${mode:-unknown})"
+
+    [[ "$(bd config get no-push 2>/dev/null)" == *true* ]] ||
+        fail "no-push guard is not set"
+
+    [[ "$(git config --local --get beads.role)" == maintainer ]] ||
+        fail "beads.role is not pinned to maintainer"
+
+    if [[ "$LOCAL_MODE" == true ]]; then
+        [[ "$(git config --local --get beads.solo.local)" == true ]] ||
+            fail "beads.solo.local opt-in is not recorded"
+
+        bd memories --json 2>/dev/null | grep -Fq "$MEMORY_KEY" ||
+            warn "policy memory '$MEMORY_KEY' not found in 'bd memories'"
+
+        # The defining invariant of local mode: 'git status' must be
+        # byte-for-byte identical to what it printed before enrollment.
+        # Comparing the whole status, rather than just the Beads paths,
+        # catches any stray artifact written outside .beads/ as well.
+        local status_after
+        status_after=$(git status --porcelain --untracked-files=all 2>/dev/null || true)
+
+        if [[ "$status_after" != "$STATUS_BEFORE" ]]; then
+            fail "local enrollment changed 'git status'.
+       Before:
+${STATUS_BEFORE:-  (clean)}
+       After:
+${status_after:-  (clean)}"
+        fi
+
+        info "Verified: 'git status' is unchanged; Git sees no trace"
+    else
+        git ls-files --error-unmatch -- .beads-solo >/dev/null 2>&1 ||
+            fail ".beads-solo marker is not tracked"
+    fi
+}
+
+# Validate an existing enrollment and print the active profile.
+#
+# This is the whole of the beads-solo skill's per-invocation validation. The
+# skill runs exactly this and reads the exit status; it must never reproduce
+# these checks as separate commands for an agent to interpret, because each
+# such step is an opportunity to misread output or skip a check.
+#
+# Exit status:
+#   0  enrolled and valid; profile printed to stdout as "profile: tracked|local"
+#   1  not enrolled, or the enrollment is malformed
+run_check() {
+    local errors=()
+    local profile=""
+
+    require_command git
+    require_command bd
+
+    ROOT=$(git rev-parse --show-toplevel 2>/dev/null) ||
+        fail "not inside a Git repository"
+    cd "$ROOT" || fail "cannot enter repository root: $ROOT"
+
+    local local_opt_in tracked_marker=false
+    local_opt_in=$(git config --local --get beads.solo.local 2>/dev/null || true)
+    git ls-files --error-unmatch -- .beads-solo >/dev/null 2>&1 && tracked_marker=true
+
+    if [[ "$local_opt_in" == true && "$tracked_marker" == true ]]; then
+        fail "conflicting enrollment: both a tracked .beads-solo marker and
+       'beads.solo.local' are present. Resolve before continuing."
+    elif [[ "$local_opt_in" == true ]]; then
+        profile=local
+    elif [[ "$tracked_marker" == true ]]; then
+        profile=tracked
+    else
+        echo "not enrolled: no beads-solo enrollment found in $ROOT" >&2
+        echo "Run 'bd-enroll-solo --yes' (or '--local --yes') to enroll." >&2
+        return 1
+    fi
+
+    [[ -d "$ROOT/.beads" ]] || errors+=("no .beads workspace directory")
+
+    local mode
+    mode=$(bd context --json 2>/dev/null |
+               python3 -c 'import json,sys; print(json.load(sys.stdin).get("dolt_mode",""))' \
+               2>/dev/null) || mode=""
+    [[ "$mode" == "server" ]] ||
+        errors+=("workspace is not in Dolt server mode (got: ${mode:-unknown})")
+
+    [[ "$(bd config get no-push 2>/dev/null)" == *true* ]] ||
+        errors+=("no-push guard is not set")
+
+    [[ "$(git config --local --get beads.role 2>/dev/null)" == maintainer ]] ||
+        errors+=("beads.role is not pinned to maintainer")
+
+    [[ "$(bd config get export.git-add 2>/dev/null)" == *false* ]] ||
+        errors+=("export.git-add is not false; the JSONL export may be staged")
+
+    if [[ "$profile" == local ]]; then
+        # The defining invariant: no Beads artifact may be visible to Git.
+        local visible
+        visible=$(git status --porcelain --untracked-files=all -- \
+                      .beads .beads-solo 2>/dev/null || true)
+        [[ -z "$visible" ]] ||
+            errors+=("Beads artifacts are visible to Git:
+    ${visible//$'\n'/$'\n'    }")
+
+        local staged
+        staged=$(git diff --cached --name-only -- .beads .beads-solo 2>/dev/null || true)
+        [[ -z "$staged" ]] ||
+            errors+=("Beads artifacts are staged: ${staged//$'\n'/, }")
+
+        bd memories --json 2>/dev/null | grep -Fq "$MEMORY_KEY" ||
+            errors+=("policy memory '$MEMORY_KEY' is missing; run 'bd remember'")
+    else
+        [[ -f "$ROOT/.beads-solo" && ! -L "$ROOT/.beads-solo" &&
+               ! -s "$ROOT/.beads-solo" ]] ||
+            errors+=(".beads-solo must be a tracked, empty, regular file")
+
+        grep -Fq 'Use the `beads-solo` skill' "$ROOT/AGENTS.md" 2>/dev/null ||
+            errors+=("AGENTS.md lacks the beads-solo policy declaration")
+
+        if git ls-files --error-unmatch -- CLAUDE.md >/dev/null 2>&1 &&
+               [[ ! -L "$ROOT/CLAUDE.md" ]]; then
+            cmp -s "$ROOT/AGENTS.md" "$ROOT/CLAUDE.md" ||
+                errors+=("tracked AGENTS.md and CLAUDE.md differ")
+        fi
+    fi
+
+    if [[ ${#errors[@]} -gt 0 ]]; then
+        echo "beads-solo enrollment is malformed ($profile profile):" >&2
+        printf '  - %s\n' "${errors[@]}" >&2
+        return 1
+    fi
+
+    echo "profile: $profile"
+    return 0
+}
+
+report() {
+    [[ "$DRY_RUN" == true ]] && return 0
+
+    echo
+    info "Enrollment complete"
+
+    if [[ "$LOCAL_MODE" == true ]]; then
+        cat <<EOF
+
+Profile:      local (invisible to Git)
+Opt-in:       git config --local beads.solo.local
+Policy:       Beads memory '$MEMORY_KEY' (injected by 'bd prime')
+Excluded via: .git/info/exclude
+
+Nothing was staged or committed. Do not commit .beads/ or .beads-solo, and
+do not add the policy to a tracked AGENTS.md or CLAUDE.md.
+EOF
+    else
+        cat <<'EOF'
+
+Profile: tracked
+
+.beads-solo and AGENTS.md are staged but NOT committed. Review them, then
+commit when you are satisfied.
+EOF
+    fi
+
+    echo
+    echo "Pushing Git branches and Dolt state remains prohibited unless you"
+    echo "explicitly request it."
+}
+
+main() {
+    parse_args "$@"
+
+    if [[ "$CHECK_MODE" == true ]]; then
+        run_check
+        return $?
+    fi
+
+    if [[ "$YES" != true && "$DRY_RUN" != true ]]; then
+        usage >&2
+        fail "refusing to enroll without --yes (or use --dry-run)"
+    fi
+
+    check_prerequisites
+    check_instruction_files
+
+    [[ -n "$PREFIX" ]] || PREFIX=$(infer_prefix_from_cwd)
+    [[ -n "$PREFIX" ]] || fail "could not infer an issue prefix; pass --prefix"
+
+    info "Repository: $ROOT"
+    info "Profile:    $([[ "$LOCAL_MODE" == true ]] && echo local || echo tracked)"
+    info "Prefix:     $PREFIX"
+
+    record_opt_in
+    install_policy_declaration
+    initialize_workspace
+    install_local_memory
+    configure_workspace
+    # After all bd commands, since 'bd hooks install' may also touch ignores.
+    absorb_bd_gitignore
+    verify_enrollment
+    report
+}
+
+main "$@"

@@ -4,3 +4,8 @@ worktree-path = "{{ repo_path }}/.worktrees/{{ branch | sanitize }}"
 # Never collapse a branch's commits into one. Commit boundaries are chosen
 # deliberately while the work is done, and squashing discards them.
 squash = false
+
+# Never rewrite commits onto the target tip. When the target has moved, wt
+# stops rather than rebasing silently, leaving the choice explicit: rebase
+# with `wt step rebase`, or join the histories with a plain `git merge`.
+rebase = false

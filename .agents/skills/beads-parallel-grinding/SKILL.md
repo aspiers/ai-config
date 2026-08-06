@@ -46,10 +46,10 @@ two things present, and **checks both before doing any work**:
 
 If either is missing, **stop and say which**. Do not fall back to
 `git worktree`, and do not improvise `wt` usage from memory. A silent
-fallback produces worktrees with no dependencies installed and merges with
-no pre-merge gate, and the damage is not obvious until later. Point the
-user at <https://worktrunk.dev> (the CLI, and the plugin providing the
-skill) and let them decide.
+fallback produces worktrees with no dependencies installed and no lifecycle
+hooks run, and the damage is not obvious until later. Point the user at
+<https://worktrunk.dev> (the CLI, and the plugin providing the skill) and
+let them decide.
 
 Consult the `worktrunk` skill, rather than guessing, whenever a run needs
 more than the handful of commands below: reading or changing `.config/wt.toml`
@@ -61,15 +61,15 @@ Two consequences worth internalising:
 - **`wt` decides where worktrees live.** Paths come from a configurable
   template, so never invent one. Get the real path from the JSON output of
   `wt switch` (see below) or from `wt list`.
-- **Hooks may already do the work you were about to do.** `wt hook show`
-  lists what the repo has configured. If a `pre-merge` hook already runs the
-  tests, do not run them a second time by hand; if there is none, you run
-  them yourself after each merge.
+- **`wt hook show` tells you what the repo expects.** Worktree creation and
+  removal go through `wt`, so those hooks run on their own. Merging does
+  not (see **Merging back**), so whatever a `pre-merge` hook would have
+  run is the gate you have to run yourself.
 
 - **How a merge is shaped is not this skill's business.** Squashing,
-  rebasing, and whether a merge commit is created are `wt` configuration,
-  set once in the user or project config. Take whatever they are, and do
-  not override them per-merge.
+  rebasing, and whether a merge commit is created are matters of the user's
+  general git and `wt` preferences, not of grinding beads in parallel.
+  Never pass flags to force a particular shape.
 
 ## Decide the concurrency limit first
 
@@ -113,13 +113,13 @@ Before dispatching anything:
    branches from its tip, and every merge lands on it. Pass it explicitly
    to `wt` rather than relying on the default, which is the repository's
    default branch and may not be where you are.
-2. `git status` — uncommitted work in the main worktree is not overwritten
-   by `wt merge` (it advances the branch, it does not merge into your
-   working tree), but a dirty tree makes it hard to tell your own changes
-   from the merged ones. If it is dirty, say so and ask whether to commit,
+2. `git status` — the merges run here, in this worktree, so uncommitted
+   work is genuinely at risk: a merge touching the same files will refuse
+   to start, and a dirty tree makes it impossible to tell your changes from
+   the merged ones. If it is dirty, say so and ask whether to commit,
    stash, or proceed.
 3. `wt hook show` — see which lifecycle hooks the repo configures, so you
-   know what will run on create and merge, and what you still have to do
+   know what will run on create and remove, and what you still have to do
    yourself.
 4. `wt list` — check for leftover `bgp/*` worktrees from an interrupted
    earlier run, and clean them up before starting.
@@ -189,10 +189,9 @@ conversation. Include:
   repository's commit conventions.
 - An instruction to commit its work to its branch and **not** to push, and
   not to merge, rebase, or otherwise touch other branches.
-- An instruction not to run `wt` at all. Worktree lifecycle — creating,
-  merging, removing — belongs to the orchestrator. A subagent running
-  `wt merge` would merge into the shared base branch concurrently with its
-  siblings.
+- An instruction not to run `wt` at all, and not to merge. Worktree
+  lifecycle and integration belong to the orchestrator; a subagent merging
+  would write to the shared base branch concurrently with its siblings.
 - A request to report back: what changed, which files, what it ran to verify,
   and anything it could not finish or discovered along the way.
 
@@ -203,38 +202,40 @@ something neither provides, run it serially instead.
 ## Merging back
 
 Merge **one branch at a time**, in whatever order the subagents finish.
-Note that `wt merge` works in the opposite direction to `git merge`: it
-merges *the worktree's branch into the target*, which is what is wanted
-here. For each finished bead:
+
+Use plain `git merge`, not `wt merge`. `wt merge` rebases the branch onto
+the base before merging, which rewrites the subagent's commits; and where
+the user config disables rebasing it refuses outright once the base has
+moved — which here it has, on every bead after the first. A plain merge
+fast-forwards when the base has not moved and creates a merge commit when
+it has, keeping the original commits either way.
+
+For each finished bead, from the base worktree:
 
 1. Read the subagent's report. If it failed or stopped short, do not merge;
    go to **When a subagent fails** below.
-2. Merge it, driving `wt` at the subagent's worktree from where you are:
+2. Run the repo's quality gate — its tests and linters — against the bead's
+   branch *before* merging. `wt merge`'s `pre-merge` hooks are not running
+   here, so this is the gate. `wt hook show` reveals what the repo would
+   have run; run the equivalent yourself. If it fails, do not merge: fix it
+   or treat the bead as failed.
+3. Merge it:
 
    ```bash
-   wt -C <worktree-path> merge <base-branch> -y
+   git merge bgp/<id>
    ```
 
-   This runs the repo's `pre-merge` hooks (its own quality gate), brings
-   the branch up to date with the base, merges it, then removes the
-   worktree and branch. One command covers merge and teardown.
-
-   How the merge is shaped — squash, rebase, merge commit — is `wt`
-   configuration, not this skill's business. Take whatever the user and
-   project config say and do not override it per-merge.
-3. If a `pre-merge` hook fails, the merge aborts and nothing lands. Fix the
-   problem yourself in the worktree, or treat the bead as failed. Never
-   pass `--no-hooks` to force it through — the hook is the repo's gate, and
-   this skill is not authority to bypass it.
-4. If the rebase conflicts, it aborts immediately. Resolve it yourself in
-   the worktree, then re-run the merge. You have the full picture; the
-   subagent does not, and re-dispatching to it will not help.
-5. Run the project's tests and linters after each merge **unless a
-   `pre-merge` hook already ran them** — no point duplicating the gate. The
-   reason to verify per-merge rather than once at the end is to know which
-   merge broke what.
+   No flags: fast-forward where possible, merge commit where not, commits
+   preserved as the subagent made them.
+4. If the merge conflicts, resolve it yourself and commit the resolution.
+   You have the full picture; the subagent does not, and re-dispatching to
+   it will not help.
+5. Confirm the merged result is still green — a branch that passed alone
+   can still break once combined with a sibling's changes.
 6. `bd close <id>` once merged and green.
-7. Refill the free slot from the queue and dispatch again.
+7. Tear the worktree down: `wt remove bgp/<id> -y`, so the repo's
+   `pre-remove` and `post-remove` hooks still run.
+8. Refill the free slot from the queue and dispatch again.
 
 Do not batch the merges. Do not close a bead before its branch is merged and
 verified — a closed bead with unmerged work is worse than an open one.
@@ -254,8 +255,8 @@ Do not retry blindly, and do not leave the bead in limbo:
   either take it serially yourself or move on.
 
 Always remove the worktree afterwards, whatever the outcome. Stale worktrees
-accumulate and confuse the next run. A successful `wt merge` already removed
-it; otherwise do it explicitly:
+accumulate and confuse the next run. Discarding abandoned work needs both
+force flags:
 
 ```bash
 wt remove bgp/<id> --force --force-delete -y

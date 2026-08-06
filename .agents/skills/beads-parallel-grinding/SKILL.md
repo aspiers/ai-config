@@ -112,14 +112,14 @@ Before dispatching anything:
 0. Confirm both prerequisites: run `wt --version`, and load the upstream
    `worktrunk` skill. Stop if either is unavailable.
 1. Note the current branch. It is the **base branch**: every worktree
-   branches from its tip, and every merge fast-forwards it. Pass it
-   explicitly to `wt` rather than relying on the default, which is the
-   repository's default branch and may not be where you are.
+   branches from its tip, and every merge lands on it. Pass it explicitly
+   to `wt` rather than relying on the default, which is the repository's
+   default branch and may not be where you are.
 2. `git status` — uncommitted work in the main worktree is not overwritten
    by `wt merge` (it advances the branch, it does not merge into your
-   working tree), but a dirty tree still means a fast-forward can fail and
-   makes it hard to tell your changes from the merged ones. If it is dirty,
-   say so and ask whether to commit, stash, or proceed.
+   working tree), but a dirty tree makes it hard to tell your own changes
+   from the merged ones. If it is dirty, say so and ask whether to commit,
+   stash, or proceed.
 3. `wt hook show` — see which lifecycle hooks the repo configures, so you
    know what will run on create and merge, and what you still have to do
    yourself.
@@ -214,15 +214,17 @@ here. For each finished bead:
 2. Merge it, driving `wt` at the subagent's worktree from where you are:
 
    ```bash
-   wt -C <worktree-path> merge <base-branch> --no-squash -y
+   wt -C <worktree-path> merge <base-branch> --no-squash --no-ff -y
    ```
 
    `--no-squash` is **mandatory** — never squash a bead's commits together.
+   `--no-ff` joins the branch to the base with a merge commit instead of
+   flattening it in, so each bead stays a visible unit of work in history.
+
    The rest of the pipeline stays on: this runs the repo's `pre-merge`
-   hooks (its own quality gate), rebases the branch onto the base,
-   fast-forwards the base, then removes the worktree and branch. So the
-   bead's individual commits survive, replayed onto the base tip, and
-   history stays linear. One command covers merge and teardown.
+   hooks (its own quality gate), rebases the branch onto the base, adds the
+   merge commit, then removes the worktree and branch. One command covers
+   merge and teardown.
 3. If a `pre-merge` hook fails, the merge aborts and nothing lands. Fix the
    problem yourself in the worktree, or treat the bead as failed. Never
    pass `--no-hooks` to force it through — the hook is the repo's gate, and

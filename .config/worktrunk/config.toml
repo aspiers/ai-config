@@ -5,7 +5,7 @@ worktree-path = "{{ repo_path }}/.worktrees/{{ branch | sanitize }}"
 # deliberately while the work is done, and squashing discards them.
 squash = false
 
-# Never rewrite commits onto the target tip. When the target has moved, wt
-# stops rather than rebasing silently, leaving the choice explicit: rebase
-# with `wt step rebase`, or join the histories with a plain `git merge`.
-rebase = false
+# Rebase before merging (wt's default, kept explicit because it is a
+# deliberate choice): a conflict then surfaces in the branch's own worktree,
+# leaving the target untouched until the branch is clean.
+rebase = true

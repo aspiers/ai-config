@@ -66,12 +66,10 @@ Two consequences worth internalising:
   tests, do not run them a second time by hand; if there is none, you run
   them yourself after each merge.
 
-**Never squash.** A bead can legitimately produce several atomic commits,
-and collapsing them destroys commit boundaries chosen deliberately while
-the work was done. `wt merge` squashes by default, so every merge here
-passes `--no-squash` explicitly — even where the user config already sets
-`[merge] squash = false`, since that config is per-machine and this skill
-must stay correct without it. Squashing is never enabled to tidy history.
+- **How a merge is shaped is not this skill's business.** Squashing,
+  rebasing, and whether a merge commit is created are `wt` configuration,
+  set once in the user or project config. Take whatever they are, and do
+  not override them per-merge.
 
 ## Decide the concurrency limit first
 
@@ -214,17 +212,16 @@ here. For each finished bead:
 2. Merge it, driving `wt` at the subagent's worktree from where you are:
 
    ```bash
-   wt -C <worktree-path> merge <base-branch> --no-squash --no-ff -y
+   wt -C <worktree-path> merge <base-branch> -y
    ```
 
-   `--no-squash` is **mandatory** — never squash a bead's commits together.
-   `--no-ff` joins the branch to the base with a merge commit instead of
-   flattening it in, so each bead stays a visible unit of work in history.
+   This runs the repo's `pre-merge` hooks (its own quality gate), brings
+   the branch up to date with the base, merges it, then removes the
+   worktree and branch. One command covers merge and teardown.
 
-   The rest of the pipeline stays on: this runs the repo's `pre-merge`
-   hooks (its own quality gate), rebases the branch onto the base, adds the
-   merge commit, then removes the worktree and branch. One command covers
-   merge and teardown.
+   How the merge is shaped — squash, rebase, merge commit — is `wt`
+   configuration, not this skill's business. Take whatever the user and
+   project config say and do not override it per-merge.
 3. If a `pre-merge` hook fails, the merge aborts and nothing lands. Fix the
    problem yourself in the worktree, or treat the bead as failed. Never
    pass `--no-hooks` to force it through — the hook is the repo's gate, and

@@ -4,7 +4,3 @@ worktree-path = "{{ repo_path }}/.worktrees/{{ branch | sanitize }}"
 # Never collapse a branch's commits into one. Commit boundaries are chosen
 # deliberately while the work is done, and squashing discards them.
 squash = false
-
-# Join branches with a merge commit rather than fast-forwarding them into
-# the target, so each branch stays a visible unit of work.
-ff = false

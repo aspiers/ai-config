@@ -1,7 +1,7 @@
 ---
 name: beads-parallel-grinding
 description: Grind through ready beads in priority order by running several issues at once, each in its own isolated git worktree managed by worktrunk (`wt`), then merging the finished branches back one at a time. Use when asked to work the beads queue in parallel, to run N issues concurrently, or when a serial grind is too slow and the ready issues are independent.
-compatibility: Requires the `wt` CLI (worktrunk, https://worktrunk.dev) and the `bd` CLI (beads)
+compatibility: Requires the `wt` CLI (worktrunk, https://worktrunk.dev), the upstream `worktrunk` skill, and the `bd` CLI (beads)
 ---
 
 # Grinding Beads in Parallel Worktrees
@@ -31,16 +31,30 @@ test suite before a merge — and `wt` is what runs them. Reaching for plain
 git skips the repo's own setup and gates, which is exactly the failure this
 skill exists to avoid.
 
-Check it is present before starting:
+### Both prerequisites are required
 
-```bash
-wt --version
-```
+This skill deliberately does not restate how `wt` works. It covers only the
+orchestration — which beads to run in parallel, who merges, and in what
+order — and delegates everything about `wt` itself to upstream. So it needs
+two things present, and **checks both before doing any work**:
 
-If `wt` is missing, **stop and say so**. Do not fall back to `git worktree`:
-a silent fallback produces worktrees with no dependencies installed and
-merges with no pre-merge gate, and the damage is not obvious until later.
-Point the user at <https://worktrunk.dev> and let them decide.
+1. **The `wt` CLI.** Verify with `wt --version`.
+2. **The upstream `worktrunk` skill.** Load it before the first `wt`
+   command. It is the authority on `wt` configuration, hook types and
+   timing, template variables, and troubleshooting — all of which this
+   skill assumes rather than explains.
+
+If either is missing, **stop and say which**. Do not fall back to
+`git worktree`, and do not improvise `wt` usage from memory. A silent
+fallback produces worktrees with no dependencies installed and merges with
+no pre-merge gate, and the damage is not obvious until later. Point the
+user at <https://worktrunk.dev> (the CLI, and the plugin providing the
+skill) and let them decide.
+
+Consult the `worktrunk` skill, rather than guessing, whenever a run needs
+more than the handful of commands below: reading or changing `.config/wt.toml`
+or the user config, understanding why a hook fired or did not, resolving a
+template-path question, or debugging any unexpected `wt` behaviour.
 
 Two consequences worth internalising:
 
@@ -52,15 +66,12 @@ Two consequences worth internalising:
   tests, do not run them a second time by hand; if there is none, you run
   them yourself after each merge.
 
-For questions about `wt` configuration or hook authoring, use the upstream
-`worktrunk` skill — it covers config files, hook types, and template
-variables in depth. This skill only covers driving `wt` from a parallel
-grind.
-
-**Never squash.** `wt merge` squashes by default; every merge here passes
-`--no-squash`. A bead can legitimately produce several atomic commits, and
-collapsing them destroys the commit boundaries deliberately created while
-the work was done.
+**Never squash.** A bead can legitimately produce several atomic commits,
+and collapsing them destroys commit boundaries chosen deliberately while
+the work was done. `wt merge` squashes by default, so every merge here
+passes `--no-squash` explicitly — even where the user config already sets
+`[merge] squash = false`, since that config is per-machine and this skill
+must stay correct without it. Squashing is never enabled to tidy history.
 
 ## Decide the concurrency limit first
 
@@ -98,6 +109,8 @@ matches nothing, ask rather than guessing; verify an epic ID with
 
 Before dispatching anything:
 
+0. Confirm both prerequisites: run `wt --version`, and load the upstream
+   `worktrunk` skill. Stop if either is unavailable.
 1. Note the current branch. It is the **base branch**: every worktree
    branches from its tip, and every merge fast-forwards it. Pass it
    explicitly to `wt` rather than relying on the default, which is the
@@ -205,9 +218,11 @@ here. For each finished bead:
    ```
 
    `--no-squash` is **mandatory** — never squash a bead's commits together.
-   This runs the repo's `pre-merge` hooks (its own quality gate), rebases
-   onto the base, fast-forwards the base branch, then removes the worktree
-   and branch. One command covers merge and teardown.
+   The rest of the pipeline stays on: this runs the repo's `pre-merge`
+   hooks (its own quality gate), rebases the branch onto the base,
+   fast-forwards the base, then removes the worktree and branch. So the
+   bead's individual commits survive, replayed onto the base tip, and
+   history stays linear. One command covers merge and teardown.
 3. If a `pre-merge` hook fails, the merge aborts and nothing lands. Fix the
    problem yourself in the worktree, or treat the bead as failed. Never
    pass `--no-hooks` to force it through — the hook is the repo's gate, and

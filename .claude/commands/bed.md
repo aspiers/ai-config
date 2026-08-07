@@ -13,6 +13,11 @@ you get it wrong, it is not a disaster because we have git history so we can
 always revert or rewind later.  The worst outcome would be that you just stop
 and waste time, because we learn nothing that way.
 
+Even though I'm asleep and unlikely to reprioritise anything mid-run, still
+re-read `bd ready` before picking each issue rather than working from a cached
+list — your own closes, new beads, and newly unblocked dependencies all change
+the queue as you go.
+
 When I wake up, I expect to see a concise report of everything you have
 achieved, with any supporting information required in order to quickly test
 out the things you have done.

@@ -128,10 +128,16 @@ Do not pick worktree paths yourself; `wt` derives them from its own config.
 
 ## Selecting a batch
 
-Run `bd ready` with the scope flags. Consider only the top few
-highest-priority issues — enough to fill the free slots, not the whole
-queue. Then filter for **parallel safety**, and this is the one place worth
-spending a little thought:
+Run `bd ready` with the scope flags, **freshly, every time you are about to
+dispatch** — at the start, and again each time a slot frees. Never reuse an
+earlier listing or a remembered ordering. The human can reprioritise, close,
+add, or block beads at any moment while the grind runs, and a run that is
+overlapping work by design spends long stretches between queue reads. A
+listing taken before the last merge may already be stale.
+
+Consider only the top few highest-priority issues — enough to fill the free
+slots, not the whole queue. Then filter for **parallel safety**, and this is
+the one place worth spending a little thought:
 
 - Prefer beads that plainly touch different files or subsystems.
 - Never dispatch two beads that you expect to edit the same file. Run those
@@ -272,6 +278,49 @@ Both are needed to discard abandoned work, so be sure that is the intent —
 this throws the subagent's commits away. To keep the branch for inspection,
 drop `--force-delete` and use `--no-delete-branch`.
 
+## When priorities shift under a running batch
+
+A parallel grind can have several beads in flight for a long time, so the
+backlog it was dispatched from may no longer be the backlog the human cares
+about. Each time you re-read `bd ready`, compare the top of the fresh queue
+against what is currently in flight.
+
+**Never discard or roll back in-flight work.** A subagent's commits are
+finished effort; losing them to a reshuffled backlog is strictly worse than
+landing something the human deprioritised. Merge what completes, as normal.
+
+If, and only if, there is a **large** discrepancy — the top of the fresh
+queue is markedly higher priority than everything currently in flight, e.g.
+a new P0/P1 sitting behind a batch of P3s — draw the human's attention to it
+and **carry straight on working**:
+
+- Say it once, briefly, in your normal output: which in-flight beads, which
+  higher-priority ones now waiting, and that they can tell you to pause the
+  batch if they would rather you switched.
+- Fire an out-of-band notification, so it lands even when nobody is reading
+  the transcript:
+
+  ```bash
+  ai-notify "Beads priority discrepancy" \
+            "<in-flight beads> running while <higher-priority beads> wait"
+  ```
+
+  `ai-notify` picks whichever mechanism the machine actually has, makes the
+  notification persistent where it can (the human may be away from the
+  screen), and always exits 0 — so there is nothing to check and no need to
+  probe for `herdr`, `notify-send`, or anything else yourself. It never waits
+  for input. If it is not installed, skip the notification; the in-transcript
+  mention is enough.
+
+**This must never block.** Do not use `AskUserQuestion`, do not wait for a
+reply, do not slow the loop down. Mention it, notify, and continue exactly as
+before. Pause only if the human explicitly asks you to — an unanswered
+question here would stall the grind for hours, which is far worse than
+finishing some lower-priority work first.
+
+Say it once per discrepancy, not once per loop iteration. Repeating the same
+alert every cycle is noise, and noise gets ignored.
+
 ## Continuing and stopping
 
 Keep refilling slots until `bd ready` returns nothing within scope. Then
@@ -284,7 +333,8 @@ Between merges, do not pause to ask what to do next and do not summarise
 progress — keep the loop running. The exception is the concurrency question
 at the very start, and anything that genuinely needs a decision you cannot
 make (a dirty working tree, an ambiguous scope, a merge conflict whose
-correct resolution is a judgement call about intent).
+correct resolution is a judgement call about intent). A shifted backlog is
+**not** such a case — flag it and keep going, as above.
 
 ## Pushing
 

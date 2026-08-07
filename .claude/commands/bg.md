@@ -39,7 +39,10 @@ before using `--parent`.
 Loop forever:
 
 1. Run `bd ready` with the scope flags to get the list of ready (unblocked)
-   issues.
+   issues. **Run it fresh every time round the loop.** Never reuse a listing
+   from an earlier iteration or work from a remembered ordering — the human
+   can reprioritise, close, add, or block beads at any moment, so a queue
+   read one issue ago may already be wrong.
 2. Look at the top 5 highest-priority issues from the output. Do NOT
    spend time analysing beyond these 5. Pick whichever one you can
    make the most immediate progress on.
@@ -57,6 +60,11 @@ Loop forever:
 
 - **Never stop.** After closing an issue, immediately start the next one.
 - **No lengthy analysis.** Glance at max 5 top-priority issues, pick one, go.
+- **Priorities are not static.** The human may reprioritise the backlog while
+  you work. Treat every `bd ready` result as a snapshot valid only for the
+  issue you are about to pick, and re-read the queue before each pick.
+  Finish the issue in hand first, though — do not abandon work in progress
+  because something else rose above it.
 - **No asking for permission.** Just do the work.
 - If `bd ready` returns no issues, report that the queue is empty and stop.
   When a scope was given, say which scope was exhausted, so it is clear that

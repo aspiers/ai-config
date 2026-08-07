@@ -181,6 +181,17 @@ For each selected bead, in the main worktree:
 4. Spawn a subagent with an `Agent` call. Send all dispatches for a batch in
    a **single message** so they actually run concurrently.
 
+   If the harness lets you title or label a subagent — Claude Code's `Agent`
+   tool takes a short `description`, other harnesses have their own
+   equivalent — **prefix it with the bead ID**, as in
+   `<id>: rename config loader`. With several subagents running at once,
+   the label is often the only thing distinguishing them in a progress
+   display, and an untitled or generically-titled batch makes it impossible
+   to tell which bead is which when one stalls or fails. It also matches the
+   `bgp/<id>` branch and worktree names, so a label, a branch, and a bead
+   line up on sight. If the harness offers no such field, skip this — it is
+   presentation, not correctness.
+
 The subagent's prompt must be self-contained, because it cannot see this
 conversation. Include:
 

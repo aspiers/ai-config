@@ -1,0 +1,78 @@
+#!/bin/bash
+#
+# ai-notify - Send a persistent notification the best way available
+#
+# Usage: ai-notify <title> [body]
+#
+# Intended for agents that need to draw a human's attention to something
+# out-of-band, without blocking on an answer.
+#
+# Notifications are made **persistent** wherever the mechanism allows it:
+# the point is to catch someone who is not currently looking, so a toast
+# that disappears after five seconds is worthless. Nothing here ever waits
+# for user input, though — persistence must not become blocking.
+#
+# Mechanisms:
+#   - herdr notification show  - in-pane ping, reaches the human where the
+#                                agent runs. Transient only, so it is fired
+#                                *in addition to* a desktop notification
+#                                rather than instead of one.
+#   - notify-send              - freedesktop (Linux). `-t 0` means no expiry
+#                                and `-u critical` keeps it resident in most
+#                                daemons.
+#   - terminal-notifier        - macOS. Sticks when the notification style is
+#                                set to Alerts in System Settings.
+#   - osascript                - macOS fallback. Always transient (banners
+#                                cannot be made sticky without blocking), but
+#                                better than silence.
+#   - stderr                   - last resort; always "succeeds".
+#
+# Exits 0 whenever any mechanism was reached, including the stderr fallback,
+# so callers never need to guard against a missing notifier. A notification
+# is advisory: failing to deliver one must not fail the caller's work.
+
+set -u
+
+if [ $# -lt 1 ]; then
+    echo "Usage: ai-notify <title> [body]" >&2
+    exit 64
+fi
+
+TITLE="$1"
+BODY="${2:-}"
+
+# Fired first and unconditionally: it is cheap, it reaches the agent's own
+# pane, and it does not substitute for the persistent desktop notification
+# below. herdr talks to its server over a socket, so with no server running
+# this simply fails and is ignored.
+if command -v herdr >/dev/null 2>&1; then
+    herdr notification show "$TITLE" \
+          ${BODY:+--body "$BODY"} --sound request >/dev/null 2>&1 || true
+fi
+
+# -t 0 disables expiry; -u critical stops daemons auto-dismissing it anyway.
+# Never pass -w or -A: both wait for the user and would hang the caller.
+if command -v notify-send >/dev/null 2>&1; then
+    if notify-send -u critical -t 0 -- "$TITLE" "$BODY" >/dev/null 2>&1; then
+        exit 0
+    fi
+fi
+
+if command -v terminal-notifier >/dev/null 2>&1; then
+    if terminal-notifier -title "$TITLE" -message "$BODY" >/dev/null 2>&1; then
+        exit 0
+    fi
+fi
+
+if command -v osascript >/dev/null 2>&1; then
+    # Escape backslashes then double quotes, so the strings survive being
+    # embedded in an AppleScript string literal
+    escape() { printf '%s' "$1" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g'; }
+    if osascript -e "display notification \"$(escape "$BODY")\" \
+                     with title \"$(escape "$TITLE")\"" >/dev/null 2>&1; then
+        exit 0
+    fi
+fi
+
+printf '\n*** %s ***\n%s\n\n' "$TITLE" "$BODY" >&2
+exit 0

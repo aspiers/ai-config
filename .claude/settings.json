@@ -294,6 +294,7 @@
   "theme": "auto",
   "verbose": true,
   "preferredNotifChannel": "terminal_bell",
+  "autoCompactEnabled": true,
   "remoteControlAtStartup": false,
   "agentPushNotifEnabled": true,
   "skipAutoPermissionPrompt": true,

@@ -84,6 +84,20 @@ project's test suite is and on what else the machine is doing.
 The limit is a cap on *concurrently running subagents*, not a batch size.
 Whenever a slot frees, refill it from the queue.
 
+**Refilling is part of finishing a merge, not a separate step to report and
+await approval on.** After merging and verifying, check the queue and
+dispatch into every free slot in the same turn. A cap is a ceiling, not a
+request for permission each time — "do not exceed N" is not "do not launch
+without being asked", and a slot left idle while beads are unclaimed is
+wasted wall-clock time.
+
+Hold a slot empty only for a stated reason, and say the reason in a clause:
+the user asked you to hold, or a running subagent is benchmarking and a
+second CPU-heavy job would corrupt its measurements. Otherwise fill it.
+
+Never state how many subagents are running from memory. Check first — see
+**Establishing state** below.
+
 ## Determine scope
 
 The rest of the arguments restrict which beads are eligible, exactly as for
@@ -199,13 +213,51 @@ conversation. Include:
   there and nowhere else. It must not `cd` into the main repository.
 - The bead's ID, title, description, design notes, and acceptance criteria —
   pasted in full, not referenced.
-- An explicit prohibition on running any `bd` command. The beads database is
-  gitignored and lives in the main worktree; anything it did there would be
-  lost or corrupting. Bookkeeping is the orchestrator's job.
+- **Bead bookkeeping rules — include these verbatim in every dispatch, and
+  do not drop them when a brief gets long.**
+
+  A subagent **must** keep its bead current as it works. `bd comment` is
+  mandatory, not optional: findings, evidence, measurements, refuted
+  hypotheses, dead ends, and anything the next person would otherwise have
+  to rediscover — recorded **as they are found**, not saved for the end.
+
+  This is the only durable record. A final report is lost entirely if the
+  subagent is stopped, crashes, or loses its connection mid-run, and that is
+  not hypothetical: in one run three subagents were interrupted, and their
+  discoveries survived only because someone happened to notice and
+  transcribe them by hand. A comment written at the moment of discovery
+  survives anything.
+
+  A subagent **must never** change a bead's status — above all, **never
+  `bd close`**. Closing marks the work done *before it is merged*, from a
+  worktree whose branch may still be rejected at the gate, and a closed bead
+  with unmerged work is worse than an open one because nothing will bring you
+  back to it. Closure means *integrated into the trunk and verified there*,
+  which only the orchestrator can know. Status transitions and closure are
+  the orchestrator's alone.
+
+  Nor should a subagent create beads for work it discovers. Have it report
+  those in its output or as a comment on its own bead; the orchestrator
+  files them, so scope labels and parents stay consistent and duplicates are
+  caught against the queue the subagent cannot see.
+
+  Some setups back the database with a single server process (a lockfile,
+  PID or port under `.beads/`). That is a reason to expect occasional
+  contention on a write, not a reason to stop subagents commenting — have
+  them retry. Never respond to it by banning `bd` outright: doing so trades
+  a recoverable retry for the permanent loss of everything an interrupted
+  subagent had learned.
 - The project's development expectations: tests, linting, and the
   repository's commit conventions.
-- An instruction to commit its work to its branch and **not** to push, and
-  not to merge, rebase, or otherwise touch other branches.
+- An instruction to commit its work to its branch and **not to push at
+  all**, and not to merge, rebase, or otherwise touch other branches.
+
+  Say this as a flat prohibition. Phrasing like "push only your own branch"
+  is meant as *don't push to the base* but reads as an instruction to push,
+  and subagents will follow it. There is no reason for them to: `wt merge`
+  integrates from the **local** branch, so committing is sufficient, and
+  every pushed branch outlives its worktree as remote litter that no
+  teardown removes.
 - An instruction not to run `wt` at all, and not to merge. Worktree
   lifecycle and integration belong to the orchestrator; a subagent merging
   would write to the shared base branch concurrently with its siblings.
@@ -256,11 +308,121 @@ merges *the worktree's branch into the target*. For each finished bead:
    `pre-merge` hook already ran them** — no point duplicating the gate. The
    reason to verify per-merge is to know which merge broke what: a branch
    that passed alone can still break once combined with a sibling's work.
-6. `bd close <id>` once merged and green.
-7. Refill the free slot from the queue and dispatch again.
+
+   **A skipped gate is not a passing gate.** Some gates disable themselves
+   when a prerequisite is missing — an absent build tree, an uninstalled
+   tool — and report a cheerful skip rather than a failure. Read what the
+   gate actually did, not just its exit status, and treat "did not run" as
+   the same severity as "failed". The same applies to a subagent reporting
+   "all gates pass": check whether any of them skipped.
+
+   Where a subagent's central claim is checkable, check it rather than
+   accepting the report — inject the defect its fix prevents and confirm the
+   gate rejects it, then restore. A fix that cannot be shown to fail without
+   it has not been verified.
+6. `bd close <id>` once merged and green. Close it now, in this step —
+   closing is part of finishing the merge, and the moment attention moves to
+   the next subagent is exactly when a bead gets left in `in_progress`.
+7. Refill the free slot from the queue and dispatch again, in this same turn.
 
 Do not batch the merges. Do not close a bead before its branch is merged and
 verified — a closed bead with unmerged work is worse than an open one.
+
+## Establishing state — never infer it
+
+Every question about what is running, where, and how far along has a command
+that answers it. Use the command. Inferring from memory or from a remembered
+path is how a long run drifts away from reality, and the errors compound
+silently because a wrong answer looks exactly like a right one.
+
+| Question | Authority |
+| --- | --- |
+| Where are the worktrees? | `git worktree list` (or `wt list`) |
+| What is uncommitted, and how far ahead/behind? | `wt list` |
+| How many subagents are running? | The harness — its own task list or progress display |
+| What is claimed and by whom? | `bd list --status=in_progress` |
+| Did a branch's work land on the base? | `git log <base> -- <path>`, then diff the content |
+
+That last row has a trap worth knowing. `wt merge` **rebases** the branch
+onto the base before merging, so every commit gets a **new SHA**. Asking
+whether the original commit is an ancestor —
+`git merge-base --is-ancestor <sha> <base>` — correctly answers *no* for work
+that landed perfectly. Ask whether the **content** arrived instead: check the
+file exists on the base and diff it against the branch. A subagent that
+checks its own SHAs will conclude its work was lost when it was not.
+
+Specifically:
+
+- **Never glob a remembered worktree path.** `wt` derives paths from its own
+  config, and a repository can hold worktrees under several parents. A
+  relative glob is worse still: it resolves against your current directory,
+  which may itself have drifted into a worktree, and then silently returns
+  nothing.
+- **Never count `bgp/*` branches to count subagents.** Branches outlive the
+  agents that made them — a paused bead, a merged-but-unpruned branch, and a
+  live agent all look identical in `git branch`.
+- **A query that returns nothing about state you believe exists is evidence
+  the query is wrong**, not that the state is gone. Verify the query before
+  acting on an empty result.
+
+## When a subagent is paused or interrupted
+
+Distinct from failure, and more dangerous, because the work usually still
+exists and is easy to destroy by accident.
+
+**There is no pause primitive.** Stopping a subagent terminates it. If asked
+to pause, say so and ask whether to stop them or let them finish; do not
+silently substitute one for the other.
+
+**Before stopping anything, have it commit.** A subagent's uncommitted work
+lives only in its worktree's working tree — not in the reflog, not in the
+index, not in dangling objects, not in any stash. If the worktree is later
+removed, the work is genuinely gone. So instruct subagents to commit
+work-in-progress to their own branch early and often, and prefer letting one
+finish over stopping it mid-edit.
+
+**If a subagent has already stopped without committing**, commit on its
+behalf, in its worktree, labelled clearly as unverified:
+
+```bash
+git -C <worktree-path> add -A
+git -C <worktree-path> commit -m "wip(<scope>): preserve interrupted work"
+```
+
+Do this **only once the subagent is confirmed finished**. Committing under a
+live subagent moves its branch pointer mid-edit and races it.
+
+**A transient error is not death.** A notification reporting a stalled
+stream, a network drop, or an API error describes a broken connection; the
+subagent may still be running and may resume. Neither silence nor an error
+justifies dismantling a worktree. Ask it directly if the harness supports
+messaging, or wait for a real completion notification.
+
+**Never re-dispatch a bead into an existing worktree.** If a subagent was
+stopped or interrupted, its worktree and branch usually survive. Sending a
+second subagent to the same `bgp/<id>` puts two of them in one working tree,
+committing over each other — one will sweep the other's uncommitted changes
+into a commit whose message describes something else entirely, and history
+stops matching content.
+
+Before re-dispatching, run `git worktree list` and decide explicitly:
+
+- **Resume the same subagent** (if the harness can message it) — best, since
+  it keeps its accumulated context.
+- **Reuse the worktree with a new subagent** — only after confirming the old
+  one is finished. Tell the new one exactly what state it will find and that
+  any existing commits are a predecessor's, not its own.
+- **Start clean** — remove the worktree first, having preserved anything
+  uncommitted.
+
+What you must not do is dispatch and hope. If a subagent reports finding
+changes it did not make, treat that as a coordination failure on your side,
+not a curiosity: stop dispatching into that worktree until you know who else
+is in it.
+
+**Before concluding any work is lost, look in the worktree.** Searching the
+reflog, index, dangling objects and stashes is a sound search aimed at the
+wrong place: uncommitted changes live in none of those stores.
 
 ## When a subagent fails
 
@@ -373,3 +535,24 @@ Remove leftovers with `wt remove bgp/<id> -y`. Without `--force-delete` it
 declines to delete a branch holding unmerged work, which is the behaviour
 you want here: leave those alone, and say they exist and which beads they
 belong to, so nothing is silently lost.
+
+**Check the remote too.** `wt merge` removes the local branch and worktree,
+but anything a subagent pushed survives on the remote and no teardown step
+removes it. A long run leaves one stale `bgp/*` branch per bead:
+
+```bash
+git ls-remote --heads <remote> 'refs/heads/bgp/*'
+```
+
+**Verify with `git cherry`, not ancestry.** Because `wt merge` rebases,
+merged branches have different SHAs, so `git log <base>..<branch>` and
+`git merge-base --is-ancestor` both report unmerged work that landed
+perfectly. `git cherry` compares by patch *content* and sees through the
+rebase:
+
+```bash
+git cherry <base> <remote>/bgp/<id>   # lines starting '+' are genuinely unmerged
+```
+
+Delete only branches with no `+` lines, and report any that do rather than
+forcing them.

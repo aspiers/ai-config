@@ -217,7 +217,8 @@
       "yarn info *": "allow",
       "yarn why *": "allow",
       "yes *": "allow",
-      "zgrep *": "allow"
+      "zgrep *": "allow",
+      "~/bin/open *": "allow"
     }
   },
   "plugin": [

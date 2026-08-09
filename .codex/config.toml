@@ -6,18 +6,39 @@ model_reasoning_effort = "high"
 hooks = true
 memories = true
 prevent_idle_sleep = true
+js_repl = false
 
 [hooks.state."/home/adam/.codex/hooks.json:session_start:0:0"]
 enabled = true
 trusted_hash = "sha256:edd0a09b40313f50debeb523322158f76306ef9c01be74af714f9aa94f3fe11c"
 
 [mcp_servers.railway]
-args = ["mcp"]
 command = "railway"
+args = ["mcp"]
 
 [mcp_servers.agentsview]
-args = ["mcp"]
 command = "agentsview"
+args = ["mcp"]
+
+[mcp_servers.node_repl]
+command = "/opt/codex-desktop/resources/node_repl"
+startup_timeout_sec = 120.0
+
+[mcp_servers.node_repl.env]
+BROWSER_USE_AVAILABLE_BACKENDS = "chrome,iab"
+BROWSER_USE_CODEX_APP_BUILD_FLAVOR = "prod"
+BROWSER_USE_CODEX_APP_VERSION = "26.707.51957"
+CODEX_HOME = "/home/adam/.codex"
+NODE_REPL_INSTRUCTIONS_USE_CASE_BROWSER = "Control the in-app browser in conjunction with the Browser Plugin."
+NODE_REPL_INSTRUCTIONS_USE_CASE_CHROME = "Control the Chrome browser in conjunction with the Chrome Plugin. Prefer this method of controlling Chrome over alternatives (such as Computer Use) unless the user explicitly mentions an alternative."
+NODE_REPL_NATIVE_PIPE_CONNECT_TIMEOUT_MS = "1000"
+NODE_REPL_NODE_MODULE_DIRS = ""
+NODE_REPL_NODE_PATH = "/opt/codex-desktop/resources/node-runtime/bin/node"
+NODE_REPL_TRUSTED_BROWSER_CLIENT_SHA256S = "6d25aa7656feac858f3a3bdaea5bcbab0dbfd426c9de8e6931ce90c399ee8e4f,e74b67ab909392b37f7aef14977fce7aa80cfa02ade5491f30abcdbcb9e69f33,a8c5d0b9ca9076003dac7313a7cc4c7e9210e2e1094b5108c35f0f478e64794a"
+NODE_REPL_TRUSTED_CODE_PATHS = "/home/adam/.codex"
+
+[mcp_servers.node_repl.tools.js]
+approval_mode = "approve"
 
 [projects."/home/adam/.GIT/3rd-party/ePDS"]
 trust_level = "trusted"
@@ -30,16 +51,70 @@ trust_level = "trusted"
 
 [tui]
 status_line = [
-    "model-with-reasoning",
-    "current-dir",
-    "git-branch",
-    "pull-request-number",
-    "branch-changes",
-    "context-remaining",
-    "thread-title",
+  "model-with-reasoning",
+  "current-dir",
+  "git-branch",
+  "pull-request-number",
+  "branch-changes",
+  "context-remaining",
+  "thread-title",
 ]
 status_line_use_colors = true
 terminal_title = ["thread-title"]
 
 [tui.model_availability_nux]
 "gpt-5.6-sol" = 4
+
+[marketplaces.agentbox]
+last_updated = "2026-07-30T18:05:08Z"
+last_revision = "c9424ad090eb636ea355dbefc8a54b3d31eaa5a3"
+source_type = "git"
+source = "https://github.com/madarco/agentbox.git"
+
+[marketplaces.openai-bundled]
+last_updated = "2026-07-31T11:58:17Z"
+source_type = "local"
+source = "/home/adam/.codex/.tmp/bundled-marketplaces/openai-bundled"
+
+[marketplaces.openai-primary-runtime]
+last_updated = "2026-08-06T02:42:54Z"
+source_type = "local"
+source = "/home/adam/.cache/codex-runtimes/codex-primary-runtime/plugins/openai-primary-runtime"
+
+[plugins."agentbox@agentbox"]
+enabled = true
+
+[plugins."google-calendar@openai-curated"]
+enabled = true
+
+[plugins."slack@openai-curated"]
+enabled = true
+
+[plugins."sites@openai-bundled"]
+enabled = true
+
+[plugins."browser@openai-bundled"]
+enabled = true
+
+[plugins."visualize@openai-bundled"]
+enabled = true
+
+[plugins."documents@openai-primary-runtime"]
+enabled = true
+
+[plugins."pdf@openai-primary-runtime"]
+enabled = true
+
+[plugins."spreadsheets@openai-primary-runtime"]
+enabled = true
+
+[plugins."presentations@openai-primary-runtime"]
+enabled = true
+
+[plugins."template-creator@openai-primary-runtime"]
+enabled = true
+
+[desktop]
+conversationDetailMode = "STEPS_COMMANDS"
+ambient-suggestions-enabled = true
+followUpQueueMode = "queue"

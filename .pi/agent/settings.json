@@ -101,7 +101,8 @@
     },
     "npm:@spences10/pi-skill-importer",
     "git:github.com/aspiers/pi-herdr-tab-sync@fix/immediate-name-sync",
-    "git:github.com/aspiers/pi-ask-user@fix/number-custom-response"
+    "git:github.com/aspiers/pi-ask-user@fix/number-custom-response",
+    "npm:pi-model-aware-compaction@0.1.5"
   ],
   "hideThinkingBlock": false,
   "powerline": {
@@ -188,5 +189,10 @@
       }
     }
   },
-  "steeringMode": "all"
+  "steeringMode": "all",
+  "compaction": {
+    "enabled": true,
+    "reserveTokens": 9000,
+    "keepRecentTokens": 20000
+  }
 }

@@ -53,7 +53,9 @@
     "npm:@mzwing/pi-permission-auto-review",
     "git:github.com/aspiers/pi-herdr-tab-sync@fix/immediate-name-sync",
     "npm:pi-model-aware-compaction@0.1.5",
-    "../../.GIT/3rd-party/pi-packages/packages/pi-permission-system"
+    "../../.GIT/3rd-party/pi-packages/packages/pi-permission-system",
+    "npm:@gotgenes/pi-subagents@19.2.1",
+    "npm:@gotgenes/pi-subagents-worktrees@0.2.3"
   ],
   "hideThinkingBlock": false,
   "powerline": {

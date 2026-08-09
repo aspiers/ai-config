@@ -15,6 +15,10 @@ trusted_hash = "sha256:edd0a09b40313f50debeb523322158f76306ef9c01be74af714f9aa94
 args = ["mcp"]
 command = "railway"
 
+[mcp_servers.agentsview]
+args = ["mcp"]
+command = "agentsview"
+
 [projects."/home/adam/.GIT/3rd-party/ePDS"]
 trust_level = "trusted"
 

@@ -1,0 +1,12 @@
+[Unit]
+Description=AgentsView session browser
+Documentation=https://agentsview.io/
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/agentsview serve
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=default.target

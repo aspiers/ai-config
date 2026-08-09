@@ -98,7 +98,6 @@ class BdEnrollSoloTestCase(unittest.TestCase):
             "is not tracked",
             "opt-in is not recorded",
             "not in server mode",
-            "no-push guard",
             "beads.role",
         )
 
@@ -277,13 +276,22 @@ class TestCheckMode(BdEnrollSoloTestCase):
         )
 
     @unittest.skipUnless(bd_available(), "bd not installed")
-    def test_detects_removed_push_guard(self):
+    def test_check_ignores_no_push_setting(self):
         self.enroll_or_skip()
-        subprocess.run(["bd", "config", "set", "no-push", "false"], capture_output=True)
+        self.assertNotRegex(
+            Path(".beads/config.yaml").read_text(),
+            r"(?m)^no-push:",
+            "enrollment must leave the optional no-push setting unset",
+        )
 
-        result = self.check()
-        self.assertEqual(result.returncode, 1)
-        self.assertIn("no-push", result.stderr)
+        for action in (("set", "no-push", "false"), ("unset", "no-push")):
+            subprocess.run(["bd", "config", *action], capture_output=True, check=True)
+            result = self.check()
+            self.assertEqual(
+                result.returncode,
+                0,
+                f"check failed:\n{result.stdout}\n{result.stderr}",
+            )
 
 
 if __name__ == "__main__":

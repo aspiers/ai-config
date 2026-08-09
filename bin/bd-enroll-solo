@@ -63,7 +63,7 @@ The script:
   1. verifies prerequisites and that no conflicting enrollment exists
   2. records the opt-in (tracked marker file, or --local Git config)
   3. installs the policy declaration (AGENTS.md, or a Beads memory)
-  4. runs bd init --server --role maintainer with pushing disabled
+  4. runs bd init --server --role maintainer
   5. pins beads.role, configures private JSONL export, installs hooks
   6. verifies the resulting enrollment
 
@@ -86,8 +86,8 @@ and its policy declaration in a Beads memory keyed 'beads-solo-policy', then
 excludes .beads/ and .beads-solo via .git/info/exclude. Because .git/info/
 exclude is never published, a clone of the repository sees no trace of it.
 
-Both profiles set 'bd config set no-push true' and leave the JSONL export
-untracked. Neither grants authority to run 'git push' or 'bd dolt push'.
+Both profiles leave the JSONL export unstaged. Push authorization comes from
+the installed policy; enrollment does not configure Beads' 'no-push' guard.
 EOF
 }
 
@@ -351,15 +351,12 @@ install_local_memory() {
 initialize_workspace() {
     info "Initializing Beads in server mode (prefix: $PREFIX)"
 
-    # BD_NO_PUSH keeps Dolt push instructions out of generated content.
     # --skip-agents in local mode: bd would otherwise write managed sections
     # into tracked instruction files, which local mode must never touch.
     if [[ "$LOCAL_MODE" == true ]]; then
-        run env BD_NO_PUSH=true bd init \
-            --server --role maintainer --skip-agents --prefix "$PREFIX"
+        run bd init --server --role maintainer --skip-agents --prefix "$PREFIX"
     else
-        run env BD_NO_PUSH=true bd init \
-            --server --role maintainer --agents-profile minimal \
+        run bd init --server --role maintainer --agents-profile minimal \
             --prefix "$PREFIX"
     fi
 }
@@ -416,8 +413,7 @@ absorb_bd_gitignore() {
 }
 
 configure_workspace() {
-    info "Applying push guard and role"
-    run bd config set no-push true
+    info "Applying maintainer role"
     run git config --local beads.role maintainer
 
     info "Configuring private JSONL export"
@@ -446,9 +442,6 @@ verify_enrollment() {
                2>/dev/null) || mode=""
     [[ "$mode" == "server" ]] ||
         fail "workspace is not in server mode (got: ${mode:-unknown})"
-
-    [[ "$(bd config get no-push 2>/dev/null)" == *true* ]] ||
-        fail "no-push guard is not set"
 
     [[ "$(git config --local --get beads.role)" == maintainer ]] ||
         fail "beads.role is not pinned to maintainer"
@@ -528,9 +521,6 @@ run_check() {
                2>/dev/null) || mode=""
     [[ "$mode" == "server" ]] ||
         errors+=("workspace is not in Dolt server mode (got: ${mode:-unknown})")
-
-    [[ "$(bd config get no-push 2>/dev/null)" == *true* ]] ||
-        errors+=("no-push guard is not set")
 
     [[ "$(git config --local --get beads.role 2>/dev/null)" == maintainer ]] ||
         errors+=("beads.role is not pinned to maintainer")

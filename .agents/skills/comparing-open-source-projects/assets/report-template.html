@@ -1,214 +1,292 @@
 <!doctype html>
 <html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{REPORT_TITLE}}</title>
-    <style>
-        :root {
-            color-scheme: light dark;
-            --bg: #f6f7fb;
-            --panel: #ffffff;
-            --text: #18212f;
-            --muted: #5e6b7a;
-            --border: #d8dee8;
-            --accent: #3157c8;
-            --good: #18794e;
-            --caution: #9a6700;
-            --poor: #c9372c;
-            --unknown: #6f42c1;
-            --shadow: 0 8px 24px rgb(22 34 51 / 8%);
-        }
-        @media (prefers-color-scheme: dark) {
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>{{REPORT_TITLE}}</title>
+        <style>
             :root {
-                --bg: #111722;
-                --panel: #1a2230;
-                --text: #edf2f7;
-                --muted: #aeb9c7;
-                --border: #344054;
-                --accent: #8ca8ff;
-                --good: #5bd6a2;
-                --caution: #f2c14e;
-                --poor: #ff8a80;
-                --unknown: #c4a7ff;
-                --shadow: 0 8px 24px rgb(0 0 0 / 24%);
+                color-scheme: light dark;
+                --bg: #f6f7fb;
+                --panel: #ffffff;
+                --text: #18212f;
+                --muted: #5e6b7a;
+                --border: #d8dee8;
+                --accent: #3157c8;
+                --good: #18794e;
+                --caution: #9a6700;
+                --poor: #c9372c;
+                --unknown: #6f42c1;
+                --shadow: 0 8px 24px rgb(22 34 51 / 8%);
             }
-        }
-        * { box-sizing: border-box; }
-        html { scroll-behavior: smooth; }
-        body {
-            background: var(--bg);
-            color: var(--text);
-            font: 16px/1.55 system-ui, -apple-system, BlinkMacSystemFont,
-                "Segoe UI", sans-serif;
-            margin: 0;
-        }
-        a { color: var(--accent); }
-        a:focus-visible {
-            outline: 3px solid var(--accent);
-            outline-offset: 3px;
-        }
-        header, main, footer {
-            margin: 0 auto;
-            max-width: 1180px;
-            padding: 1.5rem;
-        }
-        header { padding-top: 3rem; }
-        h1 {
-            font-size: clamp(2rem, 5vw, 3.4rem);
-            letter-spacing: -0.035em;
-            line-height: 1.05;
-            margin: 0 0 1rem;
-        }
-        h2 { line-height: 1.2; margin-top: 0; }
-        h3 { margin-bottom: 0.35rem; }
-        .lede { font-size: 1.15rem; max-width: 78ch; }
-        .meta, .muted { color: var(--muted); }
-        .table-wrap {
-            background: var(--panel);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            box-shadow: var(--shadow);
-            margin-bottom: 2rem;
-            overflow-x: auto;
-        }
-        table { border-collapse: collapse; min-width: 860px; width: 100%; }
-        caption {
-            font-weight: 700;
-            padding: 1rem;
-            text-align: left;
-        }
-        th, td {
-            border-top: 1px solid var(--border);
-            padding: 0.8rem 1rem;
-            text-align: left;
-            vertical-align: top;
-        }
-        th { background: color-mix(in srgb, var(--panel), var(--accent) 6%); }
-        td:nth-child(3), th:nth-child(3) {
-            font-variant-numeric: tabular-nums;
-            text-align: right;
-        }
-        .project-detail, .methodology, .recommendation {
-            background: var(--panel);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            box-shadow: var(--shadow);
-            margin: 1.5rem 0;
-            padding: clamp(1.1rem, 3vw, 2rem);
-            scroll-margin-top: 1rem;
-        }
-        .facts {
-            display: grid;
-            gap: 0.8rem;
-            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-            margin: 1rem 0;
-        }
-        .fact {
-            border-left: 4px solid var(--border);
-            padding: 0.25rem 0.8rem;
-        }
-        .fact strong { display: block; }
-        .badge {
-            border: 1px solid currentColor;
-            border-radius: 999px;
-            display: inline-block;
-            font-size: 0.86rem;
-            font-weight: 700;
-            padding: 0.12rem 0.55rem;
-        }
-        .good { color: var(--good); }
-        .caution { color: var(--caution); }
-        .poor { color: var(--poor); }
-        .unknown { color: var(--unknown); }
-        .evidence li { margin-bottom: 0.35rem; }
-        .back { display: inline-block; margin-top: 1rem; }
-        footer { color: var(--muted); padding-bottom: 3rem; }
-    </style>
-</head>
-<body>
-<header>
-    <h1>{{REPORT_TITLE}}</h1>
-    <p class="lede">{{SCOPE_AND_PURPOSE}}</p>
-    <p class="meta">Evidence observed {{AS_OF_UTC}} · {{CANDIDATE_COUNT}}
-        candidates</p>
-</header>
-<main>
-    <div class="table-wrap">
-        <table id="comparison-summary">
-            <caption>Comparison summary</caption>
-            <thead>
-                <tr>
-                    <th scope="col">Project</th>
-                    <th scope="col">Domain fit</th>
-                    <th scope="col">GitHub stars</th>
-                    <th scope="col">Maintenance</th>
-                    <th scope="col">Licence</th>
-                    <th scope="col">Recommendation</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Duplicate this row for every candidate, then remove this
+            @media (prefers-color-scheme: dark) {
+                :root {
+                    --bg: #111722;
+                    --panel: #1a2230;
+                    --text: #edf2f7;
+                    --muted: #aeb9c7;
+                    --border: #344054;
+                    --accent: #8ca8ff;
+                    --good: #5bd6a2;
+                    --caution: #f2c14e;
+                    --poor: #ff8a80;
+                    --unknown: #c4a7ff;
+                    --shadow: 0 8px 24px rgb(0 0 0 / 24%);
+                }
+            }
+            * {
+                box-sizing: border-box;
+            }
+            html {
+                scroll-behavior: smooth;
+            }
+            body {
+                background: var(--bg);
+                color: var(--text);
+                font:
+                    16px/1.55 system-ui,
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Segoe UI",
+                    sans-serif;
+                margin: 0;
+            }
+            a {
+                color: var(--accent);
+            }
+            a:focus-visible {
+                outline: 3px solid var(--accent);
+                outline-offset: 3px;
+            }
+            header,
+            main,
+            footer {
+                margin: 0 auto;
+                max-width: 1180px;
+                padding: 1.5rem;
+            }
+            header {
+                padding-top: 3rem;
+            }
+            h1 {
+                font-size: clamp(2rem, 5vw, 3.4rem);
+                letter-spacing: -0.035em;
+                line-height: 1.05;
+                margin: 0 0 1rem;
+            }
+            h2 {
+                line-height: 1.2;
+                margin-top: 0;
+            }
+            h3 {
+                margin-bottom: 0.35rem;
+            }
+            .lede {
+                font-size: 1.15rem;
+                max-width: 78ch;
+            }
+            .meta,
+            .muted {
+                color: var(--muted);
+            }
+            .table-wrap {
+                background: var(--panel);
+                border: 1px solid var(--border);
+                border-radius: 14px;
+                box-shadow: var(--shadow);
+                margin-bottom: 2rem;
+                overflow-x: auto;
+            }
+            table {
+                border-collapse: collapse;
+                min-width: 860px;
+                width: 100%;
+            }
+            caption {
+                font-weight: 700;
+                padding: 1rem;
+                text-align: left;
+            }
+            th,
+            td {
+                border-top: 1px solid var(--border);
+                padding: 0.8rem 1rem;
+                text-align: left;
+                vertical-align: top;
+            }
+            th {
+                background: color-mix(in srgb, var(--panel), var(--accent) 6%);
+            }
+            td:nth-child(3),
+            th:nth-child(3) {
+                font-variant-numeric: tabular-nums;
+                text-align: right;
+            }
+            .project-detail,
+            .methodology,
+            .recommendation {
+                background: var(--panel);
+                border: 1px solid var(--border);
+                border-radius: 14px;
+                box-shadow: var(--shadow);
+                margin: 1.5rem 0;
+                padding: clamp(1.1rem, 3vw, 2rem);
+                scroll-margin-top: 1rem;
+            }
+            .facts {
+                display: grid;
+                gap: 0.8rem;
+                grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+                margin: 1rem 0;
+            }
+            .fact {
+                border-left: 4px solid var(--border);
+                padding: 0.25rem 0.8rem;
+            }
+            .fact strong {
+                display: block;
+            }
+            .badge {
+                border: 1px solid currentColor;
+                border-radius: 999px;
+                display: inline-block;
+                font-size: 0.86rem;
+                font-weight: 700;
+                padding: 0.12rem 0.55rem;
+            }
+            .good {
+                color: var(--good);
+            }
+            .caution {
+                color: var(--caution);
+            }
+            .poor {
+                color: var(--poor);
+            }
+            .unknown {
+                color: var(--unknown);
+            }
+            .evidence li {
+                margin-bottom: 0.35rem;
+            }
+            .back {
+                display: inline-block;
+                margin-top: 1rem;
+            }
+            footer {
+                color: var(--muted);
+                padding-bottom: 3rem;
+            }
+        </style>
+    </head>
+    <body>
+        <header>
+            <h1>{{REPORT_TITLE}}</h1>
+            <p class="lede">{{SCOPE_AND_PURPOSE}}</p>
+            <p class="meta">
+                Evidence observed {{AS_OF_UTC}} · {{CANDIDATE_COUNT}} candidates
+            </p>
+        </header>
+        <main>
+            <div class="table-wrap">
+                <table id="comparison-summary">
+                    <caption>
+                        Comparison summary
+                    </caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Project</th>
+                            <th scope="col">Domain fit</th>
+                            <th scope="col">GitHub stars</th>
+                            <th scope="col">Maintenance</th>
+                            <th scope="col">Licence</th>
+                            <th scope="col">Recommendation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Duplicate this row for every candidate, then remove this
                      comment and all placeholders. Use good, caution, poor, or
                      unknown only as a supplementary visual classification. -->
-                <tr>
-                    <td><a href="#project-{{PROJECT_SLUG}}">{{PROJECT}}</a></td>
-                    <td>{{DOMAIN_FIT}}</td>
-                    <td>{{STAR_COUNT}}</td>
-                    <td><span class="badge {{MAINTENANCE_CLASS}}">
-                        {{MAINTENANCE}}</span></td>
-                    <td>{{SPDX_OR_LICENCE}}</td>
-                    <td>{{SHORT_RECOMMENDATION}}</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
+                        <tr>
+                            <td>
+                                <a href="#project-{{PROJECT_SLUG}}"
+                                    >{{PROJECT}}</a
+                                >
+                            </td>
+                            <td>{{DOMAIN_FIT}}</td>
+                            <td>{{STAR_COUNT}}</td>
+                            <td>
+                                <span class="badge {{MAINTENANCE_CLASS}}">
+                                    {{MAINTENANCE}}</span
+                                >
+                            </td>
+                            <td>{{SPDX_OR_LICENCE}}</td>
+                            <td>{{SHORT_RECOMMENDATION}}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
 
-    <!-- Duplicate this section for every summary row, preserving row order,
+            <!-- Duplicate this section for every summary row, preserving row order,
          then remove this comment and all placeholders. -->
-    <section class="project-detail" id="project-{{PROJECT_SLUG}}">
-        <h2><a href="{{CANONICAL_PROJECT_URL}}">{{PROJECT}}</a></h2>
-        <p><strong>Verdict:</strong> {{VERDICT_AND_BEST_FIT}}</p>
-        <div class="facts">
-            <div class="fact"><strong>GitHub stars</strong>{{STAR_COUNT}} as
-                of {{AS_OF_UTC}}</div>
-            <div class="fact"><strong>Maintenance</strong>
-                {{MAINTENANCE_WITH_BASIS}}</div>
-            <div class="fact"><strong>Licence</strong>
-                <a href="{{LICENCE_URL}}">{{SPDX_OR_LICENCE}}</a></div>
-        </div>
-        <h3>Domain fit</h3>
-        <p>{{DOMAIN_FIT_DETAILS}}</p>
-        <h3>Popularity and maintenance</h3>
-        <p>{{POPULARITY_AND_MAINTENANCE_EVIDENCE}}</p>
-        <h3>Licence</h3>
-        <p>{{LICENCE_SCOPE_AND_IMPLICATIONS}}</p>
-        <h3>Strengths and trade-offs</h3>
-        <p>{{STRENGTHS_AND_TRADE_OFFS}}</p>
-        <h3>Evidence</h3>
-        <ul class="evidence">
-            <li><a href="{{CANONICAL_REPOSITORY_URL}}">Canonical repository</a>
-                — checked {{AS_OF_UTC}}</li>
-            <li><a href="{{RELEASES_URL}}">Release history</a></li>
-            <li><a href="{{LICENCE_URL}}">Governing licence text</a></li>
-        </ul>
-        <a class="back" href="#comparison-summary">Back to comparison</a>
-    </section>
+            <section class="project-detail" id="project-{{PROJECT_SLUG}}">
+                <h2><a href="{{CANONICAL_PROJECT_URL}}">{{PROJECT}}</a></h2>
+                <p><strong>Verdict:</strong> {{VERDICT_AND_BEST_FIT}}</p>
+                <div class="facts">
+                    <div class="fact">
+                        <strong>GitHub stars</strong>{{STAR_COUNT}} as of
+                        {{AS_OF_UTC}}
+                    </div>
+                    <div class="fact">
+                        <strong>Maintenance</strong> {{MAINTENANCE_WITH_BASIS}}
+                    </div>
+                    <div class="fact">
+                        <strong>Licence</strong>
+                        <a href="{{LICENCE_URL}}">{{SPDX_OR_LICENCE}}</a>
+                    </div>
+                </div>
+                <h3>Domain fit</h3>
+                <p>{{DOMAIN_FIT_DETAILS}}</p>
+                <h3>Popularity and maintenance</h3>
+                <p>{{POPULARITY_AND_MAINTENANCE_EVIDENCE}}</p>
+                <h3>Licence</h3>
+                <p>{{LICENCE_SCOPE_AND_IMPLICATIONS}}</p>
+                <h3>Strengths and trade-offs</h3>
+                <p>{{STRENGTHS_AND_TRADE_OFFS}}</p>
+                <h3>Evidence</h3>
+                <ul class="evidence">
+                    <li>
+                        <a href="{{CANONICAL_REPOSITORY_URL}}"
+                            >Canonical repository</a
+                        >
+                        — checked {{AS_OF_UTC}}
+                    </li>
+                    <li><a href="{{RELEASES_URL}}">Release history</a></li>
+                    <li>
+                        <a href="{{LICENCE_URL}}">Governing licence text</a>
+                    </li>
+                </ul>
+                <a class="back" href="#comparison-summary"
+                    >Back to comparison</a
+                >
+            </section>
 
-    <section class="methodology" id="methodology">
-        <h2>Methodology and shortlist</h2>
-        <p>{{SCOPE_INCLUSION_ACTIVITY_WINDOW_AND_LIMITATIONS}}</p>
-    </section>
+            <section class="methodology" id="methodology">
+                <h2>Methodology and shortlist</h2>
+                <p>{{SCOPE_INCLUSION_ACTIVITY_WINDOW_AND_LIMITATIONS}}</p>
+            </section>
 
-    <section class="recommendation" id="recommendation">
-        <h2>Comparative recommendation</h2>
-        <p>{{NEEDS_BASED_COMPARATIVE_RECOMMENDATION}}</p>
-    </section>
-</main>
-<footer>
-    <p>Generated from public evidence observed {{AS_OF_UTC}}. Repository
-        popularity and activity figures change over time. This report is not
-        legal advice.</p>
-</footer>
-</body>
+            <section class="recommendation" id="recommendation">
+                <h2>Comparative recommendation</h2>
+                <p>{{NEEDS_BASED_COMPARATIVE_RECOMMENDATION}}</p>
+            </section>
+        </main>
+        <footer>
+            <p>
+                Generated from public evidence observed {{AS_OF_UTC}}.
+                Repository popularity and activity figures change over time.
+                This report is not legal advice.
+            </p>
+        </footer>
+    </body>
 </html>

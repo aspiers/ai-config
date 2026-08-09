@@ -74,5 +74,6 @@ node_modules
 ^/\.agents/skills/allow-commands
 ^/\.agents/skills/beads
 ^/tests
+^/tmp
 ^/\.beads
 ^/\.claude/settings.local.json

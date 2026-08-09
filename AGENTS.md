@@ -149,8 +149,13 @@ This keeps token usage efficient while maintaining full capability.
 Code, OpenCode, and other agents. `.claude/skills/` is also still scanned for
 backwards compatibility.
 
-Use stow or symlinks to manage skills in this repository that should be
+Use the repository's deployment workflow to manage skills that should be
 available globally.
+
+> **⚠️ AUTHOR-SPECIFIC:** In the maintainer's checkout, run `mr stow` for
+> deployment. Do not invoke GNU Stow directly; `mr` selects and wraps the
+> stowable packages. Other users should substitute their own deployment
+> workflow.
 
 ### Integration with Helper Scripts
 

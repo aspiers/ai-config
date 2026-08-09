@@ -1,5 +1,8 @@
 {
   "$schema": "https://raw.githubusercontent.com/gotgenes/pi-packages/main/packages/pi-permission-system/schemas/permissions.schema.json",
+  "debugLog": true,
+  "permissionReviewLog": true,
+  "yoloMode": true,
   "piInfrastructureReadPaths": [
     "~/.agents/skills"
   ],

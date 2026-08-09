@@ -171,6 +171,7 @@
       "Bash(yarn why:*)",
       "Bash(yes:*)",
       "Bash(zgrep:*)",
+      "Bash(~/bin/emacs-markdown-live-preview:*)",
       "Bash(~/bin/open:*)",
       "Skill(safe-rm)",
       "WebFetch",

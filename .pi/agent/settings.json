@@ -100,7 +100,7 @@
       "extensions": []
     },
     "npm:@spences10/pi-skill-importer",
-    "git:github.com/justcyl/pi-herdr-tab-sync",
+    "git:github.com/aspiers/pi-herdr-tab-sync@fix/immediate-name-sync",
     "git:github.com/aspiers/pi-ask-user@fix/number-custom-response"
   ],
   "hideThinkingBlock": false,

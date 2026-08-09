@@ -11,22 +11,8 @@
     "npm:@juicesharp/rpiv-btw",
     "npm:pi-agent-browser-native",
     "npm:pi-mermaid",
-    {
-      "source": "npm:pi-session-context",
-      "extensions": [],
-      "skills": [],
-      "prompts": [],
-      "themes": []
-    },
     "npm:pi-web-access",
     "npm:pi-prompt-shelf",
-    {
-      "source": "npm:context-mode",
-      "extensions": [],
-      "skills": [],
-      "prompts": [],
-      "themes": []
-    },
     "npm:@latentminds/pi-quotas",
     "npm:@aliou/pi-processes",
     "npm:@zenobius/pi-worktrees",
@@ -38,23 +24,9 @@
       ]
     },
     "npm:@vanillagreen/pi-skills-manager",
-    {
-      "source": "npm:@vanillagreen/pi-tool-renderer",
-      "extensions": [],
-      "skills": [],
-      "prompts": [],
-      "themes": []
-    },
     "npm:@vanillagreen/pi-session-manager",
     "npm:@vanillagreen/pi-extension-manager",
     "npm:pi-resource-center",
-    {
-      "source": "npm:@ifi/oh-pi-themes",
-      "extensions": [],
-      "skills": [],
-      "prompts": [],
-      "themes": []
-    },
     {
       "source": "npm:amp-themes",
       "extensions": [
@@ -68,41 +40,20 @@
       ]
     },
     "npm:@sherif-fanous/pi-catppuccin",
-    {
-      "source": "npm:@sherif-fanous/pi-theme-sync",
-      "extensions": []
-    },
     "npm:@siesing/pi-shortcuts",
-    {
-      "source": "npm:pi-recap",
-      "extensions": [],
-      "skills": [],
-      "prompts": [],
-      "themes": []
-    },
     "npm:@tmustier/pi-session-recap",
     "npm:@brain0pia/pi-extension-times",
     "git:github.com/apmantza/pi-lens",
     "npm:@lukemelnik/pi-monitor",
     "npm:pi-peek",
-    "git:github.com/gotgenes/pi-packages",
-    {
-      "source": "npm:@gotgenes/pi-permission-system",
-      "extensions": [],
-      "skills": [],
-      "prompts": [],
-      "themes": []
-    },
     "npm:@gotgenes/pi-github-tools",
     "npm:@gotgenes/pi-autoformat",
-    {
-      "source": "npm:pi-sandbox",
-      "extensions": []
-    },
     "npm:@spences10/pi-skill-importer",
-    "git:github.com/aspiers/pi-herdr-tab-sync@fix/immediate-name-sync",
     "git:github.com/aspiers/pi-ask-user@fix/number-custom-response",
-    "npm:pi-model-aware-compaction@0.1.5"
+    "npm:@mzwing/pi-permission-auto-review",
+    "git:github.com/aspiers/pi-herdr-tab-sync@fix/immediate-name-sync",
+    "npm:pi-model-aware-compaction@0.1.5",
+    "../../.GIT/3rd-party/pi-packages/packages/pi-permission-system"
   ],
   "hideThinkingBlock": false,
   "powerline": {
@@ -163,26 +114,8 @@
   },
   "vstack": {
     "extensionManager": {
-      "disabledItems": [
-        "package:pi-recap",
-        "package:pi-sandbox"
-      ],
+      "disabledItems": [],
       "config": {
-        "@vanillagreen/pi-tool-renderer": {
-          "bashOutputMode": "summary",
-          "enabled": true,
-          "renderMutationTools": true,
-          "pendingStatusAnimation": true,
-          "stackToolCalls": false,
-          "stackChildDisplay": "headline",
-          "bashPreviewLines": 80,
-          "readOutputMode": "summary",
-          "searchOutputMode": "count",
-          "genericToolRenderers": true,
-          "mcpOutputMode": "preview",
-          "mcpPreviewLines": 80,
-          "toolChrome": "outlines"
-        },
         "@vanillagreen/pi-session-manager": {
           "shortcutKey": "alt+m"
         }

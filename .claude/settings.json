@@ -293,7 +293,7 @@
     "mode": "hold"
   },
   "skipWorkflowUsageWarning": true,
-  "theme": "auto",
+  "theme": "dark",
   "verbose": true,
   "preferredNotifChannel": "terminal_bell",
   "autoCompactEnabled": true,

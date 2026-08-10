@@ -40,7 +40,6 @@
       ]
     },
     "npm:@sherif-fanous/pi-catppuccin",
-    "npm:@siesing/pi-shortcuts",
     "npm:@tmustier/pi-session-recap",
     "npm:@brain0pia/pi-extension-times",
     "git:github.com/apmantza/pi-lens",
@@ -55,7 +54,8 @@
     "npm:pi-model-aware-compaction@0.1.5",
     "../../.GIT/3rd-party/pi-packages/packages/pi-permission-system",
     "npm:@gotgenes/pi-subagents@19.2.1",
-    "npm:@gotgenes/pi-subagents-worktrees@0.2.3"
+    "npm:@gotgenes/pi-subagents-worktrees@0.2.3",
+    "git:github.com/aspiers/pi-shortcuts@configurable-shortcut"
   ],
   "hideThinkingBlock": false,
   "powerline": {

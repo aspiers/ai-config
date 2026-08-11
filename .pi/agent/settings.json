@@ -27,18 +27,6 @@
     "npm:@vanillagreen/pi-session-manager",
     "npm:@vanillagreen/pi-extension-manager",
     "npm:pi-resource-center",
-    {
-      "source": "npm:amp-themes",
-      "extensions": [
-        "-extensions/amp-editor.ts",
-        "-extensions/amp-user-message.ts",
-        "-node_modules/pi-tool-display/index.ts"
-      ],
-      "skills": [
-        "-skills/release-amp-themes/SKILL.md",
-        "-skills/configure-amp-themes/SKILL.md"
-      ]
-    },
     "npm:@sherif-fanous/pi-catppuccin",
     "npm:@tmustier/pi-session-recap",
     "npm:@brain0pia/pi-extension-times",

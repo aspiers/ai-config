@@ -9,9 +9,12 @@ the standard `beads` skill.
 Enrollment requires explicit user approval.
 
 `bd-enroll-solo` performs the entire enrollment. Do not carry out the steps by
-hand: it creates the opt-in, installs the policy declaration, initializes Dolt
-server mode, applies the maintainer role, configures a private JSONL export,
-installs hooks, and verifies the result. Reassembling that from
+hand: it creates the opt-in, installs repository-local links to the upstream
+`beads` skill, installs the policy declaration, initializes Dolt server mode,
+applies the maintainer role, configures a private JSONL export, installs hooks,
+and verifies the result. The skill links live at `.agents/skills/beads` and
+`.claude/skills/beads`; both are added to `.git/info/exclude` so their
+machine-specific targets cannot enter the repository. Reassembling that from
 individual commands produces a different setup each time.
 
 ### Choose the profile
@@ -53,8 +56,11 @@ default silently.
 The script refuses to run without `--yes` or `--dry-run`, refuses to touch a
 repository that already has a `.beads` workspace, and — in the tracked profile
 — refuses to proceed without a tracked `AGENTS.md` or with a diverged
-`AGENTS.md`/`CLAUDE.md` pair. Report a refusal to the user rather than working
-around it.
+`AGENTS.md`/`CLAUDE.md` pair. It normally finds the skill source from the
+installed `bd` executable or a conventional shared-data location. If that is
+not possible, set `BEADS_SKILL_DIR` to the upstream `beads` skill directory
+containing `SKILL.md`. Report a refusal to the user rather than working around
+it.
 
 For a repository with an existing Beads workspace in embedded mode, the script
 stops. Migrating is a separate, explicitly approved step; do not begin
@@ -224,15 +230,21 @@ bd-enroll-solo --check
 ```
 
 It validates the opt-in, Dolt server mode, the maintainer role, the export
-policy, the policy declaration, and — in the local profile — that no Beads
-artifact is visible to Git. Exit 0 means valid and prints the
-profile; exit 1 lists every problem found on stderr.
+policy, the policy declaration, both repository-local skill installations and
+their exclusions, and — in the local profile — that no Beads artifact is
+visible to Git. Exit 0 means valid and prints the profile; exit 1 lists every
+problem found on stderr.
 
 Do not substitute a hand-run sequence of `bd doctor`, `bd config get`, and
 `git config` commands. The check exists so validation is identical every time.
 
 Repair depends on what it reports:
 
+- **Missing or malformed repository-local skill links or exclusions** — preview
+  the narrowly scoped repair with `bd-enroll-solo --repair-skills --dry-run`,
+  then run `bd-enroll-solo --repair-skills --yes`. This mode does not
+  reinitialize Beads or rewrite policy; it only installs the missing symlinks
+  and their worktree-local exclusions, then runs the complete check.
 - **Ignore-rule problems** — let the installed Beads version own its rules
   with `bd doctor --dry-run`, then `bd doctor --fix --yes` once the proposed
   repairs are confirmed appropriate. If the dry run proposes data repair,

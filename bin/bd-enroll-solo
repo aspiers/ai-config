@@ -28,8 +28,11 @@ YES=false
 DRY_RUN=false
 LOCAL_MODE=false
 CHECK_MODE=false
+REPAIR_SKILLS=false
 PREFIX=""
 ROOT=""
+EXCLUDE_FILE=""
+BEADS_SKILL_SOURCE=""
 
 # 'git status' as it stood before enrollment. In --local mode the invariant is
 # that enrollment leaves it byte-for-byte identical.
@@ -47,6 +50,15 @@ LOCAL_EXCLUDES=(
     '.beads-solo'
 )
 
+# Repository-local entry points for the upstream Beads skill. These are
+# deliberately excluded even in the tracked profile: newly installed entries
+# are absolute symlinks into this machine's Beads checkout and must never be
+# published by the enrolled repository.
+BEADS_SKILL_LINKS=(
+    '.agents/skills/beads'
+    '.claude/skills/beads'
+)
+
 # Whether the repository had its own root .gitignore before enrollment.
 # 'bd init' creates one; in --local mode that file is ours, not the
 # repository's, and must not become visible to Git.
@@ -61,17 +73,21 @@ initializing Beads in Dolt server mode with push authority withheld.
 
 The script:
   1. verifies prerequisites and that no conflicting enrollment exists
-  2. records the opt-in (tracked marker file, or --local Git config)
-  3. installs the policy declaration (AGENTS.md, or a Beads memory)
-  4. runs bd init --server --role maintainer
-  5. pins beads.role, configures private JSONL export, installs hooks
-  6. verifies the resulting enrollment
+  2. installs repository-local links to the Beads skill
+  3. records the opt-in (tracked marker file, or --local Git config)
+  4. installs the policy declaration (AGENTS.md, or a Beads memory)
+  5. runs bd init --server --role maintainer
+  6. pins beads.role, configures private JSONL export, installs hooks
+  7. verifies the resulting enrollment
 
 Options:
   --check           Validate an existing enrollment instead of creating one.
                     Prints "profile: tracked" or "profile: local" and exits 0
                     when valid; exits 1 when absent or malformed. This is the
                     only validation the beads-solo skill needs to run.
+  --repair-skills   Install or repair only the repository-local Beads skill
+                    links and exclusions in an existing enrollment. Requires
+                    --yes unless used with --dry-run.
   --yes             Actually perform the enrollment. Required unless --dry-run.
   --dry-run         Show the planned values and commands, then exit.
   --local           Enroll invisibly to Git: no tracked files are created or
@@ -86,8 +102,13 @@ and its policy declaration in a Beads memory keyed 'beads-solo-policy', then
 excludes .beads/ and .beads-solo via .git/info/exclude. Because .git/info/
 exclude is never published, a clone of the repository sees no trace of it.
 
-Both profiles leave the JSONL export unstaged. Push authorization comes from
-the installed policy; enrollment does not configure Beads' 'no-push' guard.
+Both profiles leave the JSONL export unstaged. They also exclude the local
+Beads skill links via .git/info/exclude, because the symlink targets are
+machine-specific. Set BEADS_SKILL_DIR to the upstream skill directory when it
+cannot be inferred from the local bd installation.
+
+Push authorization comes from the installed policy; enrollment does not
+configure Beads' 'no-push' guard.
 EOF
 }
 
@@ -137,6 +158,10 @@ parse_args() {
                 ;;
             --check)
                 CHECK_MODE=true
+                shift
+                ;;
+            --repair-skills)
+                REPAIR_SKILLS=true
                 shift
                 ;;
             --prefix)
@@ -202,18 +227,24 @@ beads.solo.local' and the exclusions in .git/info/exclude.
 EOF
 }
 
-check_prerequisites() {
-    require_command git
-    require_command bd
-
+set_repository_context() {
     ROOT=$(git rev-parse --show-toplevel 2>/dev/null) ||
         fail "not inside a Git repository"
-
     cd "$ROOT" || fail "cannot enter repository root: $ROOT"
+
+    EXCLUDE_FILE=$(git rev-parse --git-path info/exclude 2>/dev/null) ||
+        fail "cannot resolve this worktree's Git exclude file"
+    [[ "$EXCLUDE_FILE" == /* ]] || EXCLUDE_FILE="$ROOT/$EXCLUDE_FILE"
 
     # Baseline for the --local invisibility check. Captured before any
     # mutation so verify_enrollment can prove nothing became visible.
     STATUS_BEFORE=$(git status --porcelain --untracked-files=all 2>/dev/null || true)
+}
+
+check_prerequisites() {
+    require_command git
+    require_command bd
+    set_repository_context
 
     [[ -e "$ROOT/.gitignore" ]] && GITIGNORE_PREEXISTING=true
 
@@ -230,6 +261,27 @@ check_prerequisites() {
            ! git ls-files --error-unmatch -- AGENTS.md >/dev/null 2>&1; then
         fail "tracked AGENTS.md not found. The tracked profile requires one;
        supply it first, or use --local to enroll without touching tracked files."
+    fi
+}
+
+check_skill_repair_prerequisites() {
+    require_command git
+    require_command bd
+    set_repository_context
+
+    [[ -d "$ROOT/.beads" ]] ||
+        fail "cannot repair skills: no existing .beads workspace"
+
+    local local_opt_in tracked_marker=false
+    local_opt_in=$(git config --local --get beads.solo.local 2>/dev/null || true)
+    git ls-files --error-unmatch -- .beads-solo >/dev/null 2>&1 && tracked_marker=true
+
+    if [[ "$local_opt_in" == true && "$tracked_marker" == true ]]; then
+        fail "conflicting enrollment: both local and tracked opt-ins are present"
+    elif [[ "$local_opt_in" == true ]]; then
+        LOCAL_MODE=true
+    elif [[ "$tracked_marker" != true ]]; then
+        fail "cannot repair skills: no beads-solo enrollment found"
     fi
 }
 
@@ -255,37 +307,267 @@ check_instruction_files() {
        symlink to AGENTS.md, or re-run with --local."
 }
 
-# Append the exclusion rules to .git/info/exclude, which is per-clone and
-# never published. Idempotent: existing identical rules are left alone.
-install_local_excludes() {
-    local exclude_file="$ROOT/.git/info/exclude"
+# Append exclusion rules to .git/info/exclude, which is per-clone and never
+# published. Idempotent: existing identical rules are left alone.
+install_excludes() {
+    local description=$1
+    shift
+
     local pattern missing=()
 
-    for pattern in "${LOCAL_EXCLUDES[@]}"; do
-        if [[ -f "$exclude_file" ]] &&
-               grep -qxF "$pattern" "$exclude_file" 2>/dev/null; then
+    for pattern in "$@"; do
+        if [[ -f "$EXCLUDE_FILE" ]] &&
+               grep -qxF "$pattern" "$EXCLUDE_FILE" 2>/dev/null; then
             continue
         fi
         missing+=("$pattern")
     done
 
     if [[ ${#missing[@]} -eq 0 ]]; then
-        info "Exclusions already present in .git/info/exclude"
+        info "$description exclusions already present in .git/info/exclude"
         return 0
     fi
 
-    info "Excluding Beads artifacts via .git/info/exclude"
+    info "Excluding $description via .git/info/exclude"
 
     if [[ "$DRY_RUN" == true ]]; then
         echo "+ # append to .git/info/exclude: ${missing[*]}"
         return 0
     fi
 
-    mkdir -p "$(dirname "$exclude_file")"
+    mkdir -p "$(dirname "$EXCLUDE_FILE")"
     {
-        printf '\n# beads-solo local enrollment (bd-enroll-solo --local)\n'
+        printf '\n# %s (bd-enroll-solo)\n' "$description"
         printf '%s\n' "${missing[@]}"
-    } >>"$exclude_file"
+    } >>"$EXCLUDE_FILE"
+}
+
+install_local_excludes() {
+    install_excludes "beads-solo local enrollment" "${LOCAL_EXCLUDES[@]}"
+}
+
+is_beads_skill() {
+    local path=$1
+    [[ -f "$path/SKILL.md" ]] &&
+        grep -Eq '^name:[[:space:]]*beads[[:space:]]*$' "$path/SKILL.md"
+}
+
+skill_path_is_tracked() {
+    git ls-files --error-unmatch -- "$1" >/dev/null 2>&1
+}
+
+# Print a privacy problem for a skill symlink and return success, or return
+# failure when the path is a regular installation or a safe local symlink.
+skill_link_privacy_problem() {
+    local link=$1
+    [[ -L "$ROOT/$link" ]] || return 1
+
+    if skill_path_is_tracked "$link"; then
+        local target resolved
+        target=$(readlink "$ROOT/$link")
+        if [[ "$target" == /* ]]; then
+            echo "$link is a tracked absolute symlink to a machine-specific Beads installation"
+            return 0
+        fi
+        resolved=$(cd "$ROOT/$link" 2>/dev/null && pwd -P) || resolved=""
+        if [[ "$resolved" != "$ROOT"/* ]]; then
+            echo "$link is a tracked symlink resolving outside the repository"
+            return 0
+        fi
+        return 1
+    fi
+    if ! grep -qxF "$link" "$EXCLUDE_FILE" 2>/dev/null; then
+        echo "$link is not listed in this worktree's .git/info/exclude"
+        return 0
+    fi
+    if ! git check-ignore -q --no-index -- "$link" 2>/dev/null; then
+        echo "$link is not effectively ignored by Git"
+        return 0
+    fi
+
+    return 1
+}
+
+# Find the upstream skill associated with the installed bd executable. A
+# development build retains Go source paths, which lets us locate its checkout
+# without baking that machine-specific path into this public script. Packaged
+# installations can expose their data under a conventional share directory;
+# BEADS_SKILL_DIR is the explicit fallback.
+detect_beads_skill_source() {
+    local candidate bd_executable source_file source_root
+    local candidates=()
+
+    if [[ -n "${BEADS_SKILL_DIR:-}" ]]; then
+        is_beads_skill "$BEADS_SKILL_DIR" ||
+            fail "BEADS_SKILL_DIR is not a Beads skill directory: $BEADS_SKILL_DIR"
+        (cd "$BEADS_SKILL_DIR" && pwd -P)
+        return 0
+    fi
+
+    bd_executable=$(command -v bd)
+    bd_executable=$(readlink -f "$bd_executable" 2>/dev/null || printf '%s' "$bd_executable")
+
+    candidates+=(
+        "$(dirname "$bd_executable")/../share/beads/skills/beads"
+        "${XDG_DATA_HOME:-$HOME/.local/share}/beads/skills/beads"
+        "$HOME/.local/share/beads/skills/beads"
+    )
+
+    if command -v strings >/dev/null 2>&1; then
+        source_file=$(strings "$bd_executable" 2>/dev/null |
+            grep -m1 -E '/cmd/bd/.*\.go$' || true)
+        if [[ -n "$source_file" ]]; then
+            source_root=${source_file%%/cmd/bd/*}
+            candidates+=("$source_root/plugins/beads/skills/beads")
+        fi
+    fi
+
+    for candidate in "${candidates[@]}"; do
+        if is_beads_skill "$candidate"; then
+            (cd "$candidate" && pwd -P)
+            return 0
+        fi
+    done
+
+    fail "could not locate the Beads skill shipped with the local bd installation.
+       Set BEADS_SKILL_DIR to its directory (the one containing SKILL.md)."
+}
+
+prepare_beads_skill_links() {
+    local link needs_source=false privacy_problem visible
+
+    for link in "${BEADS_SKILL_LINKS[@]}"; do
+        if is_beads_skill "$ROOT/$link"; then
+            if skill_path_is_tracked "$link" &&
+                   privacy_problem=$(skill_link_privacy_problem "$link"); then
+                fail "$privacy_problem"
+            fi
+
+            if [[ "$LOCAL_MODE" == true && "$REPAIR_SKILLS" != true ]]; then
+                visible=$(git status --porcelain --untracked-files=all -- \
+                              "$link" 2>/dev/null || true)
+                [[ -z "$visible" ]] ||
+                    fail "$link already exists and is visible to Git. Exclude or
+       track the existing skill before local enrollment."
+            fi
+            continue
+        fi
+        if skill_path_is_tracked "$link"; then
+            fail "$link has invalid or missing tracked content; restore or repair
+       the repository-owned skill instead of replacing it with a local symlink"
+        fi
+        if [[ -e "$ROOT/$link" || -L "$ROOT/$link" ]]; then
+            if [[ "$REPAIR_SKILLS" == true && -L "$ROOT/$link" ]]; then
+                info "Replacing invalid Beads skill symlink at $link"
+                needs_source=true
+                continue
+            fi
+            fail "$link exists but is not a valid Beads skill"
+        fi
+        needs_source=true
+    done
+
+    if [[ "$needs_source" == true ]]; then
+        BEADS_SKILL_SOURCE=$(detect_beads_skill_source)
+        info "Beads skill: $BEADS_SKILL_SOURCE"
+    fi
+}
+
+has_higher_precedence_ignore_negation() {
+    local link=$1 match metadata pattern source
+    match=$(git check-ignore -v --no-index -- "$link" 2>/dev/null || true)
+    [[ -n "$match" ]] || return 1
+
+    metadata=${match%%$'\t'*}
+    pattern=${metadata##*:}
+    [[ "$pattern" == '!'* ]] || return 1
+    source=${metadata%:*}
+    source=${source%:*}
+
+    [[ "$source" == *.gitignore || "$source" == */.gitignore ]]
+}
+
+ensure_effective_skill_excludes() {
+    local link
+    local overridden=()
+
+    # Repository .gitignore rules outrank .git/info/exclude. Detect a negation
+    # before changing anything so dry runs are faithful and failures leave no
+    # repeated ineffective rules behind.
+    for link in "$@"; do
+        has_higher_precedence_ignore_negation "$link" &&
+            fail "$link cannot be excluded through .git/info/exclude.
+       Check for a higher-precedence negation in a repository .gitignore."
+    done
+
+    install_excludes "repository-local Beads skill links" "$@"
+
+    # An exact rule may already exist before a later negation. Append it again
+    # so the last matching rule always keeps the machine-specific link local.
+    for link in "$@"; do
+        grep -qxF "$link" "$EXCLUDE_FILE" 2>/dev/null || continue
+        git check-ignore -q --no-index -- "$link" 2>/dev/null ||
+            overridden+=("$link")
+    done
+    [[ ${#overridden[@]} -gt 0 ]] || return 0
+
+    info "Restoring effective Git exclusions for repository-local Beads skills"
+    if [[ "$DRY_RUN" == true ]]; then
+        echo "+ # append to .git/info/exclude: ${overridden[*]}"
+        return 0
+    fi
+    {
+        printf '\n# effective repository-local Beads skill links (bd-enroll-solo)\n'
+        printf '%s\n' "${overridden[@]}"
+    } >>"$EXCLUDE_FILE"
+}
+
+verify_planned_skill_excludes() {
+    [[ "$DRY_RUN" == true ]] && return 0
+
+    local link
+    for link in "$@"; do
+        git check-ignore -q --no-index -- "$link" 2>/dev/null ||
+            fail "$link cannot be excluded through .git/info/exclude.
+       Check for a higher-precedence negation in a repository .gitignore."
+    done
+}
+
+install_beads_skill_links() {
+    local link
+    local skill_excludes=()
+
+    # Existing regular skill directories need no exclusion. Missing entries
+    # become machine-specific symlinks, and existing symlinks must also remain
+    # local to this clone.
+    for link in "${BEADS_SKILL_LINKS[@]}"; do
+        if [[ ! -e "$ROOT/$link" ]] ||
+               { [[ -L "$ROOT/$link" ]] && ! skill_path_is_tracked "$link"; }; then
+            skill_excludes+=("$link")
+        fi
+    done
+    if [[ ${#skill_excludes[@]} -gt 0 ]]; then
+        ensure_effective_skill_excludes "${skill_excludes[@]}"
+        verify_planned_skill_excludes "${skill_excludes[@]}"
+    fi
+
+    for link in "${BEADS_SKILL_LINKS[@]}"; do
+        if is_beads_skill "$ROOT/$link"; then
+            info "Preserving existing Beads skill at $link"
+            continue
+        fi
+
+        info "Linking $link to the local Beads installation"
+        if [[ "$DRY_RUN" == true ]]; then
+            [[ -L "$ROOT/$link" ]] && echo "+ rm -f $link"
+            echo "+ ln -s $BEADS_SKILL_SOURCE $link"
+            continue
+        fi
+
+        [[ -L "$ROOT/$link" ]] && rm -f "$ROOT/$link"
+        mkdir -p "$(dirname "$ROOT/$link")"
+        ln -s "$BEADS_SKILL_SOURCE" "$ROOT/$link"
+    done
 }
 
 record_opt_in() {
@@ -311,6 +593,8 @@ install_policy_declaration() {
         return 0
     fi
 
+    # Literal Markdown; the backticks must not be evaluated by the shell.
+    # shellcheck disable=SC2016
     if grep -Fq 'Use the `beads-solo` skill' "$ROOT/AGENTS.md" 2>/dev/null; then
         info "Policy declaration already present in AGENTS.md"
         return 0
@@ -387,7 +671,7 @@ absorb_bd_gitignore() {
         {
             printf '\n# beads-solo local enrollment: rules from bd init\n'
             cat "$gitignore"
-        } >>"$ROOT/.git/info/exclude"
+        } >>"$EXCLUDE_FILE"
         rm -f "$gitignore"
         return 0
     fi
@@ -405,7 +689,7 @@ absorb_bd_gitignore() {
         {
             printf '\n# beads-solo local enrollment: rules from bd init\n'
             printf '%s\n' "$added"
-        } >>"$ROOT/.git/info/exclude"
+        } >>"$EXCLUDE_FILE"
     fi
 
     git checkout -- .gitignore ||
@@ -435,6 +719,15 @@ verify_enrollment() {
     fi
 
     info "Verifying enrollment"
+
+    local link privacy_problem
+    for link in "${BEADS_SKILL_LINKS[@]}"; do
+        is_beads_skill "$ROOT/$link" ||
+            fail "$link is missing or is not a valid Beads skill"
+        if privacy_problem=$(skill_link_privacy_problem "$link"); then
+            fail "$privacy_problem"
+        fi
+    done
 
     local mode
     mode=$(bd context --json 2>/dev/null |
@@ -491,10 +784,7 @@ run_check() {
 
     require_command git
     require_command bd
-
-    ROOT=$(git rev-parse --show-toplevel 2>/dev/null) ||
-        fail "not inside a Git repository"
-    cd "$ROOT" || fail "cannot enter repository root: $ROOT"
+    set_repository_context
 
     local local_opt_in tracked_marker=false
     local_opt_in=$(git config --local --get beads.solo.local 2>/dev/null || true)
@@ -528,17 +818,28 @@ run_check() {
     [[ "$(bd config get export.git-add 2>/dev/null)" == *false* ]] ||
         errors+=("export.git-add is not false; the JSONL export may be staged")
 
+    local link privacy_problem
+    for link in "${BEADS_SKILL_LINKS[@]}"; do
+        if ! is_beads_skill "$ROOT/$link"; then
+            errors+=("$link is missing or is not a valid Beads skill")
+        elif privacy_problem=$(skill_link_privacy_problem "$link"); then
+            errors+=("$privacy_problem")
+        fi
+    done
+
     if [[ "$profile" == local ]]; then
         # The defining invariant: no Beads artifact may be visible to Git.
         local visible
         visible=$(git status --porcelain --untracked-files=all -- \
-                      .beads .beads-solo 2>/dev/null || true)
+                      .beads .beads-solo "${BEADS_SKILL_LINKS[@]}" \
+                      2>/dev/null || true)
         [[ -z "$visible" ]] ||
             errors+=("Beads artifacts are visible to Git:
     ${visible//$'\n'/$'\n'    }")
 
         local staged
-        staged=$(git diff --cached --name-only -- .beads .beads-solo 2>/dev/null || true)
+        staged=$(git diff --cached --name-only -- .beads .beads-solo \
+                     "${BEADS_SKILL_LINKS[@]}" 2>/dev/null || true)
         [[ -z "$staged" ]] ||
             errors+=("Beads artifacts are staged: ${staged//$'\n'/, }")
 
@@ -549,6 +850,8 @@ run_check() {
                ! -s "$ROOT/.beads-solo" ]] ||
             errors+=(".beads-solo must be a tracked, empty, regular file")
 
+        # Literal Markdown; the backticks must not be evaluated by the shell.
+        # shellcheck disable=SC2016
         grep -Fq 'Use the `beads-solo` skill' "$ROOT/AGENTS.md" 2>/dev/null ||
             errors+=("AGENTS.md lacks the beads-solo policy declaration")
 
@@ -604,6 +907,9 @@ EOF
 main() {
     parse_args "$@"
 
+    if [[ "$CHECK_MODE" == true && "$REPAIR_SKILLS" == true ]]; then
+        fail "--check and --repair-skills cannot be combined"
+    fi
     if [[ "$CHECK_MODE" == true ]]; then
         run_check
         return $?
@@ -612,6 +918,20 @@ main() {
     if [[ "$YES" != true && "$DRY_RUN" != true ]]; then
         usage >&2
         fail "refusing to enroll without --yes (or use --dry-run)"
+    fi
+
+    if [[ "$REPAIR_SKILLS" == true ]]; then
+        check_skill_repair_prerequisites
+        info "Repository: $ROOT"
+        info "Repairing repository-local Beads skill links"
+        prepare_beads_skill_links
+        install_beads_skill_links
+        if [[ "$DRY_RUN" == true ]]; then
+            info "Dry run complete; no changes were made"
+        else
+            run_check
+        fi
+        return 0
     fi
 
     check_prerequisites
@@ -624,6 +944,9 @@ main() {
     info "Profile:    $([[ "$LOCAL_MODE" == true ]] && echo local || echo tracked)"
     info "Prefix:     $PREFIX"
 
+    prepare_beads_skill_links
+
+    install_beads_skill_links
     record_opt_in
     install_policy_declaration
     initialize_workspace

@@ -1,13 +1,24 @@
 # Fields and JS interaction
 
-All TRANSACTION DETAILS fields are manipulated by ID — do NOT use
-`agent-browser fill` with snapshot refs for these fields, as the unlabelled
-textboxes are display-only shims and will corrupt other fields (e.g. Supplier).
-Use the JS approach below.
+**Use native `agent-browser` commands, targeting fields by CSS id selector.**
+Verified 2026-08-13: `fill`, `type`, and `select` all work on these fields.
 
-**Exception: `editor-amount` is model-backed and JS value-setting does not
-reach its model** — the field looks correct but Publish rejects it as
-required. See "Total Amount" below before setting it.
+Do NOT use `agent-browser fill` with **snapshot refs** (`@eN`) — the unlabelled
+textboxes are display-only shims and will corrupt other fields (e.g. Supplier).
+The id selector (`#editor-amount`) is safe; the ref is not.
+
+Do NOT reach for `eval` to set these fields. An earlier version of this file
+said "always use the JS approach", which is wrong and caused a real failure —
+see the JS-approval rule in the
+[`agent-browser-local`](../../agent-browser-local/SKILL.md) skill.
+
+```bash
+agent-browser fill   "#editor-invoice-number" "2187780"
+agent-browser select "#editor-taxrate" "NONE"
+```
+
+**`editor-amount` needs the full focus/type/blur sequence** — see "Total
+Amount" below.
 
 ## Field IDs
 
@@ -36,78 +47,64 @@ misread day-for-month with no visible sign of the mistake.
 Read the date back after setting it and confirm it matches the receipt's
 day and month — do not assume your input format survived.
 
-## Setting field values via JS
+## Setting field values
 
-For `<input>` fields:
 ```bash
-agent-browser eval --stdin <<'EVALEOF'
-const el = document.getElementById('editor-invoice-number');
-el.value = '2397-5919';
-el.dispatchEvent(new Event('input', {bubbles: true}));
-el.dispatchEvent(new Event('change', {bubbles: true}));
-el.value
-EVALEOF
-```
+# <input> fields
+agent-browser fill "#editor-invoice-number" "2397-5919"
 
-For `<select>` fields (Document Type, Currency, Tax Rate):
-```bash
-agent-browser eval --stdin <<'EVALEOF'
-const sel = document.getElementById('editor-document-type');
-sel.value = 'Receipt';  // must match exact option value
-['change', 'input'].forEach(ev => sel.dispatchEvent(new Event(ev, {bubbles: true})));
-sel.value
-EVALEOF
+# <select> fields (Document Type, Currency, Tax Rate) — pass the option value
+agent-browser select "#editor-document-type" "Receipt"
+agent-browser select "#editor-taxrate" "NONE"
 ```
 
 Document Type option values: `Invoice`, `Receipt`, `Statement`, `Report`,
 `CSV`, `Check`, `Deposit`, `eTransfer`, `Invoice (AR)`, `Payment`,
 `Credit Memo`, `Purchase Order`, `Other`.
 
-## Total Amount: JS value-setting does NOT reach the model
-
-**`editor-amount` cannot be set by assigning `.value` from JS.** The field is
-model-backed:
-
-```html
-<input type="text" id="editor-amount" name="editor-amount"
-       value="0.00" modelattribute="amount">
-```
-
-Assigning `.value` updates the DOM property only. The HTML `value` attribute
-and the `modelattribute="amount"` model stay at `0.00`, and Hubdoc's
-validator reads the model — so **Publish fails with "This field is
-required."** even though the field visibly shows the right number.
-
-Verified 2026-08-13: `.value` read back `119.99` while
-`getAttribute('value')` still read `0.00`. A full `focus` → `input` →
-`keyup` → `change` → `blur` dispatch did not close the gap, and no
-Backbone/jQuery handle was exposed on the page to write the model directly.
-
-### Detecting the failure
-
-Two independent tells, both cheap:
+Supplier (`editor-vendor-id`) takes a numeric option value, not the name.
+Read the options first, and beware near-identical names — "Companies House"
+and "Companies Made Simple" are different suppliers:
 
 ```bash
-# 1. property vs attribute disagree => the model was never updated
-agent-browser eval "(function(){const a=document.getElementById('editor-amount');
-  return JSON.stringify({prop:a.value, attr:a.getAttribute('value')});})()"
-
-# 2. the Total: summary line renders with no figure (bare "Total: GBP")
+agent-browser eval "JSON.stringify(Array.from(document.getElementById('editor-vendor-id').options).filter(o=>/made simple/i.test(o.textContent)).map(o=>({v:o.value,t:o.textContent.trim()})))"
 ```
 
-The blank `Total:` line is a **symptom of this bug**, not a cosmetic quirk —
-`#edit-data-total-container` stays unpopulated precisely because the model
-never received the amount. Do not dismiss it. (`Subtotal:` and `Tax:` DO
-update from the DOM property, so they can look correct while the model is
-still empty — they are not sufficient verification on their own.)
+## Total Amount: needs focus → type → blur
 
-### Working around it
+`editor-amount` is model-backed (`modelattribute="amount"`). Setting the value
+without a real focus/blur cycle leaves the model empty, so **Publish fails
+with "This field is required."** even though the field shows the right number.
 
-Native typing produces real key events and is the documented path for
-model-backed widgets, but note that `click` steals window focus from the
-user's terminal (see the `agent-browser-local` skill) — warn them first, or
-they will type into the page. If native typing also fails to write through,
-ask the user to enter the amount by hand rather than retrying; two failed
-attempts is the stop point.
+**Working sequence, verified 2026-08-13:**
 
-Always confirm with the property/attribute check above before publishing.
+```bash
+agent-browser click "#editor-amount"              # real focus
+agent-browser fill  "#editor-amount" ""           # clear (type appends)
+agent-browser type  "#editor-amount" "119.99"     # per-character key events
+agent-browser click "#editor-invoice-number"      # blur commits to the model
+```
+
+`fill` alone sets the value and clears the required error, but does **not**
+commit to the model — the `Total:` line stays blank. The blur is what commits.
+
+Note `click` steals window focus from the user's terminal (see
+[`agent-browser-local`](../../agent-browser-local/SKILL.md)) — warn them
+before this sequence, or their keystrokes land in the page.
+
+### Verifying: read the `Total:` line
+
+```bash
+agent-browser eval "(function(){const n=Array.from(document.querySelectorAll('*')).filter(e=>e.children.length===0&&/^\s*Total:\s*$/.test(e.textContent))[0];return n.closest('div').innerText.replace(/\s+/g,' ').trim();})()"
+```
+
+- `Total: 119.99 GBP` → committed, safe to publish.
+- `Total: GBP` (no figure) → **not** committed; redo the sequence.
+
+Two things that look like verification but are not:
+
+- **`Subtotal:` and `Tax:`** update from the DOM property, so they show the
+  right numbers while the model is still empty.
+- **The `value` attribute** lags — it stays at `0.00` after a successful edit
+  and only syncs on save. Confirmed by comparing against an already-published
+  document, where `value` attribute, property, and `Total:` all agreed.

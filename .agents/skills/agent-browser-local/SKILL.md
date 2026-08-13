@@ -30,9 +30,41 @@ these cross-site rules. Application-specific skills may be stricter.
 6. Verify the resulting state; a dispatched click does not prove acceptance.
 
 Ref ids such as `@e42` are ephemeral and may be reassigned after any update.
-Prefer native subcommands (`get`, `find`, `scrollintoview`, `click`, `fill`,
-`type`, `select`, `screenshot`) over `eval`. Use JavaScript only when native
-commands cannot operate the widget, then verify the result.
+
+## Native commands first — JS writes need human approval
+
+Use native subcommands (`get`, `find`, `scrollintoview`, `click`, `fill`,
+`type`, `select`, `screenshot`) for every interaction. `eval` is for **reading
+and diagnosis**, never a shortcut for driving the page.
+
+**A write via `eval` (setting `.value`, dispatching events, calling `.click()`)
+requires explicit human approval, for one of exactly two reasons:**
+
+- **(a) Native is genuinely broken** — a bug or missing capability that **a
+  human has confirmed**. Your own failed attempt is not confirmation.
+- **(b) Native is too slow** and JS is materially faster — again, **approved by
+  a human** first.
+
+Absent (a) or (b), a native command that is not working means **you are calling
+it wrong**. Read `agent-browser <cmd> --help` before concluding otherwise.
+
+**Evidence (2026-08-13):** `agent-browser type "119.99"` appeared to do
+nothing, twice. The signature is `type <selector> <text>` — the amount had been
+passed as the *selector*, matching no element, while the CLI still printed
+`✓ Done`. Instead of reading `--help`, the agent theorised that the framework
+filtered synthetic events, then set every field by `eval` and left a
+model-backed field uncommitted, blocking Publish. The correct native sequence
+(`click` → `fill ""` → `type` → `click` away to blur) worked first time.
+
+Two traps this exposes:
+
+- **`✓ Done` means dispatched, not effective.** A wrong selector, a wrong
+  argument order, and a genuine bug all print the same success line.
+- **Application-specific skills may claim "always use JS" for a widget.** Treat
+  that as a claim to re-test natively, not a licence. If native works, fix the
+  skill.
+
+When JS is approved, verify the result natively afterwards.
 
 ## Diagnose no-op clicks
 

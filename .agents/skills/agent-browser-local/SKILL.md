@@ -80,7 +80,8 @@ it.
 ## Shared-window tab safety
 
 - Run `tab list` before assuming which page is active.
-- Switch with `tab <n>` rather than blindly opening another copy.
+- Switch with `tab t<n>` (the `t` prefix is required; bare integers are
+  rejected) rather than blindly opening another copy.
 - Re-check `tab list` after focus jumps, new tabs, or external links.
 - Tie evidence to the tab and browser instance from which it came.
 
@@ -91,6 +92,12 @@ operate native browser chrome: tab strip, address bar, permission prompts,
 download shelf, or crash-recovery dialog. A 2026-07-16 verification screenshot
 contained only the webpage, not the Chromium frame. Native UI requires an
 explicitly approved OS/window-level tool.
+
+The boundary is crossed in the other direction too: `click` raises and focuses
+the Chromium window, stealing X focus from whatever the user is typing in, so
+their next keystrokes land in the page. `eval`, `snapshot`, and `screenshot` do
+not. Warn the user before a burst of clicks, or capture and restore focus
+around it. See [`references/window-focus.md`](references/window-focus.md).
 
 Agent-browser Chromium and the user's regular browser are separate processes
 with separate profiles, ports, extensions, and sessions. Never use evidence

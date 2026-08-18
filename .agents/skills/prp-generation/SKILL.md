@@ -77,6 +77,7 @@ The generated PRP should include:
 ## Target Audience
 
 Assume the primary reader is a **junior developer**. Therefore:
+
 - Requirements should be explicit and unambiguous
 - Avoid jargon where possible
 - Provide enough detail for understanding purpose and core logic

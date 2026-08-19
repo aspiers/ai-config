@@ -117,10 +117,59 @@
             th {
                 background: color-mix(in srgb, var(--panel), var(--accent) 6%);
             }
-            td:nth-child(3),
-            th:nth-child(3) {
+            #comparison-summary td:nth-child(3),
+            #comparison-summary th:nth-child(3) {
                 font-variant-numeric: tabular-nums;
                 text-align: right;
+            }
+            .rating-cell.rating-good,
+            .rating-cell.rating-caution,
+            .rating-cell.rating-poor,
+            .rating-cell.rating-unknown {
+                background: color-mix(
+                    in srgb,
+                    var(--panel),
+                    var(--rating-color) 12%
+                );
+                box-shadow: inset 4px 0 var(--rating-color);
+            }
+            .rating-good {
+                --rating-color: var(--good);
+            }
+            .rating-caution {
+                --rating-color: var(--caution);
+            }
+            .rating-poor {
+                --rating-color: var(--poor);
+            }
+            .rating-unknown {
+                --rating-color: var(--unknown);
+            }
+            .rating-judgement {
+                font-weight: 700;
+            }
+            .rating-legend {
+                align-items: center;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.65rem 1rem;
+                margin: -0.75rem 0 2rem;
+            }
+            .rating-key {
+                align-items: center;
+                display: inline-flex;
+                gap: 0.35rem;
+            }
+            .rating-swatch {
+                background: var(--rating-color);
+                border: 1px solid currentColor;
+                border-radius: 999px;
+                display: inline-block;
+                height: 0.75rem;
+                width: 0.75rem;
+            }
+            .comparison-facets {
+                margin: 2rem 0;
             }
             .project-detail,
             .methodology,
@@ -205,27 +254,99 @@
                     </thead>
                     <tbody>
                         <!-- Duplicate this row for every candidate, then remove this
-                     comment and all placeholders. Use good, caution, poor, or
-                     unknown only as a supplementary visual classification. -->
+                     comment and all placeholders. Rating placeholders accept
+                     rating-good, rating-caution, rating-poor, or rating-unknown;
+                     leave the class blank when no ordinal judgement applies. -->
                         <tr>
                             <td>
                                 <a href="#project-{{PROJECT_SLUG}}"
                                     >{{PROJECT}}</a
                                 >
                             </td>
-                            <td>{{DOMAIN_FIT}}</td>
+                            <td class="rating-cell {{DOMAIN_FIT_RATING}}">
+                                <span class="rating-judgement"
+                                    >{{DOMAIN_FIT}}</span
+                                >
+                            </td>
                             <td>{{STAR_COUNT}}</td>
-                            <td>
+                            <td class="rating-cell {{MAINTENANCE_RATING}}">
                                 <span class="badge {{MAINTENANCE_CLASS}}">
                                     {{MAINTENANCE}}</span
                                 >
                             </td>
                             <td>{{SPDX_OR_LICENCE}}</td>
-                            <td>{{SHORT_RECOMMENDATION}}</td>
+                            <td class="rating-cell {{RECOMMENDATION_RATING}}">
+                                <span class="rating-judgement"
+                                    >{{SHORT_RECOMMENDATION}}</span
+                                >
+                            </td>
                         </tr>
                     </tbody>
                 </table>
             </div>
+            <div class="rating-legend" role="note" aria-label="Rating legend">
+                <span class="rating-key rating-good"
+                    ><span class="rating-swatch" aria-hidden="true"></span
+                    >Stronger / suitable</span
+                >
+                <span class="rating-key rating-caution"
+                    ><span class="rating-swatch" aria-hidden="true"></span
+                    >Mixed / trade-off</span
+                >
+                <span class="rating-key rating-poor"
+                    ><span class="rating-swatch" aria-hidden="true"></span
+                    >Weaker / blocker</span
+                >
+                <span class="rating-key rating-unknown"
+                    ><span class="rating-swatch" aria-hidden="true"></span
+                    >Unknown / not comparable</span
+                >
+            </div>
+
+            <!-- Keep this example only when a focused facet matrix clarifies the
+         comparison. Duplicate it for further facets, use unique slugs, and remove
+         this comment and all placeholders. -->
+            <section
+                class="comparison-facets"
+                aria-labelledby="facet-heading-{{FACET_SLUG}}"
+            >
+                <h2 id="facet-heading-{{FACET_SLUG}}">{{FACET_TITLE}}</h2>
+                <div class="table-wrap">
+                    <table id="comparison-facet-{{FACET_SLUG}}">
+                        <caption>
+                            {{FACET_CAPTION}}
+                        </caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Project</th>
+                                <th scope="col">{{FACET_CRITERION_A}}</th>
+                                <th scope="col">{{FACET_CRITERION_B}}</th>
+                                <th scope="col">Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <a href="#project-{{PROJECT_SLUG}}"
+                                        >{{PROJECT}}</a
+                                    >
+                                </td>
+                                <td class="rating-cell {{FACET_A_RATING}}">
+                                    <span class="rating-judgement"
+                                        >{{FACET_A_JUDGEMENT}}</span
+                                    >
+                                </td>
+                                <td class="rating-cell {{FACET_B_RATING}}">
+                                    <span class="rating-judgement"
+                                        >{{FACET_B_JUDGEMENT}}</span
+                                    >
+                                </td>
+                                <td>{{FACET_NOTES}}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
 
             <!-- Duplicate this section for every summary row, preserving row order,
          then remove this comment and all placeholders. -->

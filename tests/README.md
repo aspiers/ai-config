@@ -13,6 +13,16 @@ allowing explicitly configured exceptions.
 python3 tests/test_research_report_locations.py
 ```
 
+## FOSS Comparison Reporting Tests
+
+`test_foss_comparison_reporting.py` verifies accessible traffic-light matrix
+ratings, optional facet matrices, and the existing coloured verdict contract
+used by similar Pi package audit reports.
+
+```bash
+python3 tests/test_foss_comparison_reporting.py
+```
+
 ## AI Cockpit Contract Tests
 
 `test_ai_cockpit_contract.py` validates the target-neutral orchestrator contract,

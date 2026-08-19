@@ -49,6 +49,48 @@ maintenance classification, and the licence identifier in the table; put
 qualifications in the detailed section. Use `N/A`, `Unknown`, or `Unclear`
 rather than a misleading zero.
 
+Apply traffic-light styling to summary cells where the report makes a relative
+judgement, normally domain fit, maintenance, and recommendation. Leave raw
+facts such as star counts and licence identifiers uncoloured unless the cell
+also states an explicit suitability judgement.
+
+## Additional facet matrices
+
+The summary table is mandatory, but it need not be the only matrix. Add one or
+more focused matrices after the summary and before the detailed project
+sections when separate facets would otherwise make the summary too dense or
+hide important trade-offs. Useful facets can include capabilities, usability,
+operations and security, integration, or ecosystem and maintenance. Do not add
+extra matrices when they would merely repeat the summary or detailed prose.
+
+For every additional matrix:
+
+- give it a concise heading and caption;
+- use `id="comparison-facet-SLUG"`, deriving `SLUG` with the same rules as
+  project fragments;
+- keep candidates as rows in the summary's order where practical, and link
+  each project name to its detailed section;
+- group only comparable criteria in the same matrix and explain ambiguous
+  terms nearby;
+- keep cells concise, with qualifications and evidence in the detailed
+  sections; and
+- do not manufacture an aggregate score from coloured cells unless the user
+  supplied an explicit weighting model.
+
+Use traffic-light cell ratings only for ordinal judgements tied to the user's
+needs:
+
+- `rating-good` (green): relatively strong, suitable, or low concern;
+- `rating-caution` (amber): mixed, conditional, or a material trade-off;
+- `rating-poor` (red): relatively weak, unsuitable, or a blocker; and
+- `rating-unknown` (purple): unknown, unclear, or not comparable.
+
+Every rated cell must contain a concise textual judgement such as “Strong”,
+“Mixed”, “Weak”, or “Unknown”; colour is supplementary and must never carry the
+meaning alone. Leave factual or categorical cells uncoloured when no honest
+ordinal interpretation exists. Assess ratings against the stated use case,
+not a universal ranking, and explain surprising ratings in the detail section.
+
 ## Detailed project sections
 
 Create one detailed section for every summary row, in the same order. Each
@@ -83,8 +125,10 @@ is explicitly tied to the user's needs.
 
 - Use semantic HTML, a plain-text `<title>`, a single `<h1>`, accessible link
   text, and visible focus styles.
-- Keep verdict colours supplementary: the text must communicate meaning
-  without colour.
+- Include the visible traffic-light legend from the template whenever any
+  matrix cells are rated.
+- Keep rating colours supplementary: every coloured cell must communicate its
+  judgement in text and remain understandable without colour.
 - Use human-readable exact counts such as `24,381`, not false precision copied
   from rounded badges.
 - Put an explicit UTC date beside volatile data. Do not call figures “current”
@@ -103,11 +147,16 @@ Before opening the report, verify that:
 1. its resolved path is inside `$repo_root/docs/research/` and it is non-empty;
 2. no `{{PLACEHOLDER}}` tokens remain;
 3. it contains the summary table and all six required headers;
-4. every project link in the table has exactly one matching detail `id`, every
-   detail section has a table link, and all IDs are unique;
-5. each candidate has stars, maintenance, and licence evidence or an explicit
+4. every project link in the summary and facet matrices has exactly one
+   matching detail `id`, every detail section has a summary-table link, and all
+   IDs are unique;
+5. every additional matrix has a unique `comparison-facet-` ID, heading, and
+   caption;
+6. every rated cell uses one of the four defined rating classes, contains a
+   textual judgement, and has a visible legend in the report;
+7. each candidate has stars, maintenance, and licence evidence or an explicit
    unknown value; and
-6. the HTML has no remote executable or presentation assets.
+8. the HTML has no remote executable or presentation assets.
 
 Opening the file is not evidence that these checks passed.
 

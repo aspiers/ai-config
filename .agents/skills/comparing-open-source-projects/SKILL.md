@@ -77,6 +77,13 @@ manufacturing a universal winner. Base recommendations on the user's stated
 needs and call out when licensing or maintenance makes an otherwise strong
 candidate unsuitable.
 
+Use the mandatory high-level summary matrix for orientation. Add focused
+matrices for distinct facets when they make a dense comparison easier to
+understand. In matrices, apply accessible traffic-light ratings to cells where
+relative strength or suitability can be judged fairly; retain plain text and
+leave non-ordinal facts uncoloured. The reporting contract defines the rating
+semantics and multi-matrix structure.
+
 ## Produce the report
 
 Read [the HTML reporting contract](references/reporting.md) completely before

@@ -8,6 +8,12 @@ description: Capture durable project or workflow knowledge discovered during wor
 Record knowledge where future readers will naturally look for it, without
 turning instruction files into a transcript or catch-all memory store.
 
+## Research reports
+
+Store durable research, investigation, audit, and comparison reports under
+`docs/research/` relative to the current repository root by default. Defer to a
+location specified by the user, the repository, or a focused workflow.
+
 ## Workflow
 
 1. Identify the durable lesson and who needs it.

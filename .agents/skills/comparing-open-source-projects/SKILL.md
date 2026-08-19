@@ -82,6 +82,6 @@ candidate unsuitable.
 Read [the HTML reporting contract](references/reporting.md) completely before
 writing the report. Use
 [the self-contained report template](assets/report-template.html) as the
-structural and visual basis. The finished report must be written under `tmp/`
-in the current Git repository and opened with the repository-specific opener
-described in the reporting contract.
+structural and visual basis. The finished report must be written under
+`docs/research/` in the current Git repository and opened with the
+repository-specific opener described in the reporting contract.

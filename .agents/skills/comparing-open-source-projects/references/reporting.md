@@ -9,14 +9,16 @@ Resolve the current repository rather than the skill's own repository:
 ```bash
 repo_root=$(git rev-parse --show-toplevel)
 stamp=$(date -u +%Y-%m-%d-%H%M%SZ)
-mkdir -p "$repo_root/tmp"
-html_report="$repo_root/tmp/foss-comparison-DOMAIN-SLUG-$stamp.html"
+report_dir="$repo_root/docs/research"
+mkdir -p "$report_dir"
+html_report="$report_dir/foss-comparison-DOMAIN-SLUG-$stamp.html"
 ```
 
 Derive `DOMAIN-SLUG` by lowercasing the domain, replacing each run of
 non-alphanumeric characters with `-`, and trimming surrounding hyphens. Never
-write the report to `/tmp`, the skill directory, or a global reports directory.
-Use a new timestamp rather than overwriting an earlier comparison.
+write the report to `/tmp`, a repository's temporary directory, the skill
+directory, or a global reports directory. Use a new timestamp rather than
+overwriting an earlier comparison.
 
 ## Required structure
 
@@ -98,7 +100,7 @@ is explicitly tied to the user's needs.
 
 Before opening the report, verify that:
 
-1. its resolved path is inside `$repo_root/tmp/` and it is non-empty;
+1. its resolved path is inside `$repo_root/docs/research/` and it is non-empty;
 2. no `{{PLACEHOLDER}}` tokens remain;
 3. it contains the summary table and all six required headers;
 4. every project link in the table has exactly one matching detail `id`, every
@@ -119,7 +121,8 @@ For this repository, open the verified report exactly once:
 ~/bin/open "$html_report"
 ```
 
-Do not use bare `open`, `xdg-open`, a browser command, or `/tmp`. If the report
-is regenerated at the same path, leave the existing tab in place rather than
-opening a duplicate. End the response with the absolute report path and state
-whether it was opened now or an existing tab was left in place.
+Do not use bare `open`, `xdg-open`, a browser command, or a temporary report
+path. If the report is regenerated at the same path, leave the existing tab in
+place rather than opening a duplicate. End the response with the absolute
+report path and state whether it was opened now or an existing tab was left in
+place.

@@ -3,6 +3,16 @@
 This directory contains test suites for the AI configuration scripts and
 deployment contracts.
 
+## Research Report Location Tests
+
+`test_research_report_locations.py` verifies that cross-agent policy and the
+shared reporting skills default durable reports to `docs/research/`, while
+allowing explicitly configured exceptions.
+
+```bash
+python3 tests/test_research_report_locations.py
+```
+
 ## AI Cockpit Contract Tests
 
 `test_ai_cockpit_contract.py` validates the target-neutral orchestrator contract,

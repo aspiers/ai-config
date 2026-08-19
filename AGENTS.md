@@ -70,6 +70,13 @@ author's accountancy firm — plus an adviser lock date in another skill. None
 of it was useful to anyone else, and the author had to catch it. AGENTS.md
 gave no indication the repo was public, which is why this section exists.
 
+## Research reports
+
+Store durable research, investigation, audit, and comparison reports under
+`docs/research/` relative to the current repository root by default. A user
+request, repository-specific instruction, or focused workflow may specify a
+different location.
+
 ## Adding/Changing Allowed Commands
 
 Use the `allow-agent-commands` skill for instructions on adding or modifying

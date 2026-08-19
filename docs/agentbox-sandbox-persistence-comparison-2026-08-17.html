@@ -1,0 +1,723 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AgentBox sandbox persistence: provider comparison</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #eef3f7;
+      --panel: #ffffff;
+      --panel-2: #f6f9fb;
+      --text: #14202b;
+      --muted: #5c6b78;
+      --line: #d7e0e6;
+      --ink: #102f3b;
+      --accent: #007f78;
+      --accent-2: #e56a3a;
+      --good: #0f7a4d;
+      --caution: #9a6500;
+      --poor: #ba3b32;
+      --unknown: #6556a8;
+      --soft-good: #e8f6ef;
+      --soft-warn: #fff6df;
+      --soft-blue: #e8f3f8;
+      --shadow: 0 18px 55px rgba(24, 50, 65, .10);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0d171d;
+        --panel: #142129;
+        --panel-2: #192831;
+        --text: #edf4f7;
+        --muted: #adbbc4;
+        --line: #30434d;
+        --ink: #e7f7f8;
+        --accent: #5bd7cb;
+        --accent-2: #ff9a6d;
+        --good: #73dca8;
+        --caution: #f2c768;
+        --poor: #ff8f87;
+        --unknown: #c2b5ff;
+        --soft-good: #17372c;
+        --soft-warn: #3a3019;
+        --soft-blue: #16313e;
+        --shadow: 0 18px 55px rgba(0, 0, 0, .28);
+      }
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at 85% 0%, color-mix(in srgb, var(--accent) 15%, transparent) 0, transparent 32rem),
+        var(--bg);
+      color: var(--text);
+      font: 16px/1.62 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    a { color: var(--accent); text-underline-offset: .16em; }
+    a:hover { text-decoration-thickness: 2px; }
+    a:focus-visible { outline: 3px solid var(--accent-2); outline-offset: 3px; border-radius: 3px; }
+    code {
+      padding: .08em .35em;
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      background: var(--panel-2);
+      font: .9em/1.4 ui-monospace, SFMono-Regular, Consolas, monospace;
+    }
+    .shell {
+      min-height: 100vh;
+    }
+    header, main, footer {
+      width: min(1240px, calc(100% - 2rem));
+      margin-inline: auto;
+    }
+    header { padding: 3.8rem 0 2rem; }
+    .eyebrow {
+      margin: 0 0 .8rem;
+      color: var(--accent-2);
+      font-size: .78rem;
+      font-weight: 800;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+    h1 {
+      max-width: 900px;
+      margin: 0;
+      color: var(--ink);
+      font-size: clamp(2.3rem, 6vw, 5rem);
+      letter-spacing: -.055em;
+      line-height: .98;
+    }
+    .lede {
+      max-width: 850px;
+      margin: 1.35rem 0 0;
+      font-size: clamp(1.05rem, 2vw, 1.32rem);
+    }
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .55rem 1.15rem;
+      margin-top: 1.15rem;
+      color: var(--muted);
+      font-size: .91rem;
+    }
+    .meta span::before { content: "•"; margin-right: .55rem; color: var(--accent-2); }
+    .meta span:first-child::before { content: ""; margin: 0; }
+    .jump {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .55rem;
+      margin-top: 1.5rem;
+    }
+    .jump a {
+      padding: .48rem .75rem;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--panel) 86%, transparent);
+      color: var(--text);
+      font-size: .88rem;
+      font-weight: 650;
+      text-decoration: none;
+    }
+    .panel, .project-detail, .methodology, .recommendation {
+      margin: 1.4rem 0;
+      padding: clamp(1.15rem, 3vw, 2.1rem);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      scroll-margin-top: 1rem;
+    }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.3fr .9fr;
+      gap: 1rem;
+      margin: 1.4rem 0;
+    }
+    .verdict-card {
+      border-left: 6px solid var(--accent);
+      background: linear-gradient(135deg, var(--panel), var(--soft-blue));
+    }
+    .warning-card {
+      border-left: 6px solid var(--accent-2);
+      background: linear-gradient(135deg, var(--panel), var(--soft-warn));
+    }
+    h2 {
+      margin: 0 0 .75rem;
+      color: var(--ink);
+      font-size: clamp(1.45rem, 3vw, 2.15rem);
+      letter-spacing: -.025em;
+      line-height: 1.15;
+    }
+    h3 { margin: 1.35rem 0 .35rem; color: var(--ink); font-size: 1.08rem; }
+    p { margin: .65rem 0; }
+    ul, ol { padding-left: 1.3rem; }
+    li { margin: .35rem 0; }
+    .table-wrap {
+      margin: 1.4rem 0 2rem;
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+    table { width: 100%; min-width: 940px; border-collapse: collapse; }
+    caption {
+      padding: 1.1rem 1.15rem;
+      color: var(--ink);
+      font-size: 1.07rem;
+      font-weight: 800;
+      text-align: left;
+    }
+    th, td { padding: .78rem .88rem; border-top: 1px solid var(--line); text-align: left; vertical-align: top; }
+    th {
+      background: color-mix(in srgb, var(--panel) 90%, var(--accent) 10%);
+      color: var(--ink);
+      font-size: .78rem;
+      letter-spacing: .035em;
+      text-transform: uppercase;
+    }
+    tbody tr:hover { background: color-mix(in srgb, var(--panel) 94%, var(--accent) 6%); }
+    #comparison-summary td:nth-child(3), #comparison-summary th:nth-child(3) { text-align: right; font-variant-numeric: tabular-nums; }
+    .badge {
+      display: inline-block;
+      padding: .17rem .55rem;
+      border: 1px solid currentColor;
+      border-radius: 999px;
+      font-size: .78rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+    .good { color: var(--good); }
+    .caution { color: var(--caution); }
+    .poor { color: var(--poor); }
+    .unknown { color: var(--unknown); }
+    .rank {
+      display: inline-flex;
+      width: 1.7rem;
+      height: 1.7rem;
+      align-items: center;
+      justify-content: center;
+      margin-right: .35rem;
+      border-radius: 50%;
+      background: var(--ink);
+      color: var(--panel);
+      font-size: .78rem;
+      font-weight: 850;
+    }
+    .layer-grid, .facts, .recommend-grid {
+      display: grid;
+      gap: .8rem;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    }
+    .layer, .fact, .rec {
+      padding: 1rem;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--panel-2);
+    }
+    .layer b, .fact strong, .rec strong { display: block; margin-bottom: .25rem; color: var(--ink); }
+    .layer small, .fact small { color: var(--muted); }
+    .tier-title {
+      margin: 1.35rem 0 .6rem;
+      color: var(--accent-2);
+      font-size: .8rem;
+      font-weight: 850;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+    .callout {
+      margin: 1rem 0;
+      padding: 1rem 1.05rem;
+      border-left: 5px solid var(--accent-2);
+      border-radius: 0 12px 12px 0;
+      background: var(--soft-warn);
+    }
+    .callout.good-note { border-left-color: var(--good); background: var(--soft-good); }
+    .fine, .muted { color: var(--muted); }
+    .fine { font-size: .87rem; }
+    .project-detail > h2 a { color: inherit; text-decoration-color: color-mix(in srgb, var(--accent) 50%, transparent); }
+    .project-detail .verdict { font-size: 1.06rem; }
+    .evidence { columns: 2; column-gap: 2rem; }
+    .evidence li { break-inside: avoid; }
+    .back { display: inline-block; margin-top: 1rem; font-weight: 700; }
+    .checklist { list-style: none; padding-left: 0; }
+    .checklist li { position: relative; padding-left: 1.65rem; }
+    .checklist li::before { content: "✓"; position: absolute; left: 0; color: var(--good); font-weight: 900; }
+    footer { padding: 1.2rem 0 3rem; color: var(--muted); font-size: .88rem; }
+    @media (max-width: 780px) {
+      .hero-grid { grid-template-columns: 1fr; }
+      .evidence { columns: 1; }
+      header { padding-top: 2.4rem; }
+    }
+    @media print {
+      :root { color-scheme: light; }
+      body { background: white; font-size: 11pt; }
+      header, main, footer { width: 100%; }
+      .panel, .project-detail, .methodology, .recommendation, .table-wrap { box-shadow: none; break-inside: avoid; }
+      .jump { display: none; }
+      a { color: inherit; }
+    }
+  </style>
+</head>
+<body>
+<div class="shell">
+  <header>
+    <p class="eyebrow">Decision report · long-lived coding agents</p>
+    <h1>AgentBox sandbox persistence</h1>
+    <p class="lede">Remote Docker on your own VPS versus E2B, Daytona and other providers — judged primarily on whether an idle agent can be resumed and whether unfinished work can still be recovered after the sandbox itself is gone.</p>
+    <div class="meta">
+      <span>Evidence observed 17 August 2026 UTC</span>
+      <span>8 provider models</span>
+      <span>AgentBox v0.27.2 documentation</span>
+      <span>Standalone report; no remote assets</span>
+    </div>
+    <nav class="jump" aria-label="Report sections">
+      <a href="#comparison-summary">Summary</a>
+      <a href="#executive-conclusion">Recommendation</a>
+      <a href="#persistence-model">Persistence model</a>
+      <a href="#persistence-matrix">Full matrix</a>
+      <a href="#cost">Economics</a>
+      <a href="#operating-model">No-loss operating model</a>
+      <a href="#methodology">Methodology</a>
+    </nav>
+  </header>
+
+  <main>
+    <div class="table-wrap">
+      <table id="comparison-summary">
+        <caption>Comparison summary — compact verdict before the detailed analysis</caption>
+        <thead>
+          <tr>
+            <th scope="col">Project</th>
+            <th scope="col">Domain fit</th>
+            <th scope="col">GitHub stars</th>
+            <th scope="col">Maintenance</th>
+            <th scope="col">Licence</th>
+            <th scope="col">Recommendation</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><a href="#project-remote-docker">Remote Docker / own VPS</a></td>
+            <td>Exact pause while host stays up; durable disk; full control</td>
+            <td>353 <span class="fine">(AgentBox)</span></td>
+            <td><span class="badge good">Active</span></td>
+            <td>MIT <span class="fine">(AgentBox)</span></td>
+            <td><strong>Tier A.</strong> Best baseline with off-host backup.</td>
+          </tr>
+          <tr>
+            <td><a href="#project-daytona">Daytona Linux VM</a></td>
+            <td>Managed RAM + filesystem pause; independent snapshots</td>
+            <td>71,980 <span class="fine">(former core)</span></td>
+            <td><span class="badge good">Service active</span></td>
+            <td>Proprietary service; former core no longer open</td>
+            <td><strong>Tier A.</strong> Strongest managed fit; benchmark US-East latency.</td>
+          </tr>
+          <tr>
+            <td><a href="#project-e2b">E2B</a></td>
+            <td>Indefinite full-state pause and reusable snapshots</td>
+            <td>13,436</td>
+            <td><span class="badge good">Active</span></td>
+            <td>Apache-2.0 core + hosted terms</td>
+            <td><strong>Tier A.</strong> Excellent persistence; active-runtime limits matter.</td>
+          </tr>
+          <tr>
+            <td><a href="#project-tenki">Tenki</a></td>
+            <td>Full-state pause, snapshots and persistent volumes</td>
+            <td>0 <span class="fine">(Go SDK)</span></td>
+            <td><span class="badge caution">New / active</span></td>
+            <td>MIT SDK + hosted terms</td>
+            <td><strong>Tier B.</strong> Promising; verify retention flags and plugin defaults.</td>
+          </tr>
+          <tr>
+            <td><a href="#project-fly-sprites">Fly Sprites</a></td>
+            <td>Exceptionally durable filesystem; warm-only process resume</td>
+            <td>N/A</td>
+            <td><span class="badge good">Active service</span></td>
+            <td>Proprietary service</td>
+            <td><strong>Tier B.</strong> Excellent recovery model; custom provider required.</td>
+          </tr>
+          <tr>
+            <td><a href="#project-vercel">Vercel Sandbox</a></td>
+            <td>Filesystem persistence; process tree restarts</td>
+            <td>183 <span class="fine">(SDK)</span></td>
+            <td><span class="badge good">Active</span></td>
+            <td>Apache-2.0 SDK + hosted terms</td>
+            <td><strong>Tier C.</strong> Only if restart is fine and retention is configured.</td>
+          </tr>
+          <tr>
+            <td><a href="#project-hetzner">Hetzner VPS</a></td>
+            <td>Long-lived disk; pause is power-off, not memory suspend</td>
+            <td>N/A</td>
+            <td><span class="badge good">Active service</span></td>
+            <td>Proprietary service</td>
+            <td><strong>Tier C.</strong> Good inexpensive pet box; weak fleet economics.</td>
+          </tr>
+          <tr>
+            <td><a href="#project-digitalocean">DigitalOcean Droplet</a></td>
+            <td>Long-lived disk; pause is power-off, not memory suspend</td>
+            <td>N/A</td>
+            <td><span class="badge good">Active service</span></td>
+            <td>Proprietary service</td>
+            <td><strong>Tier C.</strong> Straightforward but relatively expensive per box.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <section class="hero-grid" id="executive-conclusion" aria-label="Executive conclusion">
+      <div class="panel verdict-card">
+        <p class="eyebrow">Recommended starting point</p>
+        <h2>Remote Docker + an independent recovery layer</h2>
+        <p>Start on a VPS you control when agents spend substantial time actively running. AgentBox can freeze a box exactly with <code>docker pause</code>, or stop it while preserving the writable filesystem. The fixed VPS bill is usually attractive once active hours accumulate.</p>
+        <p><strong>But treat the VPS as one failure domain.</strong> The live container and AgentBox’s <code>docker commit</code> checkpoint remain on the same Docker host. Add automatic branch export or push plus off-host backups before trusting it with irreplaceable work.</p>
+      </div>
+      <div class="panel warning-card">
+        <p class="eyebrow">Managed shortlist</p>
+        <h2>Trial Daytona and E2B side by side</h2>
+        <p>Both preserve filesystem, memory and running processes without reserving your VPS RAM while paused. Daytona’s lifecycle defaults are especially friendly to long dormancy; E2B’s paused sandboxes are documented as indefinite and its snapshots survive deletion of the source sandbox.</p>
+        <p>For a UK user, benchmark Daytona’s AgentBox VM route in US-East. For E2B, decide whether the 1-hour Hobby limit is workable or whether the 24-hour Pro limit justifies the $150 monthly base fee.</p>
+      </div>
+    </section>
+
+    <section class="panel" id="persistence-model">
+      <p class="eyebrow">The key analytical distinction</p>
+      <h2>“Persistent” is not one property</h2>
+      <p>There are five layers. A provider can be excellent at exact resume and poor at disaster recovery, or vice versa. A paused VM is not a backup.</p>
+      <div class="layer-grid">
+        <div class="layer"><b>1 · Live execution</b><small>The process keeps running after you detach.</small><br>Example: tmux on an always-on VPS.</div>
+        <div class="layer"><b>2 · Memory suspend</b><small>The process returns at the exact instruction.</small><br>Example: E2B or Daytona VM pause.</div>
+        <div class="layer"><b>3 · Filesystem persistence</b><small>Dirty files survive, even if processes restart.</small><br>Example: Vercel persistent sandbox.</div>
+        <div class="layer"><b>4 · Independent snapshot</b><small>A deleted box can be reconstructed.</small><br>Example: E2B or Daytona snapshot.</div>
+        <div class="layer"><b>5 · Off-provider backup</b><small>Host, account or provider failure does not erase work.</small><br>Example: pushed branch plus object storage.</div>
+      </div>
+      <div class="callout"><strong>Your non-negotiable requirement belongs at layer 5.</strong> Layers 1–4 improve convenience and resilience; none alone guarantees recovery from provider deletion, account loss, host failure or operator error.</div>
+    </section>
+
+    <div class="table-wrap" id="persistence-matrix">
+      <table>
+        <caption>Main persistence matrix</caption>
+        <thead>
+          <tr>
+            <th scope="col">Provider</th>
+            <th scope="col">AgentBox status</th>
+            <th scope="col">Idle behaviour</th>
+            <th scope="col">Files</th>
+            <th scope="col">Running agent</th>
+            <th scope="col">Long-idle retention</th>
+            <th scope="col">After box deletion</th>
+            <th scope="col">Active limit</th>
+            <th scope="col">Idle economics</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Remote Docker</strong></td><td>Built in</td><td>Pause or stop</td><td>Yes</td><td>Yes while paused; no after stop/reboot</td><td>No provider TTL</td><td>Same-host checkpoint only unless exported</td><td>None from platform</td><td>Fixed VPS; paused RAM remains mapped</td></tr>
+          <tr><td><strong>Daytona Linux VM</strong></td><td>Built in</td><td>AgentBox pauses after 25 min of genuine agent inactivity</td><td>Yes</td><td>Yes; RAM/process freeze</td><td>Until explicit delete by default</td><td>Independent snapshots; external volumes available in Daytona, though AgentBox VM volume mounting is limited</td><td>No default wall-clock TTL</td><td>Disk billed; CPU/RAM not billed while paused</td></tr>
+          <tr><td><strong>E2B</strong></td><td>Built in; docs still label integration nightly</td><td>Auto-pause can preserve full state</td><td>Yes</td><td>Yes</td><td>Indefinite while paused</td><td>Snapshots survive source deletion</td><td>1h Hobby; 24h Pro; reset by pause/resume</td><td>No running compute charge while paused; Pro base $150/mo</td></tr>
+          <tr><td><strong>Tenki</strong></td><td>Community provider</td><td>Native memory + disk pause</td><td>Yes</td><td>Yes</td><td>Configurable via pause retention / sticky</td><td>Snapshots + persistent volumes</td><td>Configurable</td><td>No compute charge idle; storage continues</td></tr>
+          <tr><td><strong>Fly Sprites</strong></td><td>Custom provider needed</td><td>Warm memory suspend, then provider-controlled cold stop</td><td>Yes, continuously synced</td><td>Warm only; no after cold transition</td><td>Filesystem designed for months</td><td>Durable object-backed root and checkpoints</td><td>Tasks can hold active work</td><td>No compute charge idle; storage billed</td></tr>
+          <tr><td><strong>Vercel</strong></td><td>Built in</td><td>Stop + filesystem snapshot</td><td>Yes</td><td>No</td><td>Snapshot default 30 days after last use; can be disabled in Vercel</td><td>Explicit checkpoint snapshots can remain after live box deletion</td><td>45m Hobby; 24h Pro/Enterprise</td><td>No running compute while stopped</td></tr>
+          <tr><td><strong>Hetzner</strong></td><td>Built in</td><td>Power-off</td><td>Yes</td><td>No</td><td>Until deletion</td><td>Full-disk snapshots</td><td>Normal VPS</td><td>VM still bills while off</td></tr>
+          <tr><td><strong>DigitalOcean</strong></td><td>Built in</td><td>Power-off</td><td>Yes</td><td>No</td><td>Until deletion</td><td>Full-disk snapshots</td><td>Normal VPS</td><td>Droplet still bills while off</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <section class="panel" id="cost">
+      <p class="eyebrow">Economics</p>
+      <h2>Long active runs favour a fixed VPS; many dormant boxes favour real suspend</h2>
+      <p>Daytona, E2B and Tenki publish essentially the same compute unit rates as observed on 17 August 2026: <strong>$0.0504 per vCPU-hour</strong> and <strong>$0.0162 per GiB-hour</strong>. A 2-vCPU / 4-GiB sandbox therefore costs about <strong>$0.1656 per active hour</strong>, before storage. That is roughly $16.56 for 100 active hours or $120.89 for 730 active hours. E2B Pro adds $150/month.</p>
+      <p>Remote Docker instead turns cost into a fixed-capacity problem: you pay for the VPS whether the agent is busy or idle, but multiple boxes share it. A Docker-paused box uses no CPU yet retains mapped RAM. Daytona/E2B can externalise suspended memory and stop billing CPU/RAM, which becomes compelling when the dormant-to-active ratio is high.</p>
+      <p>AgentBox’s documented default pet-VM examples are approximately <strong>€4/month per Hetzner box</strong> and <strong>$24/month per DigitalOcean box</strong>. These can be sensible for a handful of permanent boxes, but a shared Remote Docker VPS normally amortises better across a fleet.</p>
+      <p class="fine">Prices are volatile and exclude taxes, bandwidth, snapshots and storage. Recheck before purchase. Sources: <a href="https://www.daytona.io/pricing">Daytona pricing</a>, <a href="https://e2b.dev/pricing">E2B pricing</a>, <a href="https://tenki.cloud/docs/pricing">Tenki pricing</a>, <a href="https://agent-box.sh/docs/hetzner">AgentBox Hetzner</a>, <a href="https://agent-box.sh/docs/digitalocean">AgentBox DigitalOcean</a>.</p>
+    </section>
+
+    <section class="project-detail" id="project-remote-docker">
+      <h2><a href="https://agent-box.sh/docs/remote-docker">Remote Docker on your own VPS</a></h2>
+      <p class="verdict"><strong>Verdict and best fit:</strong> <span class="badge good">Tier A</span> The best starting point when active compute is substantial, you are comfortable operating a VPS, and container isolation is sufficient. Add off-host recovery before calling it safe.</p>
+      <div class="facts">
+        <div class="fact"><strong>GitHub stars</strong>353 for <a href="https://github.com/madarco/agentbox">madarco/agentbox</a><br><small>Observed 17 Aug 2026 UTC</small></div>
+        <div class="fact"><strong>Maintenance</strong>Active; repository pushed 3 Aug 2026 and docs observed at v0.27.2</div>
+        <div class="fact"><strong>Licence</strong><a href="https://github.com/madarco/agentbox/blob/main/LICENSE">MIT</a> for AgentBox; your VPS/Docker terms also apply</div>
+      </div>
+      <h3>Domain fit</h3>
+      <p>AgentBox connects over SSH to a Docker engine you control. Each box is a separate container; several boxes share the same host. <code>agentbox pause</code> maps to <code>docker pause</code>, so every process freezes and resumes nearly instantly. <code>agentbox stop</code> frees RAM and kills the process tree while keeping the container’s writable filesystem.</p>
+      <h3>Persistence and failure boundary</h3>
+      <p>Docker documents pause as the Linux freezer cgroup. That preserves process state only while the host and its memory survive. A host reboot loses the exact in-memory session. AgentBox checkpoints use <code>docker commit</code> and remain on the engine that created them, so the live box and checkpoint share one failure domain.</p>
+      <div class="callout"><strong>Design consequence:</strong> use pause for short/medium gaps; use stop for long dormancy; use an off-host Git/bundle/object-storage job for actual recovery. A provider snapshot of the VPS is useful, but it is still not independent of the provider account.</div>
+      <h3>Strengths and trade-offs</h3>
+      <ul>
+        <li>Strong economics for long-running agents and many boxes on one host.</li>
+        <li>No provider-imposed wall-clock TTL or continuous-session cap.</li>
+        <li>Full operational control and predictable geography.</li>
+        <li>Paused boxes retain RAM; host failure or reboot destroys exact process state.</li>
+        <li>Shared-kernel containers are a weaker isolation boundary than separate microVMs for adversarial code.</li>
+      </ul>
+      <h3>Evidence</h3>
+      <ul class="evidence">
+        <li><a href="https://agent-box.sh/docs/remote-docker">AgentBox Remote Docker provider</a></li>
+        <li><a href="https://agent-box.sh/docs/checkpoints-and-pausing">AgentBox checkpoints and lifecycle</a></li>
+        <li><a href="https://docs.docker.com/reference/cli/docker/container/pause/">Docker pause semantics</a></li>
+        <li><a href="https://github.com/madarco/agentbox">Canonical AgentBox repository</a></li>
+      </ul>
+      <a class="back" href="#comparison-summary">Back to comparison</a>
+    </section>
+
+    <section class="project-detail" id="project-daytona">
+      <h2><a href="https://agent-box.sh/docs/daytona">Daytona Linux VM</a></h2>
+      <p class="verdict"><strong>Verdict and best fit:</strong> <span class="badge good">Tier A</span> Arguably the strongest managed option for long-idle AgentBox sessions: memory and filesystem survive pause, paused state is retained until deletion by default, and paused compute releases CPU/RAM billing.</p>
+      <div class="facts">
+        <div class="fact"><strong>GitHub stars</strong>71,980 for the former <a href="https://github.com/daytonaio/daytona">daytonaio/daytona</a> core<br><small>Historical attention, not a current openness signal</small></div>
+        <div class="fact"><strong>Maintenance</strong>Hosted service and SDKs active; former monorepo’s last push 24 Jul 2026</div>
+        <div class="fact"><strong>Licence</strong>Hosted service is proprietary; Daytona <a href="https://www.daytona.io/dotfiles/updates/daytona-is-going-closed-source">announced closure of its former open core</a></div>
+      </div>
+      <h3>Domain fit</h3>
+      <p>AgentBox defaults Daytona boxes to <code>linux-vm</code>. After 25 minutes of genuine agent inactivity, the host pauses the VM. Daytona’s pause preserves filesystem, memory and running processes; stopped, paused and archived sandboxes remain until explicit deletion unless you configure auto-delete or a wall-clock TTL.</p>
+      <p>Daytona also offers cold and hot snapshots, forks, and S3-backed volumes that can outlive a sandbox. In the current AgentBox mapping, a checkpoint stops the box to snapshot it, so the checkpoint workflow preserves disk but kills that live process instance. Daytona’s own platform has richer hot-snapshot capability than AgentBox currently exposes.</p>
+      <h3>Geography and integration caveats</h3>
+      <p>AgentBox’s current provider page says the Linux VM class is pinned to <strong>US-East</strong>; its container class can use EU regions but does not retain process memory on pause. Daytona’s broader region documentation lists shared US and EU targets, so this restriction should be treated as an AgentBox/class constraint and tested against the exact build you deploy.</p>
+      <p>AgentBox also notes that Daytona VM sandboxes ignore mounted Daytona volumes. The practical stack is therefore: <strong>VM pause for exact resume + AgentBox/Daytona snapshot for disk recovery + Git/off-provider backup for real durability.</strong></p>
+      <h3>Strengths and trade-offs</h3>
+      <ul>
+        <li>Explicit default retention: no auto-delete or wall-clock TTL unless configured.</li>
+        <li>Paused VM retains memory but bills reserved disk only.</li>
+        <li>No E2B-style 1-hour Hobby continuous-runtime cap documented.</li>
+        <li>US-East latency is the central concern for an interactive UK workflow.</li>
+        <li>AgentBox does not expose every native Daytona persistence primitive.</li>
+      </ul>
+      <h3>Evidence</h3>
+      <ul class="evidence">
+        <li><a href="https://agent-box.sh/docs/daytona">AgentBox Daytona provider</a></li>
+        <li><a href="https://www.daytona.io/docs/en/persistence/">Daytona persistence and retention</a></li>
+        <li><a href="https://www.daytona.io/docs/billing">Daytona lifecycle billing</a></li>
+        <li><a href="https://www.daytona.io/docs/en/volumes/">Daytona independent volumes</a></li>
+        <li><a href="https://www.daytona.io/pricing">Daytona pricing</a></li>
+        <li><a href="https://www.daytona.io/docs/en/regions/">Daytona regions</a></li>
+      </ul>
+      <a class="back" href="#comparison-summary">Back to comparison</a>
+    </section>
+
+    <section class="project-detail" id="project-e2b">
+      <h2><a href="https://agent-box.sh/docs/e2b">E2B</a></h2>
+      <p class="verdict"><strong>Verdict and best fit:</strong> <span class="badge good">Tier A</span> Current E2B is a much stronger persistence fit than the older destructive-timeout experience suggests. Choose it when full-state suspend and managed microVM isolation outweigh the plan limits and Pro fee.</p>
+      <div class="facts">
+        <div class="fact"><strong>GitHub stars</strong>13,436 for <a href="https://github.com/e2b-dev/E2B">e2b-dev/E2B</a><br><small>Observed 17 Aug 2026 UTC</small></div>
+        <div class="fact"><strong>Maintenance</strong>Active; pushed 17 Aug 2026; latest release <a href="https://github.com/e2b-dev/E2B/releases/tag/%40e2b/python-sdk%402.39.1">Python SDK 2.39.1</a> on 13 Aug</div>
+        <div class="fact"><strong>Licence</strong><a href="https://github.com/e2b-dev/E2B/blob/main/LICENSE">Apache-2.0</a> core + hosted-service terms</div>
+      </div>
+      <h3>Domain fit</h3>
+      <p>E2B documents pause as preservation of both filesystem and memory, including running processes and loaded state. Paused sandboxes are kept indefinitely with no automatic TTL. Explicit snapshots capture filesystem and memory, can create new sandboxes, and survive deletion of the source sandbox.</p>
+      <h3>Why earlier work may have disappeared</h3>
+      <p>E2B’s timeout is only safe if its lifecycle action is configured to pause. The SDK documentation shows lifecycle configuration such as <code>onTimeout: 'pause'</code>; killing a sandbox is permanent. A plausible explanation for earlier loss is raw/default or older integration behaviour that reached a destructive timeout rather than the present full pause. That is an inference, not a retrospective diagnosis.</p>
+      <h3>Limits and documentation lag</h3>
+      <p>The continuous-runtime ceiling is the material constraint: one hour on Hobby and 24 hours on Pro, reset after a pause/resume cycle. Pro costs $150/month plus usage. AgentBox’s provider page still labels E2B support “Nightly,” and parts of the wider AgentBox documentation lag newer E2B functionality. Run a destructive-lifecycle test against the exact version before entrusting it with work.</p>
+      <div class="callout good-note"><strong>Required acceptance test:</strong> create a dirty repository and an in-memory marker process, allow the AgentBox timeout to fire, resume after 24 hours, verify both markers, then snapshot, delete the source box, and restore from the snapshot.</div>
+      <h3>Evidence</h3>
+      <ul class="evidence">
+        <li><a href="https://e2b.dev/docs/sandbox/persistence">E2B pause, retention and runtime limits</a></li>
+        <li><a href="https://e2b.dev/docs/sandbox/snapshots">E2B full-state snapshots</a></li>
+        <li><a href="https://e2b.dev/pricing">E2B pricing and plan limits</a></li>
+        <li><a href="https://agent-box.sh/docs/e2b">AgentBox E2B provider</a></li>
+        <li><a href="https://github.com/e2b-dev/E2B">Canonical repository</a></li>
+      </ul>
+      <a class="back" href="#comparison-summary">Back to comparison</a>
+    </section>
+
+    <section class="project-detail" id="project-tenki">
+      <h2><a href="https://tenki.cloud/products/sandbox">Tenki Sandbox</a></h2>
+      <p class="verdict"><strong>Verdict and best fit:</strong> <span class="badge caution">Tier B</span> Architecturally attractive and cost-competitive, but still too new to trust without verifying the community AgentBox provider’s effective retention defaults.</p>
+      <div class="facts">
+        <div class="fact"><strong>GitHub stars</strong>0 for the young <a href="https://github.com/LuxorLabs/tenki-sdk-go">Go SDK</a><br><small>Observed 17 Aug 2026 UTC; stars are not meaningful at this age</small></div>
+        <div class="fact"><strong>Maintenance</strong>New and active; SDK pushed 16 Aug 2026; docs updated July 2026</div>
+        <div class="fact"><strong>Licence</strong><a href="https://github.com/LuxorLabs/tenki-sdk-go/blob/main/LICENSE">MIT SDK</a> + proprietary hosted service</div>
+      </div>
+      <h3>Domain fit</h3>
+      <p>Tenki’s Firecracker-style microVM model supports memory-and-filesystem pause, snapshots and independent persistent volumes. Its published compute rates match Daytona/E2B’s unit rates, and it stops compute charging while idle.</p>
+      <h3>Retention caveat</h3>
+      <p>The CLI exposes <code>--pause-retention</code>, <code>--sticky</code>, <code>--idle-timeout</code> and <code>--max-duration</code>. Those are useful controls, but they also mean persistence depends on exactly how the community AgentBox provider creates sessions. The earlier research could not establish a sufficiently clear plugin default for unattended, arbitrary-length dormancy.</p>
+      <p>Use a persistent volume for durable workspace data and a snapshot for restoration; do not assume a paused session is permanent. Tenki’s terms also allow reclamation or deletion in capacity, non-payment and post-termination scenarios, reinforcing the need for off-provider copies.</p>
+      <h3>Strengths and trade-offs</h3>
+      <ul>
+        <li>Strong full-state pause architecture and hardware-isolated VM boundary.</li>
+        <li>Independent volumes designed to outlive sessions.</li>
+        <li>Newer service and community integration mean less operational evidence.</li>
+        <li>Retention flags require an explicit tested policy, not hopeful defaults.</li>
+      </ul>
+      <h3>Evidence</h3>
+      <ul class="evidence">
+        <li><a href="https://tenki.cloud/docs/sandbox/cli">Tenki CLI lifecycle flags</a></li>
+        <li><a href="https://tenki.cloud/docs/sandbox/volumes">Tenki persistent volumes</a></li>
+        <li><a href="https://tenki.cloud/docs/sandbox/sdk">Tenki SDK reference</a></li>
+        <li><a href="https://tenki.cloud/docs/pricing">Tenki pricing and plan limits</a></li>
+        <li><a href="https://tenki.cloud/docs/terms-of-service">Tenki service terms</a></li>
+      </ul>
+      <a class="back" href="#comparison-summary">Back to comparison</a>
+    </section>
+
+    <section class="project-detail" id="project-fly-sprites">
+      <h2><a href="https://fly.io/sprites/">Fly Sprites</a></h2>
+      <p class="verdict"><strong>Verdict and best fit:</strong> <span class="badge caution">Tier B</span> Possibly the best filesystem-durability architecture here, but it does not promise indefinite process suspension and needs a custom AgentBox provider.</p>
+      <div class="facts">
+        <div class="fact"><strong>GitHub stars</strong>N/A<br><small>No canonical open-source service repository used for this comparison</small></div>
+        <div class="fact"><strong>Maintenance</strong>Active managed service; documentation observed Aug 2026</div>
+        <div class="fact"><strong>Licence</strong>Proprietary hosted service</div>
+      </div>
+      <h3>Domain fit</h3>
+      <p>A Sprite writes to a normal ext4 filesystem on fast local storage while continuously syncing durable state to external object storage. The same paths return on every run and can remain dormant for months. This is unusually strong protection for dirty files.</p>
+      <p>Idle transition is two-stage. A warm Sprite preserves RAM and resumes processes in roughly 100–500 ms. Later, at a provider-controlled transition you cannot choose or observe, it goes cold, discards memory, and wakes with a fresh process start in roughly 1–2 seconds. Files survive both stages; the running agent survives only warm.</p>
+      <h3>Integration</h3>
+      <p>AgentBox does not ship a Sprites backend. Its provider SDK exposes a relatively small <code>CloudBackend</code> surface, so an integration is feasible, but the provider plugin would run as trusted host code and should be audited. Services can restart an agent on a cold boot; Tasks can keep active work running, but a forgotten keepalive can continue billing.</p>
+      <h3>Strengths and trade-offs</h3>
+      <ul>
+        <li>Filesystem durability is continuous rather than dependent on a hibernation-time snapshot.</li>
+        <li>No compute billing while idle; storage is thin-provisioned and billed by use.</li>
+        <li>Exact process resume is temporary and not user-controlled over long dormancy.</li>
+        <li>Custom AgentBox engineering and maintenance are required.</li>
+      </ul>
+      <h3>Evidence</h3>
+      <ul class="evidence">
+        <li><a href="https://docs.sprites.dev/concepts/lifecycle/">Sprites lifecycle and persistence</a></li>
+        <li><a href="https://fly.io/sprites/">Sprites product and storage model</a></li>
+        <li><a href="https://docs.sprites.dev/keeping-sprites-running/">Sprites tasks, services and warm/cold behaviour</a></li>
+        <li><a href="https://agent-box.sh/docs/build-a-provider">AgentBox provider SDK</a></li>
+      </ul>
+      <a class="back" href="#comparison-summary">Back to comparison</a>
+    </section>
+
+    <section class="project-detail" id="project-vercel">
+      <h2><a href="https://agent-box.sh/docs/vercel">Vercel Sandbox</a></h2>
+      <p class="verdict"><strong>Verdict and best fit:</strong> <span class="badge caution">Tier C</span> Good when the filesystem matters and restarting the agent is acceptable. Not a reliable fit for arbitrary long dormancy until snapshot expiration is explicitly configured and tested.</p>
+      <div class="facts">
+        <div class="fact"><strong>GitHub stars</strong>183 for <a href="https://github.com/vercel/sandbox">vercel/sandbox</a><br><small>Observed 17 Aug 2026 UTC</small></div>
+        <div class="fact"><strong>Maintenance</strong>Active; pushed 14 Aug 2026; latest release 7 Aug 2026</div>
+        <div class="fact"><strong>Licence</strong><a href="https://github.com/vercel/sandbox/blob/main/LICENSE">Apache-2.0 SDK</a> + hosted-service terms</div>
+      </div>
+      <h3>Domain fit</h3>
+      <p>A persistent Vercel sandbox snapshots its filesystem when the session stops and restores that filesystem into a new session. AgentBox therefore maps pause to stop and resume to start. Your workspace, packages and caches return; the previous Claude/Codex process does not.</p>
+      <h3>Retention and runtime</h3>
+      <p>Vercel snapshots expire 30 days after last use by default. Vercel’s own SDK and CLI can set a custom expiry or no expiry, but the original research did not find an equivalent AgentBox configuration key. Treat a forgotten AgentBox/Vercel box as at risk after a month unless the effective policy is verified in the provider account.</p>
+      <p>Vercel currently documents up to 24 hours per session on Pro/Enterprise and 45 minutes on Hobby. This improved in June 2026; AgentBox documentation may lag some provider limits, so test the exact integration.</p>
+      <h3>Strengths and trade-offs</h3>
+      <ul>
+        <li>Simple built-in AgentBox experience and stable filesystem resume.</li>
+        <li>No paused compute cost.</li>
+        <li>No exact process continuation.</li>
+        <li>Default 30-day snapshot expiry conflicts directly with “forget it indefinitely.”</li>
+      </ul>
+      <h3>Evidence</h3>
+      <ul class="evidence">
+        <li><a href="https://agent-box.sh/docs/vercel">AgentBox Vercel provider</a></li>
+        <li><a href="https://vercel.com/docs/vercel-sandbox/concepts/snapshots">Vercel snapshot expiry controls</a></li>
+        <li><a href="https://vercel.com/kb/guide/vercel-sandbox-duration-and-persistence">Vercel duration versus persistence</a></li>
+        <li><a href="https://github.com/vercel/sandbox">Vercel Sandbox SDK repository</a></li>
+      </ul>
+      <a class="back" href="#comparison-summary">Back to comparison</a>
+    </section>
+
+    <section class="project-detail" id="project-hetzner">
+      <h2><a href="https://agent-box.sh/docs/hetzner">Hetzner Cloud VPS</a></h2>
+      <p class="verdict"><strong>Verdict and best fit:</strong> <span class="badge caution">Tier C</span> A credible, inexpensive pet-box choice for a small number of long-lived agents. It offers dependable disk semantics, not memory suspension.</p>
+      <div class="facts">
+        <div class="fact"><strong>GitHub stars</strong>N/A<br><small>Managed infrastructure product</small></div>
+        <div class="fact"><strong>Maintenance</strong>Active service and built-in AgentBox provider</div>
+        <div class="fact"><strong>Licence</strong>Proprietary service</div>
+      </div>
+      <h3>Domain fit</h3>
+      <p>AgentBox provisions one complete VPS per box. Its pause is a power-off/power-on cycle: the disk remains, while RAM, tmux and the live agent process do not. Full-disk snapshots provide a reconstruction point. The documented AgentBox default is a 2-vCPU / 4-GB / 40-GB <code>cx23</code> at roughly €4/month.</p>
+      <h3>Economics and lifecycle</h3>
+      <p>Hetzner bills the server while it exists, regardless of power state. For long idle periods you can snapshot and delete it, then recreate later, but that is a disk restore rather than exact process resume. At roughly €4 per box, simply leaving a handful running can still be perfectly rational.</p>
+      <p>Remote Docker is normally better when you want many boxes: one larger VPS can host several containers, whereas the built-in Hetzner provider allocates a separate VM and bill to each box.</p>
+      <h3>Evidence</h3>
+      <ul class="evidence">
+        <li><a href="https://agent-box.sh/docs/hetzner">AgentBox Hetzner provider</a></li>
+        <li><a href="https://docs.hetzner.com/cloud/billing/faq/">Hetzner billing while powered off</a></li>
+        <li><a href="https://agent-box.sh/docs/checkpoints-and-pausing">AgentBox lifecycle semantics</a></li>
+      </ul>
+      <a class="back" href="#comparison-summary">Back to comparison</a>
+    </section>
+
+    <section class="project-detail" id="project-digitalocean">
+      <h2><a href="https://agent-box.sh/docs/digitalocean">DigitalOcean Droplet</a></h2>
+      <p class="verdict"><strong>Verdict and best fit:</strong> <span class="badge caution">Tier C</span> Operationally straightforward and region-flexible, including London, but comparatively expensive per permanent AgentBox box and unable to resume a suspended process.</p>
+      <div class="facts">
+        <div class="fact"><strong>GitHub stars</strong>N/A<br><small>Managed infrastructure product</small></div>
+        <div class="fact"><strong>Maintenance</strong>Active service and built-in AgentBox provider</div>
+        <div class="fact"><strong>Licence</strong>Proprietary service</div>
+      </div>
+      <h3>Domain fit</h3>
+      <p>Like Hetzner, AgentBox creates one VM per box. Pause means power-off, which preserves disk but not RAM or running processes. AgentBox maps checkpoints to Droplet snapshots. DigitalOcean’s documented default in AgentBox is 2 vCPU / 4 GB / 80 GB at about $24/month, with <code>lon1</code> available for UK latency.</p>
+      <h3>Economics and lifecycle</h3>
+      <p>DigitalOcean explicitly says powered-off Droplets remain billable; destroying is required to stop compute charges. Snapshots are on-demand disk images and may be taken live, though DigitalOcean recommends power-off for applications that need a consistent disk state.</p>
+      <p>Choose this over Hetzner mainly for region, account familiarity or surrounding DigitalOcean services—not for persistence semantics. Choose Remote Docker over either pet-VM provider when you want to amortise one server across many boxes.</p>
+      <h3>Evidence</h3>
+      <ul class="evidence">
+        <li><a href="https://agent-box.sh/docs/digitalocean">AgentBox DigitalOcean provider</a></li>
+        <li><a href="https://docs.digitalocean.com/reference/doctl/reference/compute/droplet-action/power-off/">DigitalOcean powered-off billing</a></li>
+        <li><a href="https://docs.digitalocean.com/products/snapshots/how-to/snapshot-droplets/">DigitalOcean Droplet snapshots</a></li>
+      </ul>
+      <a class="back" href="#comparison-summary">Back to comparison</a>
+    </section>
+
+    <section class="recommendation" id="operating-model">
+      <p class="eyebrow">Implementation recommendation</p>
+      <h2>A no-loss operating model that works with any provider</h2>
+      <div class="recommend-grid">
+        <div class="rec"><span class="rank">1</span><strong>Choose the resume layer</strong>Remote Docker pause for fixed-cost control, or Daytona/E2B for managed full-state suspend.</div>
+        <div class="rec"><span class="rank">2</span><strong>Checkpoint intentionally</strong>Create a disk/full-state checkpoint after setup and before risky work. Do not assume an idle timeout creates one.</div>
+        <div class="rec"><span class="rank">3</span><strong>Export work automatically</strong>At a short interval, commit to an agent branch or create a Git bundle and copy it off the sandbox host.</div>
+        <div class="rec"><span class="rank">4</span><strong>Back up outside the failure domain</strong>Use another provider/account or storage target with versioning and retention. A snapshot in the same account is helpful, not independent.</div>
+        <div class="rec"><span class="rank">5</span><strong>Test destructive cases</strong>Prove resume after idle, host reboot, provider timeout, sandbox deletion and restore. Check both dirty files and the running-process marker.</div>
+        <div class="rec"><span class="rank">6</span><strong>Monitor the contract</strong>Alert on unpushed branches, stale backups, near runtime caps, snapshot expiry and boxes that failed to auto-pause.</div>
+      </div>
+      <div class="callout good-note"><strong>Recommended pilot:</strong> one Remote Docker VPS, one Daytona Linux VM and one E2B sandbox. Run the same 48-hour test fixture in each, including a 24-hour idle period, a deliberate host/provider interruption and a restore after deleting the live sandbox. The cheapest provider that passes your recovery test—not the prettiest pause demo—wins.</div>
+      <h3>Minimum acceptance checklist</h3>
+      <ul class="checklist">
+        <li>Dirty tracked and untracked files survive an ordinary idle cycle.</li>
+        <li>A running marker process resumes where expected on providers claiming memory suspend.</li>
+        <li>A checkpoint restores after the original box is deleted.</li>
+        <li>An off-provider copy restores after the provider account or VPS is unavailable.</li>
+        <li>Idle and active billing match the expected lifecycle state.</li>
+        <li>The exact AgentBox release, plan and retention settings are recorded.</li>
+      </ul>
+    </section>
+
+    <section class="methodology" id="methodology">
+      <h2>Methodology, scope and evidence limits</h2>
+      <p>This report converts and refreshes the research from the referenced “Agent Persistence Comparison” conversation. The comparison set preserves its providers: Remote Docker, Daytona, E2B, Tenki, Fly Sprites, Vercel, Hetzner and DigitalOcean. AgentBox’s seven built-in backends include local Docker, Remote Docker, Hetzner, DigitalOcean, Daytona, Vercel and E2B; Tenki is a community integration and Sprites requires a custom provider. Local Docker is omitted because the user’s decision is specifically remote execution.</p>
+      <p>The ranking weights: exact resume after idle; dirty-file survival; retention without hidden deletion TTL; recovery after sandbox deletion; independence from one host/account; continuous active-run limits; idle economics; AgentBox integration maturity; and UK latency. Provider and AgentBox documentation were checked on 17 August 2026 UTC. Repository star counts and push/release metadata were observed on the same date. Stars measure attention, not quality, and are N/A where a service has no canonical repository relevant to its persistence contract.</p>
+      <p>Licences describe public SDKs/cores, not the hosted service contract. Daytona’s former core repository is retained for historical popularity context, but the hosted product should not be described as open source after its 2026 closure announcement. This report is operational analysis, not legal advice or a service-level guarantee.</p>
+      <p>Material limits remain: AgentBox and sandbox providers were evolving quickly in mid-2026; provider docs and AgentBox mappings sometimes lag one another; account tier, region and integration version can change lifecycle behaviour. The definitive validation is an end-to-end persistence test under your exact plan and AgentBox release.</p>
+    </section>
+
+    <section class="panel" id="sources">
+      <h2>Primary source library</h2>
+      <ul class="evidence">
+        <li><a href="https://agent-box.sh/docs/checkpoints-and-pausing">AgentBox: checkpoints and pausing</a></li>
+        <li><a href="https://agent-box.sh/docs/remote-docker">AgentBox: Remote Docker</a></li>
+        <li><a href="https://agent-box.sh/docs/daytona">AgentBox: Daytona</a></li>
+        <li><a href="https://agent-box.sh/docs/e2b">AgentBox: E2B</a></li>
+        <li><a href="https://agent-box.sh/docs/vercel">AgentBox: Vercel</a></li>
+        <li><a href="https://agent-box.sh/docs/hetzner">AgentBox: Hetzner</a></li>
+        <li><a href="https://agent-box.sh/docs/digitalocean">AgentBox: DigitalOcean</a></li>
+        <li><a href="https://agent-box.sh/docs/build-a-provider">AgentBox: provider SDK</a></li>
+        <li><a href="https://e2b.dev/docs/sandbox/persistence">E2B: persistence</a></li>
+        <li><a href="https://e2b.dev/docs/sandbox/snapshots">E2B: snapshots</a></li>
+        <li><a href="https://www.daytona.io/docs/en/persistence/">Daytona: persistence</a></li>
+        <li><a href="https://www.daytona.io/docs/billing">Daytona: billing</a></li>
+        <li><a href="https://vercel.com/kb/guide/vercel-sandbox-duration-and-persistence">Vercel: duration and persistence</a></li>
+        <li><a href="https://tenki.cloud/docs/sandbox/cli">Tenki: sandbox lifecycle CLI</a></li>
+        <li><a href="https://docs.sprites.dev/concepts/lifecycle/">Sprites: lifecycle and persistence</a></li>
+        <li><a href="https://docs.docker.com/reference/cli/docker/container/pause/">Docker: container pause</a></li>
+      </ul>
+    </section>
+  </main>
+
+  <footer>
+    <p>Generated from public evidence observed 17 August 2026 UTC. Prices, limits, product behaviour and repository metrics change over time. Verify the exact plan, region, retention settings and AgentBox release before relying on any provider for unattended work.</p>
+  </footer>
+</div>
+</body>
+</html>

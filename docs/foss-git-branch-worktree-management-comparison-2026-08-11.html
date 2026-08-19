@@ -1,0 +1,1483 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Parallel Git branch and worktree management comparison</title>
+        <style>
+            :root {
+                color-scheme: light dark;
+                --bg: #f6f7fb;
+                --panel: #ffffff;
+                --text: #18212f;
+                --muted: #5e6b7a;
+                --border: #d8dee8;
+                --accent: #3157c8;
+                --good: #18794e;
+                --caution: #9a6700;
+                --poor: #c9372c;
+                --unknown: #6f42c1;
+                --shadow: 0 8px 24px rgb(22 34 51 / 8%);
+            }
+            @media (prefers-color-scheme: dark) {
+                :root {
+                    --bg: #111722;
+                    --panel: #1a2230;
+                    --text: #edf2f7;
+                    --muted: #aeb9c7;
+                    --border: #344054;
+                    --accent: #8ca8ff;
+                    --good: #5bd6a2;
+                    --caution: #f2c14e;
+                    --poor: #ff8a80;
+                    --unknown: #c4a7ff;
+                    --shadow: 0 8px 24px rgb(0 0 0 / 24%);
+                }
+            }
+            * {
+                box-sizing: border-box;
+            }
+            html {
+                scroll-behavior: smooth;
+            }
+            body {
+                background: var(--bg);
+                color: var(--text);
+                font:
+                    16px/1.55 system-ui,
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Segoe UI",
+                    sans-serif;
+                margin: 0;
+            }
+            a {
+                color: var(--accent);
+            }
+            a:focus-visible {
+                outline: 3px solid var(--accent);
+                outline-offset: 3px;
+            }
+            code {
+                background: color-mix(in srgb, var(--panel), var(--accent) 8%);
+                border-radius: 4px;
+                padding: 0.08rem 0.28rem;
+            }
+            header,
+            main,
+            footer {
+                margin: 0 auto;
+                max-width: 1280px;
+                padding: 1.5rem;
+            }
+            header {
+                padding-top: 3rem;
+            }
+            h1 {
+                font-size: clamp(2rem, 5vw, 3.4rem);
+                letter-spacing: -0.035em;
+                line-height: 1.05;
+                margin: 0 0 1rem;
+            }
+            h2 {
+                line-height: 1.2;
+                margin-top: 0;
+            }
+            h3 {
+                margin-bottom: 0.35rem;
+            }
+            .lede {
+                font-size: 1.15rem;
+                max-width: 85ch;
+            }
+            .meta,
+            .muted {
+                color: var(--muted);
+            }
+            .table-wrap {
+                background: var(--panel);
+                border: 1px solid var(--border);
+                border-radius: 14px;
+                box-shadow: var(--shadow);
+                margin-bottom: 2rem;
+                overflow-x: auto;
+            }
+            table {
+                border-collapse: collapse;
+                min-width: 920px;
+                width: 100%;
+            }
+            caption {
+                font-weight: 700;
+                padding: 1rem;
+                text-align: left;
+            }
+            th,
+            td {
+                border-top: 1px solid var(--border);
+                padding: 0.8rem 1rem;
+                text-align: left;
+                vertical-align: top;
+            }
+            th {
+                background: color-mix(in srgb, var(--panel), var(--accent) 6%);
+            }
+            #comparison-summary td:nth-child(3),
+            #comparison-summary th:nth-child(3) {
+                font-variant-numeric: tabular-nums;
+                text-align: right;
+            }
+            .project-detail,
+            .methodology,
+            .recommendation,
+            .capabilities,
+            .scope-note {
+                background: var(--panel);
+                border: 1px solid var(--border);
+                border-radius: 14px;
+                box-shadow: var(--shadow);
+                margin: 1.5rem 0;
+                padding: clamp(1.1rem, 3vw, 2rem);
+                scroll-margin-top: 1rem;
+            }
+            .facts {
+                display: grid;
+                gap: 0.8rem;
+                grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+                margin: 1rem 0;
+            }
+            .fact {
+                border-left: 4px solid var(--border);
+                padding: 0.25rem 0.8rem;
+            }
+            .fact strong {
+                display: block;
+            }
+            .badge {
+                border: 1px solid currentColor;
+                border-radius: 999px;
+                display: inline-block;
+                font-size: 0.86rem;
+                font-weight: 700;
+                padding: 0.12rem 0.55rem;
+            }
+            .good {
+                color: var(--good);
+            }
+            .caution {
+                color: var(--caution);
+            }
+            .poor {
+                color: var(--poor);
+            }
+            .unknown {
+                color: var(--unknown);
+            }
+            .evidence li,
+            .key-points li {
+                margin-bottom: 0.35rem;
+            }
+            .back {
+                display: inline-block;
+                margin-top: 1rem;
+            }
+            footer {
+                color: var(--muted);
+                padding-bottom: 3rem;
+            }
+        </style>
+    </head>
+    <body>
+        <header>
+            <h1>Parallel Git branch and worktree management</h1>
+            <p class="lede">
+                A needs-based comparison of Adam Spiers’ <code>ggmx</code>/<code
+                    >ggmxd</code
+                >
+                branch mixer with worktrunk-sync, git-machete, and
+                representative FOSS contenders for multiple concurrent short-
+                and long-lived work streams.
+            </p>
+            <p class="meta">
+                Evidence observed 11 August 2026 UTC · 6 candidates · activity
+                window 11 August 2025–11 August 2026
+            </p>
+        </header>
+        <main>
+            <section class="scope-note" id="author-specific-scope">
+                <h2>Author-specific scope</h2>
+                <p>
+                    <strong>⚠️ This report evaluates the tools against Adam Spiers’ branch-mixing and Worktrunk workflow.</strong>
+                    Other readers should reuse the factual comparison but substitute their own repository topology,
+                    worktree manager, publication rules, and risk tolerance before adopting its recommendations.
+                </p>
+            </section>
+            <div class="table-wrap">
+                <table id="comparison-summary">
+                    <caption>
+                        Comparison summary
+                    </caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Project</th>
+                            <th scope="col">Domain fit</th>
+                            <th scope="col">GitHub stars</th>
+                            <th scope="col">Maintenance</th>
+                            <th scope="col">Licence</th>
+                            <th scope="col">Recommendation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <a href="#project-ggmx-ggmxd">ggmx + ggmxd</a>
+                            </td>
+                            <td>Arbitrary fan-in integration testing</td>
+                            <td>105</td>
+                            <td>
+                                <span class="badge caution"
+                                    >Maintained wrapper; old core</span
+                                >
+                            </td>
+                            <td>GPL-3.0-or-later</td>
+                            <td>
+                                Keep for its unique throw-away mix role; do not
+                                treat it as a stack/worktree synchronizer.
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <a href="#project-worktrunk-sync"
+                                    >worktrunk-sync</a
+                                >
+                            </td>
+                            <td>Worktree-first stack rebasing</td>
+                            <td>15</td>
+                            <td>
+                                <span class="badge caution"
+                                    >Early, quiet since April</span
+                                >
+                            </td>
+                            <td>MIT declared; no licence file</td>
+                            <td>
+                                Best incremental trial alongside
+                                <code>wt</code>, with dry runs and without
+                                push/prune initially.
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <a href="#project-git-machete">git-machete</a>
+                            </td>
+                            <td>Mature explicit branch topology</td>
+                            <td>1,132</td>
+                            <td>
+                                <span class="badge good"
+                                    >Active and mature</span
+                                >
+                            </td>
+                            <td>MIT</td>
+                            <td>
+                                Strongest mature choice when explicit layouts,
+                                traversal, and PR/MR integration matter.
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><a href="#project-git-town">Git Town</a></td>
+                            <td>Full branch/stack lifecycle</td>
+                            <td>3,361</td>
+                            <td><span class="badge good">Very active</span></td>
+                            <td>MIT</td>
+                            <td>
+                                Broad and polished, but defer multi-worktree
+                                adoption while current sync defects remain open.
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <a href="#project-git-branchless"
+                                    >git-branchless</a
+                                >
+                            </td>
+                            <td>Commit-DAG manipulation and restacking</td>
+                            <td>4,110</td>
+                            <td>
+                                <span class="badge caution">Active alpha</span>
+                            </td>
+                            <td>MIT OR Apache-2.0</td>
+                            <td>
+                                Excellent specialist toolkit, but not the safest
+                                default for concurrent worktrees today.
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><a href="#project-stackit">Stackit</a></td>
+                            <td>Integrated stacks, agents, and worktrees</td>
+                            <td>32</td>
+                            <td>
+                                <span class="badge caution"
+                                    >Extremely active, very young</span
+                                >
+                            </td>
+                            <td>MIT</td>
+                            <td>
+                                Most complete worktree/agent vision; pilot only
+                                because it overlaps <code>wt</code> and is
+                                changing rapidly.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <section class="capabilities" id="capability-matrix">
+                <h2>Capability and workflow fit</h2>
+                <div class="table-wrap">
+                    <table>
+                        <caption>
+                            What each tool actually manages
+                        </caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Tool</th>
+                                <th scope="col">Primary model</th>
+                                <th scope="col">Independent branch mix</th>
+                                <th scope="col">Dependency restack</th>
+                                <th scope="col">Worktree behavior</th>
+                                <th scope="col">Forge/PR workflow</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>ggmx</code>/<code>ggmxd</code></td>
+                                <td>
+                                    Configured branch set merged into a
+                                    disposable target
+                                </td>
+                                <td><strong>Yes—unique strength</strong></td>
+                                <td>No</td>
+                                <td>
+                                    Not worktree-aware; checks out and resets in
+                                    the invoking worktree
+                                </td>
+                                <td>None; target is intentionally local</td>
+                            </tr>
+                            <tr>
+                                <td>worktrunk-sync</td>
+                                <td>
+                                    Inferred or persisted parent tree among
+                                    branches that own worktrees
+                                </td>
+                                <td>No</td>
+                                <td>
+                                    <strong>Yes</strong>, topological
+                                    <code>rebase --onto</code>
+                                </td>
+                                <td>
+                                    <strong>Native</strong>; rebases each branch
+                                    in its owning worktree
+                                </td>
+                                <td>Push/prune only; no PR creation</td>
+                            </tr>
+                            <tr>
+                                <td>git-machete</td>
+                                <td>
+                                    Editable branch tree in a machete layout
+                                    file
+                                </td>
+                                <td>No</td>
+                                <td>
+                                    <strong>Yes</strong>, rebase or merge
+                                    traversal
+                                </td>
+                                <td>
+                                    <strong>Explicit support</strong>; enters
+                                    owning or temporary worktrees
+                                </td>
+                                <td>
+                                    GitHub PR and GitLab MR creation/retargeting
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Git Town</td>
+                                <td>
+                                    Configured branch lineage and end-to-end
+                                    branch lifecycle
+                                </td>
+                                <td>No</td>
+                                <td>
+                                    <strong>Yes</strong>, sync/stack operations
+                                </td>
+                                <td>
+                                    Extensively tested, but several current
+                                    defects involve branches in other worktrees
+                                </td>
+                                <td>
+                                    Broad GitHub/GitLab/Gitea/Bitbucket support
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>git-branchless</td>
+                                <td>
+                                    Commit DAG, including anonymous branches
+                                </td>
+                                <td>
+                                    Speculative merge testing, not a persistent
+                                    mix branch
+                                </td>
+                                <td>
+                                    <strong>Yes</strong>, often in memory
+                                    without checkout
+                                </td>
+                                <td>
+                                    Partial; open multi-worktree correctness
+                                    issues remain
+                                </td>
+                                <td>Not its core purpose</td>
+                            </tr>
+                            <tr>
+                                <td>Stackit</td>
+                                <td>
+                                    Persisted tree of stacked branches plus
+                                    managed worktrees
+                                </td>
+                                <td>No</td>
+                                <td>
+                                    <strong>Yes</strong>, with parallel/scoped
+                                    modes
+                                </td>
+                                <td>
+                                    <strong>Native ownership model</strong>,
+                                    anchors, holds, and cleanup
+                                </td>
+                                <td>
+                                    GitHub stack submission/merge and agent
+                                    skills
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p>
+                    <strong>Key distinction:</strong> the local mixer combines
+                    <em>peer or otherwise unrelated</em> feature branches to
+                    test their aggregate result without rewriting them. Every
+                    other shortlisted tool primarily maintains
+                    <em>parent/child dependency topology</em>. They are
+                    complements more often than substitutes.
+                </p>
+            </section>
+
+            <section class="project-detail" id="project-ggmx-ggmxd">
+                <h2>
+                    <a href="https://github.com/aspiers/git-config"
+                        >ggmx + ggmxd</a
+                    >
+                </h2>
+                <p>
+                    <strong>Verdict:</strong> retain as a small, local
+                    integration-testing primitive. It solves a real problem the
+                    stack managers do not: repeatedly rebuilding a disposable
+                    branch from a base plus an arbitrary ordered set of
+                    independent branches. It does not solve branch freshness,
+                    dependency propagation, worktree orchestration, or
+                    publication.
+                </p>
+                <div class="facts">
+                    <div class="fact">
+                        <strong>GitHub stars</strong>105 as of 11 August 2026
+                        UTC
+                    </div>
+                    <div class="fact">
+                        <strong>Maintenance</strong>25 repository commits in the
+                        12-month window; latest mixer core change 1 April 2020;
+                        safety/agent documentation updated 9 July 2026
+                    </div>
+                    <div class="fact">
+                        <strong>Licence</strong
+                        ><a
+                            href="https://github.com/aspiers/git-config/blob/master/COPYING"
+                            >GPL-3.0-or-later</a
+                        >
+                    </div>
+                    <div class="fact">
+                        <strong>Latest release</strong>No tagged release
+                    </div>
+                </div>
+                <h3>Domain fit</h3>
+                <p>
+                    <a
+                        href="https://github.com/aspiers/git-config/blob/master/bin/git-mix"
+                        ><code>git mix</code></a
+                    >
+                    stores ordered branch sets under
+                    <code>mixdown.&lt;target&gt;</code> in Git config;
+                    <code>ggmx</code> is its short wrapper.
+                    <a
+                        href="https://github.com/aspiers/git-config/blob/master/bin/git-mixdown"
+                        ><code>git mixdown</code></a
+                    >, wrapped by <code>ggmxd</code>, resets a target (default
+                    <code>working</code>) to the first branch and merges the
+                    remaining branches, using Git’s
+                    <code>octopus</code> strategy by default. Source branches
+                    remain untouched and the target is explicitly documented as
+                    local and throw-away. This is ideal for “do these
+                    independently developed branches work together?” but says
+                    nothing about which branch depends on which or how to update
+                    them from trunk.
+                </p>
+                <h3>Popularity and maintenance</h3>
+                <p>
+                    The canonical repository had 105 stars and 25 default-branch
+                    commits from 11 August 2025 through 11 August 2026. The
+                    repository’s latest commit was 11 July 2026. Mixer-facing
+                    docs and its agent skill changed in February and July 2026,
+                    showing live usage and policy maintenance, but the last
+                    executable mixer change was the slash-containing branch-name
+                    fix on 1 April 2020. There are no releases or tags, and the
+                    tool is one component in a personal configuration repository
+                    rather than a separately packaged product.
+                </p>
+                <h3>Licence</h3>
+                <p>
+                    The scripts’ headers grant GPL version 3 or any later
+                    version, and the repository ships the GPLv3 text. This is
+                    OSI-approved free software, with strong copyleft obligations
+                    on distributed derivatives. This report is not legal advice.
+                </p>
+                <h3>Strengths and trade-offs</h3>
+                <ul class="key-points">
+                    <li>
+                        <strong>Strength:</strong> tiny, transparent,
+                        dependency-light, and uniquely supports arbitrary fan-in
+                        integration without rebasing or force-pushing source
+                        branches.
+                    </li>
+                    <li>
+                        <strong>Strength:</strong> mix membership is easy for an
+                        agent to inspect and edit, and rebuilding the target is
+                        deterministic when merges are conflict-free.
+                    </li>
+                    <li>
+                        <strong>Risk:</strong>
+                        <code>git checkout -B</code> destructively resets the
+                        target and cannot operate on a target already checked
+                        out in another worktree; the scripts do not enumerate or
+                        coordinate worktrees.
+                    </li>
+                    <li>
+                        <strong>Risk:</strong> there is no dry-run option
+                        despite one being mentioned in repository guidance, no
+                        explicit clean-tree preflight, no remote fetch/push or
+                        merged-branch cleanup, and no structured output.
+                    </li>
+                    <li>
+                        <strong>Risk:</strong> octopus conflicts abort the
+                        command; the sequential strategy opens an interactive
+                        shell and does not itself verify that conflict
+                        resolution was completed before proceeding.
+                    </li>
+                    <li>
+                        <strong>Boundary:</strong> a mix branch should never
+                        become a PR or shared source of truth. It is a test
+                        artifact, not a stack.
+                    </li>
+                </ul>
+                <h3>Evidence</h3>
+                <ul class="evidence">
+                    <li>
+                        <a href="https://github.com/aspiers/git-config"
+                            >Canonical repository</a
+                        >
+                        — checked 11 August 2026 UTC
+                    </li>
+                    <li>
+                        <a
+                            href="https://github.com/aspiers/git-config/blob/master/bin/git-mix"
+                            ><code>git-mix</code> source</a
+                        >
+                        and
+                        <a
+                            href="https://github.com/aspiers/git-config/blob/master/bin/git-mixdown"
+                            ><code>git-mixdown</code> source</a
+                        >
+                    </li>
+                    <li>
+                        <a
+                            href="https://github.com/aspiers/git-config/blob/master/.agents/skills/git-branch-mixer/SKILL.md"
+                            >Agent workflow and local-target safety policy</a
+                        >
+                    </li>
+                    <li>
+                        <a
+                            href="https://github.com/aspiers/git-config/commits/master/"
+                            >Commit history</a
+                        >
+                    </li>
+                    <li>
+                        <a
+                            href="https://github.com/aspiers/git-config/blob/master/COPYING"
+                            >Governing licence text</a
+                        >
+                    </li>
+                </ul>
+                <a class="back" href="#comparison-summary"
+                    >Back to comparison</a
+                >
+            </section>
+
+            <section class="project-detail" id="project-worktrunk-sync">
+                <h2>
+                    <a href="https://github.com/pablospe/worktrunk-sync"
+                        >worktrunk-sync</a
+                    >
+                </h2>
+                <p>
+                    <strong>Verdict:</strong> the most natural first experiment
+                    for an existing Worktrunk user. It adds the missing
+                    repository-wide stack synchronization layer without
+                    replacing <code>wt</code>. Start with
+                    <code>wt sync -nv</code>, then local rebases; postpone
+                    <code>--push</code> and especially
+                    <code>--prune</code> until behavior is trusted. Its youth,
+                    one-maintainer footprint, and missing licence file prevent
+                    an unconditional adoption recommendation.
+                </p>
+                <div class="facts">
+                    <div class="fact">
+                        <strong>GitHub stars</strong>15 as of 11 August 2026 UTC
+                    </div>
+                    <div class="fact">
+                        <strong>Maintenance</strong>41 commits since creation;
+                        latest meaningful fix and release 29 April 2026
+                    </div>
+                    <div class="fact">
+                        <strong>Licence</strong
+                        ><a
+                            href="https://github.com/pablospe/worktrunk-sync/blob/main/Cargo.toml"
+                            >MIT declared in package metadata</a
+                        >; no governing licence file
+                    </div>
+                    <div class="fact">
+                        <strong>Latest release</strong
+                        ><a
+                            href="https://github.com/pablospe/worktrunk-sync/releases/tag/v0.1.2"
+                            >v0.1.2</a
+                        >, 29 April 2026
+                    </div>
+                </div>
+                <h3>Domain fit</h3>
+                <p>
+                    The Rust binary runs as <code>wt-sync</code> or Worktrunk’s
+                    external <code>wt sync</code> subcommand. It enumerates
+                    branches attached to worktrees, requires the default branch
+                    to have a worktree, infers a dependency tree from merge
+                    bases, then rebases children in topological order inside
+                    each owning worktree. It persists a git-machete-compatible
+                    tree and per-branch fork points under <code>.git/wt/</code>,
+                    allowing safe <code>rebase --onto</code> after parent
+                    rewrites. It can fetch, force-push with lease, and prune
+                    integrated local/remote branches and worktrees. It cannot
+                    build a disposable aggregate of unrelated branches like
+                    <code>ggmxd</code>.
+                </p>
+                <h3>Popularity and maintenance</h3>
+                <p>
+                    The repository was created on 10 April 2026, accumulated 41
+                    commits and 15 stars, and released v0.1.2 on 29 April 2026.
+                    The latest meaningful change fixed stale branches in the
+                    stack file on 29 April. Three submitted pull requests were
+                    merged within roughly minutes to two days, but they were all
+                    from the maintainer; the only open issue, requesting
+                    push-only behavior, has been open since 3 July. The evidence
+                    supports “promising early project,” not mature maintenance.
+                </p>
+                <h3>Licence</h3>
+                <p>
+                    The README says MIT and <code>Cargo.toml</code> declares
+                    <code>license = "MIT"</code>, but the repository root
+                    contains no <code>LICENSE</code> or
+                    <code>COPYING</code> file. The intended licence is clear,
+                    but there is no governing licence text in the repository.
+                    That should be corrected before relying on it as cleanly
+                    licensed FOSS or redistributing it.
+                </p>
+                <h3>Strengths and trade-offs</h3>
+                <ul class="key-points">
+                    <li>
+                        <strong>Strength:</strong> minimal conceptual and
+                        operational overlap with Worktrunk; purpose-built around
+                        branches already isolated in worktrees.
+                    </li>
+                    <li>
+                        <strong>Strength:</strong> preflights tracked changes
+                        and in-progress rebases across participating worktrees,
+                        stores successful fork points incrementally, exits
+                        non-zero on conflict, and offers dry-run/verbose
+                        planning.
+                    </li>
+                    <li>
+                        <strong>Strength:</strong> automatic integration
+                        detection and child reparenting address the common
+                        “parent PR landed” transition.
+                    </li>
+                    <li>
+                        <strong>Risk:</strong> topology inference is heuristic
+                        on the first run. Once written, the stack file becomes
+                        persistent metadata that needs review when inference is
+                        wrong.
+                    </li>
+                    <li>
+                        <strong>Risk:</strong> <code>--push</code> force-pushes
+                        with lease and <code>--prune</code> can remove
+                        worktrees, local branches, and remote branches; these
+                        flags widen the blast radius sharply.
+                    </li>
+                    <li>
+                        <strong>Risk:</strong> only branches with worktrees
+                        participate, unlike git-machete’s general branch layout.
+                    </li>
+                </ul>
+                <h3>Evidence</h3>
+                <ul class="evidence">
+                    <li>
+                        <a href="https://github.com/pablospe/worktrunk-sync"
+                            >Canonical repository and usage documentation</a
+                        >
+                        — checked 11 August 2026 UTC
+                    </li>
+                    <li>
+                        <a
+                            href="https://github.com/pablospe/worktrunk-sync/blob/main/src/sync.rs"
+                            >Synchronization and safety implementation</a
+                        >
+                    </li>
+                    <li>
+                        <a
+                            href="https://github.com/pablospe/worktrunk-sync/releases"
+                            >Release history</a
+                        >
+                    </li>
+                    <li>
+                        <a
+                            href="https://github.com/pablospe/worktrunk-sync/pulls?q=is%3Apr"
+                            >Pull-request history</a
+                        >
+                        and
+                        <a
+                            href="https://github.com/pablospe/worktrunk-sync/issues"
+                            >issue tracker</a
+                        >
+                    </li>
+                    <li>
+                        <a
+                            href="https://github.com/pablospe/worktrunk-sync/blob/main/Cargo.toml"
+                            >MIT package declaration</a
+                        >
+                        (no licence text present)
+                    </li>
+                </ul>
+                <a class="back" href="#comparison-summary"
+                    >Back to comparison</a
+                >
+            </section>
+
+            <section class="project-detail" id="project-git-machete">
+                <h2>
+                    <a href="https://github.com/VirtusLab/git-machete"
+                        >git-machete</a
+                    >
+                </h2>
+                <p>
+                    <strong>Verdict:</strong> the strongest mature comparator
+                    and the safest fallback if worktrunk-sync proves too young.
+                    Choose it when an explicit, editable branch tree and a
+                    guided repository-wide rebase/merge/push/pull traversal are
+                    desirable. It complements Worktrunk but is less tightly
+                    integrated with Worktrunk lifecycle operations.
+                </p>
+                <div class="facts">
+                    <div class="fact">
+                        <strong>GitHub stars</strong>1,132 as of 11 August 2026
+                        UTC
+                    </div>
+                    <div class="fact">
+                        <strong>Maintenance</strong>287 commits in the 12-month
+                        window; meaningful worktree fix 5 August 2026
+                    </div>
+                    <div class="fact">
+                        <strong>Licence</strong
+                        ><a
+                            href="https://github.com/VirtusLab/git-machete/blob/develop/LICENSE"
+                            >MIT</a
+                        >
+                    </div>
+                    <div class="fact">
+                        <strong>Latest release</strong
+                        ><a
+                            href="https://github.com/VirtusLab/git-machete/releases/tag/v3.44.1"
+                            >v3.44.1</a
+                        >, 7 July 2026
+                    </div>
+                </div>
+                <h3>Domain fit</h3>
+                <p>
+                    git-machete records a forest of parent/child branches in an
+                    editable layout file, discovers likely topology, visualizes
+                    sync state, and traverses branches to rebase or merge them
+                    against parents and synchronize remotes. GitHub and GitLab
+                    commands can create and retarget stacked PRs/MRs. Current
+                    worktree support is explicit: a shared top-level machete
+                    file is the default, traversal enters the worktree that owns
+                    a branch, and an optional mode creates temporary worktrees
+                    so existing checkouts are not changed. It does not manage
+                    Worktrunk creation/removal and does not represent arbitrary
+                    many-to-one test mixes.
+                </p>
+                <h3>Popularity and maintenance</h3>
+                <p>
+                    The canonical repository had 1,132 stars, 287 commits during
+                    the common window, and release v3.44.1 on 7 July 2026. The
+                    latest default-branch commit on 9 August was automated
+                    dependency maintenance; the latest meaningful commit on 5
+                    August fixed worktree labeling. A concentrated series of
+                    worktree issues—including traversal, slide-out, layout
+                    consistency, and worktree navigation—was closed between
+                    January and July 2026, with tests dedicated to those paths.
+                    That combination supports an active, responsive
+                    classification.
+                </p>
+                <h3>Licence</h3>
+                <p>
+                    The repository contains an MIT licence. It is permissive,
+                    OSI-approved free software with attribution and
+                    licence-notice obligations.
+                </p>
+                <h3>Strengths and trade-offs</h3>
+                <ul class="key-points">
+                    <li>
+                        <strong>Strength:</strong> years of adoption, broad
+                        packaging, rich status/navigation, explicit topology
+                        corrections, remote synchronization, and forge
+                        integration.
+                    </li>
+                    <li>
+                        <strong>Strength:</strong> the clearest current worktree
+                        semantics among mature contenders, including
+                        temporary-worktree traversal and shared/per-worktree
+                        layout control.
+                    </li>
+                    <li>
+                        <strong>Strength:</strong> ships an upstream agent skill
+                        and non-interactive <code>--yes</code>/<code
+                            >--no-interactive-rebase</code
+                        >
+                        controls.
+                    </li>
+                    <li>
+                        <strong>Trade-off:</strong> more metadata and workflow
+                        surface than worktrunk-sync; agents must understand
+                        layout annotations, qualifiers, fork-point behavior, and
+                        push policy.
+                    </li>
+                    <li>
+                        <strong>Trade-off:</strong> traversal can change
+                        directories and checked-out branches unless configured
+                        for temporary worktrees, and defaults can push branches.
+                    </li>
+                    <li>
+                        <strong>Boundary:</strong> it manages dependency trees
+                        and stacked PRs, not disposable independent-branch
+                        integration builds.
+                    </li>
+                </ul>
+                <h3>Evidence</h3>
+                <ul class="evidence">
+                    <li>
+                        <a href="https://github.com/VirtusLab/git-machete"
+                            >Canonical repository</a
+                        >
+                        — checked 11 August 2026 UTC
+                    </li>
+                    <li>
+                        <a
+                            href="https://git-machete.readthedocs.io/en/stable/#traverse"
+                            >Traverse documentation and worktree behavior</a
+                        >
+                    </li>
+                    <li>
+                        <a
+                            href="https://git-machete.readthedocs.io/en/stable/#file"
+                            >Layout-file behavior in worktrees</a
+                        >
+                    </li>
+                    <li>
+                        <a
+                            href="https://github.com/VirtusLab/git-machete/issues?q=is%3Aissue+worktree"
+                            >Worktree issue history</a
+                        >
+                    </li>
+                    <li>
+                        <a
+                            href="https://github.com/VirtusLab/git-machete/releases"
+                            >Release history</a
+                        >
+                    </li>
+                    <li>
+                        <a
+                            href="https://github.com/VirtusLab/git-machete/blob/develop/LICENSE"
+                            >Governing licence text</a
+                        >
+                    </li>
+                </ul>
+                <a class="back" href="#comparison-summary"
+                    >Back to comparison</a
+                >
+            </section>
+
+            <section class="project-detail" id="project-git-town">
+                <h2>
+                    <a href="https://github.com/git-town/git-town">Git Town</a>
+                </h2>
+                <p>
+                    <strong>Verdict:</strong> a mature full-workflow contender
+                    for teams that want one tool to create, synchronize,
+                    propose, ship, undo, and clean branches. It is not the
+                    recommended default for this specifically multi-worktree,
+                    multi-agent use case until its current worktree sync defects
+                    are resolved and retested.
+                </p>
+                <div class="facts">
+                    <div class="fact">
+                        <strong>GitHub stars</strong>3,361 as of 11 August 2026
+                        UTC
+                    </div>
+                    <div class="fact">
+                        <strong>Maintenance</strong>705 commits in the 12-month
+                        window; latest commit 26 July 2026
+                    </div>
+                    <div class="fact">
+                        <strong>Licence</strong
+                        ><a
+                            href="https://github.com/git-town/git-town/blob/main/LICENSE"
+                            >MIT</a
+                        >
+                    </div>
+                    <div class="fact">
+                        <strong>Latest release</strong
+                        ><a
+                            href="https://github.com/git-town/git-town/releases/tag/v24.0.0"
+                            >v24.0.0</a
+                        >, 23 July 2026
+                    </div>
+                </div>
+                <h3>Domain fit</h3>
+                <p>
+                    Git Town provides a full branch lifecycle across popular Git
+                    workflows, including stacked-change creation and editing,
+                    <code>sync --stack</code>/<code>--all</code>, pull-request
+                    proposals, branch shipping, suspended-command continuation,
+                    run logs, and undo. Its scenario suite covers many worktree
+                    combinations. This breadth can replace several bespoke
+                    policies, but it overlaps both Worktrunk and hosting
+                    workflows and therefore carries greater migration cost than
+                    adding <code>wt sync</code>.
+                </p>
+                <h3>Popularity and maintenance</h3>
+                <p>
+                    The repository had 3,361 stars, 705 commits during the
+                    common activity window, and v24.0.0 on 23 July 2026. The
+                    latest default-branch commit was 26 July. Development is
+                    clearly active. However, open issues as of the observation
+                    date report sync failures when another worktree owns a
+                    branch, stale local <code>main</code> use, missed
+                    shipped-parent detection, an unsafe undo proposal after
+                    failed shipping, and unclear multi-agent worktree guidance.
+                    Numerous earlier worktree issues have been closed,
+                    indicating responsiveness but also a still-moving boundary.
+                </p>
+                <h3>Licence</h3>
+                <p>
+                    The repository contains an MIT licence. It is permissive,
+                    OSI-approved free software with attribution and
+                    licence-notice obligations.
+                </p>
+                <h3>Strengths and trade-offs</h3>
+                <ul class="key-points">
+                    <li>
+                        <strong>Strength:</strong> widest mature end-to-end
+                        workflow here, including stack restructuring, forge
+                        integration, conflict continuation, run logs, and undo.
+                    </li>
+                    <li>
+                        <strong>Strength:</strong> high adoption, extensive
+                        executable scenario coverage, and very active
+                        maintenance.
+                    </li>
+                    <li>
+                        <strong>Risk:</strong> current v24-era multi-worktree
+                        issues intersect exactly with the desired parallel-agent
+                        workflow; some involve sync correctness and remote
+                        mutation.
+                    </li>
+                    <li>
+                        <strong>Trade-off:</strong> adopting it as policy would
+                        duplicate or replace Worktrunk branch/worktree
+                        conventions rather than simply extend them.
+                    </li>
+                    <li>
+                        <strong>Boundary:</strong> like the other stack
+                        managers, it cannot replace <code>ggmxd</code>’s
+                        arbitrary peer-branch integration target.
+                    </li>
+                </ul>
+                <h3>Evidence</h3>
+                <ul class="evidence">
+                    <li>
+                        <a href="https://github.com/git-town/git-town"
+                            >Canonical repository</a
+                        >
+                        — checked 11 August 2026 UTC
+                    </li>
+                    <li>
+                        <a href="https://www.git-town.com/stacked-changes.html"
+                            >Stacked changes documentation</a
+                        >
+                        and
+                        <a href="https://www.git-town.com/commands/sync.html"
+                            >sync documentation</a
+                        >
+                    </li>
+                    <li>
+                        <a
+                            href="https://github.com/git-town/git-town/issues/6260"
+                            >Open worktree sync failure #6260</a
+                        >,
+                        <a
+                            href="https://github.com/git-town/git-town/issues/6084"
+                            >stale-main issue #6084</a
+                        >, and
+                        <a
+                            href="https://github.com/git-town/git-town/issues/6229"
+                            >multi-agent worktree guidance issue #6229</a
+                        >
+                    </li>
+                    <li>
+                        <a href="https://github.com/git-town/git-town/releases"
+                            >Release history</a
+                        >
+                    </li>
+                    <li>
+                        <a
+                            href="https://github.com/git-town/git-town/blob/main/LICENSE"
+                            >Governing licence text</a
+                        >
+                    </li>
+                </ul>
+                <a class="back" href="#comparison-summary"
+                    >Back to comparison</a
+                >
+            </section>
+
+            <section class="project-detail" id="project-git-branchless">
+                <h2>
+                    <a href="https://github.com/arxanas/git-branchless"
+                        >git-branchless</a
+                    >
+                </h2>
+                <p>
+                    <strong>Verdict:</strong> consider for advanced commit-DAG
+                    visualization, undo, in-memory restacking, or speculative
+                    merge checks—not as the default coordinator for many
+                    Worktrunk worktrees. Its explicit alpha status and
+                    unresolved cross-worktree correctness reports are material.
+                </p>
+                <div class="facts">
+                    <div class="fact">
+                        <strong>GitHub stars</strong>4,110 as of 11 August 2026
+                        UTC
+                    </div>
+                    <div class="fact">
+                        <strong>Maintenance</strong>107 commits in the 12-month
+                        window; latest meaningful fix 15 July 2026
+                    </div>
+                    <div class="fact">
+                        <strong>Licence</strong
+                        ><a
+                            href="https://github.com/arxanas/git-branchless/blob/master/LICENSE-MIT"
+                            >MIT</a
+                        >
+                        OR
+                        <a
+                            href="https://github.com/arxanas/git-branchless/blob/master/LICENSE-APACHE"
+                            >Apache-2.0</a
+                        >
+                    </div>
+                    <div class="fact">
+                        <strong>Latest release</strong
+                        ><a
+                            href="https://github.com/arxanas/git-branchless/releases/tag/v0.11.1"
+                            >v0.11.1</a
+                        >, 21 May 2026
+                    </div>
+                </div>
+                <h3>Domain fit</h3>
+                <p>
+                    git-branchless works one abstraction level below most
+                    candidates: it records and manipulates the commit DAG,
+                    supports anonymous branches, visualizes stacks, performs
+                    in-memory moves/restacks, syncs local stacks without
+                    checking each one out, and can calculate speculative merges
+                    to expose conflicts. This is powerful for parallel divergent
+                    development, but it does not own Worktrunk lifecycle or
+                    provide the explicit worktree ownership model required for
+                    coordinating many agents.
+                </p>
+                <h3>Popularity and maintenance</h3>
+                <p>
+                    The canonical repository led the shortlist with 4,110 stars,
+                    recorded 107 commits during the common window, released
+                    v0.11.1 on 21 May 2026, and last received a meaningful fix
+                    on 15 July. The project nevertheless labels itself alpha and
+                    warns that workflows and on-disk formats may change. Open
+                    issues include moving branches sensibly across worktrees,
+                    initialization with non-standard worktree layouts, and
+                    <code>git branchless sync</code> staging changes in other
+                    worktrees.
+                </p>
+                <h3>Licence</h3>
+                <p>
+                    The project is dual-licensed under MIT or Apache-2.0, with
+                    both governing licence texts present. Both are permissive,
+                    OSI-approved free software licences; users may select either
+                    licence under the project’s terms.
+                </p>
+                <h3>Strengths and trade-offs</h3>
+                <ul class="key-points">
+                    <li>
+                        <strong>Strength:</strong> sophisticated DAG
+                        manipulation, fast in-memory rebases, strong undo,
+                        smartlog, divergent workflows, and speculative conflict
+                        detection.
+                    </li>
+                    <li>
+                        <strong>Strength:</strong> many operations avoid
+                        checking out branches, which can preserve expensive
+                        build state in a single working copy.
+                    </li>
+                    <li>
+                        <strong>Risk:</strong> hooks and repository-wide
+                        metadata introduce a deeper Git behavioral layer than
+                        the other candidates.
+                    </li>
+                    <li>
+                        <strong>Risk:</strong> explicit alpha status plus open
+                        cross-worktree issues make it a poor baseline safety
+                        policy for parallel agents.
+                    </li>
+                    <li>
+                        <strong>Boundary:</strong> speculative merges overlap
+                        part of <code>ggmxd</code>’s testing intent, but they do
+                        not maintain a persistent runnable aggregate worktree.
+                    </li>
+                </ul>
+                <h3>Evidence</h3>
+                <ul class="evidence">
+                    <li>
+                        <a href="https://github.com/arxanas/git-branchless"
+                            >Canonical repository and alpha status</a
+                        >
+                        — checked 11 August 2026 UTC
+                    </li>
+                    <li>
+                        <a
+                            href="https://github.com/arxanas/git-branchless/wiki/Command:-git-sync"
+                            ><code>git sync</code> documentation</a
+                        >
+                        and
+                        <a
+                            href="https://github.com/arxanas/git-branchless/wiki/Concepts#speculative-merges"
+                            >speculative merge documentation</a
+                        >
+                    </li>
+                    <li>
+                        <a
+                            href="https://github.com/arxanas/git-branchless/issues/1524"
+                            >Cross-worktree staging issue #1524</a
+                        >,
+                        <a
+                            href="https://github.com/arxanas/git-branchless/issues/215"
+                            >cross-worktree move issue #215</a
+                        >, and
+                        <a
+                            href="https://github.com/arxanas/git-branchless/issues/771"
+                            >non-standard worktree layout issue #771</a
+                        >
+                    </li>
+                    <li>
+                        <a
+                            href="https://github.com/arxanas/git-branchless/releases"
+                            >Release history</a
+                        >
+                    </li>
+                    <li>
+                        <a
+                            href="https://github.com/arxanas/git-branchless/blob/master/LICENSE-MIT"
+                            >MIT licence text</a
+                        >
+                        and
+                        <a
+                            href="https://github.com/arxanas/git-branchless/blob/master/LICENSE-APACHE"
+                            >Apache-2.0 licence text</a
+                        >
+                    </li>
+                </ul>
+                <a class="back" href="#comparison-summary"
+                    >Back to comparison</a
+                >
+            </section>
+
+            <section class="project-detail" id="project-stackit">
+                <h2>
+                    <a href="https://github.com/getstackit/stackit">Stackit</a>
+                </h2>
+                <p>
+                    <strong>Verdict:</strong> the most ambitious direct solution
+                    for agent-driven parallel stacks and worktrees, but
+                    currently a pilot candidate rather than a default. It would
+                    replace substantial Worktrunk and branch-policy surface, and
+                    its exceptionally rapid development makes operational
+                    behavior a moving target.
+                </p>
+                <div class="facts">
+                    <div class="fact">
+                        <strong>GitHub stars</strong>32 as of 11 August 2026 UTC
+                    </div>
+                    <div class="fact">
+                        <strong>Maintenance</strong>2,565 commits since its
+                        December 2025 creation; meaningful sync fix 11 August
+                        2026
+                    </div>
+                    <div class="fact">
+                        <strong>Licence</strong
+                        ><a
+                            href="https://github.com/getstackit/stackit/blob/main/LICENSE"
+                            >MIT</a
+                        >
+                    </div>
+                    <div class="fact">
+                        <strong>Latest release</strong
+                        ><a
+                            href="https://github.com/getstackit/stackit/releases/tag/v0.25.0"
+                            >v0.25.0</a
+                        >, 11 August 2026
+                    </div>
+                </div>
+                <h3>Domain fit</h3>
+                <p>
+                    Stackit explicitly combines branch-tree tracking,
+                    restacking, GitHub PR submission and merging, undo
+                    snapshots, machine-readable state, agent skills, and managed
+                    worktrees. Hidden anchor branches separate worktree
+                    ownership; content-changing commands must run in the owning
+                    worktree, while sync/restack can reconcile the repository
+                    globally. It can create an isolated worktree and launch
+                    Claude or Codex inside it. This is the closest all-in-one
+                    match to the desired eventual agent policy, but also the
+                    largest workflow replacement.
+                </p>
+                <h3>Popularity and maintenance</h3>
+                <p>
+                    The repository was created on 14 December 2025, had 32
+                    stars, and recorded 2,565 commits during the common window.
+                    Release v0.25.0 and a sync cleanup fix both landed on 11
+                    August 2026. The pace demonstrates strong investment but not
+                    stability: the project remains pre-1.0 and has shipped
+                    dozens of versions in months. Recent closed defects included
+                    an unconditional hard reset that destroyed uncommitted work
+                    in a managed worktree; a new sync-reparenting defect was
+                    open on the observation date.
+                </p>
+                <h3>Licence</h3>
+                <p>
+                    The repository contains an MIT licence. It is permissive,
+                    OSI-approved free software with attribution and
+                    licence-notice obligations.
+                </p>
+                <h3>Strengths and trade-offs</h3>
+                <ul class="key-points">
+                    <li>
+                        <strong>Strength:</strong> only candidate that treats
+                        stack topology, worktree ownership, AI-agent launch,
+                        structured JSON state, PR lifecycle, and undo as one
+                        coherent product.
+                    </li>
+                    <li>
+                        <strong>Strength:</strong> current safety design holds
+                        dirty/rebasing worktrees during restack and exposes
+                        ownership warnings rather than blindly resetting them.
+                    </li>
+                    <li>
+                        <strong>Risk:</strong> very young, low-adoption, pre-1.0
+                        project with extraordinary change velocity and recent
+                        high-severity worktree safety fixes.
+                    </li>
+                    <li>
+                        <strong>Trade-off:</strong> managed worktrees, anchors,
+                        hooks, shell integration, metadata, and agent files
+                        overlap heavily with established Worktrunk policy.
+                    </li>
+                    <li>
+                        <strong>Boundary:</strong> stack trees can fork, but
+                        remain dependency trees; they do not reproduce arbitrary
+                        independent branch mixdowns.
+                    </li>
+                </ul>
+                <h3>Evidence</h3>
+                <ul class="evidence">
+                    <li>
+                        <a href="https://github.com/getstackit/stackit"
+                            >Canonical repository and feature documentation</a
+                        >
+                        — checked 11 August 2026 UTC
+                    </li>
+                    <li>
+                        <a
+                            href="https://github.com/getstackit/stackit/blob/main/docs/worktree.md"
+                            >Managed worktree documentation</a
+                        >
+                    </li>
+                    <li>
+                        <a
+                            href="https://github.com/getstackit/stackit/issues/1490"
+                            >Resolved uncommitted-work loss issue #1490</a
+                        >
+                        and
+                        <a
+                            href="https://github.com/getstackit/stackit/issues/1656"
+                            >open sync reparenting issue #1656</a
+                        >
+                    </li>
+                    <li>
+                        <a href="https://github.com/getstackit/stackit/releases"
+                            >Release history</a
+                        >
+                    </li>
+                    <li>
+                        <a
+                            href="https://github.com/getstackit/stackit/blob/main/LICENSE"
+                            >Governing licence text</a
+                        >
+                    </li>
+                </ul>
+                <a class="back" href="#comparison-summary"
+                    >Back to comparison</a
+                >
+            </section>
+
+            <section class="methodology" id="methodology">
+                <h2>Methodology and shortlist</h2>
+                <p>
+                    The domain is repository-local coordination of multiple
+                    concurrent branches and linked worktrees, especially when
+                    coding agents produce parallel short- or long-lived changes.
+                    The user supplied <code>ggmx</code>/<code>ggmxd</code>,
+                    worktrunk-sync, and git-machete. Git Town and git-branchless
+                    were added as the most established broad FOSS alternatives;
+                    Stackit was added because it directly combines stacked
+                    branches, managed worktrees, and agent integration. StGit
+                    was excluded because its patch-series model is less directly
+                    aligned with branch-per-worktree agent streams;
+                    <code>gh-stack</code> and <code>git-stk</code> were excluded
+                    as narrower or less-established forge/stack tools; Graphite
+                    was excluded because the relevant product is not a clean
+                    self-hosted FOSS comparator.
+                </p>
+                <p>
+                    GitHub stars, default-branch commits from 11 August 2025
+                    through 11 August 2026, latest meaningful commit, latest
+                    stable GitHub release, archival state, repository licence
+                    files, primary documentation, source where needed, and
+                    relevant worktree issues were observed on 11 August 2026
+                    UTC. Commit counts come from the GitHub commits API for the
+                    canonical default branch. Stars measure attention, not
+                    quality; high commit velocity can indicate churn rather than
+                    maturity; issue searches are evidence, not proof that no
+                    other defect exists. The local mixer was additionally
+                    inspected from its current source and agent skill.
+                </p>
+            </section>
+
+            <section class="recommendation" id="recommendation">
+                <h2>Comparative recommendation</h2>
+                <ol>
+                    <li>
+                        <strong
+                            >Do not replace <code>ggmx</code>/<code>ggmxd</code>
+                            on category error.</strong
+                        >
+                        Keep the mixer for local, throw-away, arbitrary branch
+                        integration tests. None of the stack managers has the
+                        same fan-in model.
+                    </li>
+                    <li>
+                        <strong
+                            >Trial worktrunk-sync first as the smallest
+                            extension to the current Worktrunk workflow.</strong
+                        >
+                        Begin with <code>wt sync -nv</code> and local-only
+                        rebases in a disposable repository fixture. Review the
+                        inferred tree. Do not enable <code>--push</code> or
+                        <code>--prune</code> by default. Ask upstream to add an
+                        MIT licence file before treating redistribution terms as
+                        settled.
+                    </li>
+                    <li>
+                        <strong
+                            >Use git-machete as the mature benchmark and
+                            fallback.</strong
+                        >
+                        It is preferable when topology should be explicit,
+                        non-worktree branches must participate, and
+                        GitHub/GitLab PR chains matter. Configure
+                        temporary-worktree traversal if preserving every
+                        existing checkout is important.
+                    </li>
+                    <li>
+                        <strong
+                            >Watch rather than standardize on Stackit.</strong
+                        >
+                        Its integrated worktree ownership and agent interfaces
+                        are compelling, but adopting it now would duplicate
+                        Worktrunk and accept substantial pre-1.0 churn.
+                    </li>
+                    <li>
+                        <strong
+                            >Do not select Git Town or git-branchless as the
+                            default multi-worktree policy today.</strong
+                        >
+                        Both are strong projects, but their open worktree issues
+                        cut across the safety properties needed for parallel
+                        agents.
+                    </li>
+                </ol>
+                <p>
+                    The resulting policy can therefore separate concerns
+                    cleanly: Worktrunk creates and locates isolated worktrees;
+                    worktrunk-sync or git-machete maintains dependency ancestry;
+                    normal Git branches and atomic commits remain publication
+                    units; and <code>ggmxd</code> produces an unpublished
+                    integration branch only when independent streams need
+                    combined testing.
+                </p>
+            </section>
+        </main>
+        <footer>
+            <p>
+                Generated from public evidence observed 11 August 2026 UTC.
+                Repository popularity and activity figures change over time.
+                This report is not legal advice.
+            </p>
+        </footer>
+    </body>
+</html>

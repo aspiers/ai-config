@@ -137,3 +137,45 @@ gh issue list --repo steveyegge/beads --state all --limit 800 \
 
 Note the 800-issue ceiling; the repository has more, so absence from a local
 filter does not prove absence upstream.
+
+## Workspace walk adopts ~/.beads when it contains embeddeddolt/
+
+Observed on **bd 1.2.1** (2026-08-20). When no repo-local `.beads/` exists,
+`FindBeadsDir` can escape the repo/worktree boundary — despite its own
+resolution-order comment saying the walk stops there — and adopt the global
+`~/.beads` directory as the project workspace. The trigger is
+`hasBeadsProjectFiles` counting an `embeddeddolt/` subdirectory as project
+files (`internal/beads/beads.go:696`), which defeats the guard whose comment
+says it exists precisely to prevent returning `~/.beads`. An old-era global
+embedded database at `~/.beads/embeddeddolt/` therefore makes every
+unenrolled directory under `$HOME` resolve to `~/.beads`.
+
+Reproduced from a git worktree (t3 layout, `.git` file) whose main repository
+had no `.beads/`: `bd context` reported `beads_dir: /home/adam/.beads` with
+`cwd_repo_root` correctly set to the worktree — so repo detection worked, but
+the walk boundary was not enforced. From the main checkout (regular `.git`
+directory) the same probe correctly reported no workspace, so the escape may
+be worktree-specific.
+
+Consequences observed in sequence:
+
+1. `bd init --server` half-initializes: the Dolt server, database,
+   `config.yaml`, and `metadata.json` all land in `~/.beads`, and **no
+   repo-local `.beads/` anchor is created** — `bd init`'s own closing
+   diagnostics report `Installation: No .beads/ directory found` while still
+   printing `bd initialized successfully!`.
+2. With old-era `embeddeddolt/` alongside the freshly written server-mode
+   files, every subsequent command fails with `legacy Dolt server workspace
+   detected; explicit migration is required`, wedging `bd` for any directory
+   that resolves to `~/.beads`.
+
+Workaround: move the old `~/.beads/embeddeddolt/` (and any stray
+server-mode files a half-init wrote: `config.yaml`, `metadata.json`, `dolt/`,
+`hooks/`, `dolt-server.*`) out of `~/.beads`, leaving only registry files
+(`registry.json`, `machine-id`, `backup/`). After that, resolution correctly
+reports no workspace, and `bd init` from a worktree targets the main
+repository root via the worktree fallback as intended.
+
+**Watch:** if upstream tightens `hasBeadsProjectFiles` to exempt `~/.beads`
+(or enforces the documented walk boundary), the quarantine workaround becomes
+unnecessary; re-test workspace resolution from a worktree after any upgrade.

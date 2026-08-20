@@ -1,4 +1,6 @@
 {
+  "tui.altScreen.nextPrompt": ["ctrl+alt+j"],
+  "tui.altScreen.previousPrompt": ["ctrl+alt+k"],
   "tui.editor.cursorUp": ["up", "ctrl+p"],
   "tui.editor.cursorDown": ["down", "ctrl+n"],
   "tui.editor.cursorLeft": ["left", "ctrl+b"],

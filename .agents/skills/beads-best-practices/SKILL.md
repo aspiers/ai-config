@@ -55,6 +55,59 @@ workflow explicitly requires overlapping tracked work. Do not bulk-claim a
 label, epic, milestone, search result, or requested task set merely because all
 items are in scope.
 
+## Flag Work That Needs a Human
+
+When a bead cannot progress without a person — a judgement only they can make,
+an environment only they can reach, or an observation only they can perform —
+label it `human` so it appears in their queue:
+
+```bash
+bd label add "$id" human
+```
+
+`bd human list` is how the user finds these. A bead that needs them but
+carries no label is invisible: it looks like every other open issue, and they
+have no reason to know they are the blocker.
+
+Leaving the explanation in a comment is not enough. A comment reading
+"awaiting live verification before close" is only found by someone already
+reading that bead, which is precisely the person who is not looking.
+
+Use it when:
+
+- an acceptance criterion requires human observation, such as confirming a
+  visual change on screen or that a sound plays;
+- the work needs credentials, hardware, an account, or a physical device the
+  agent cannot reach;
+- a product, naming, or scope decision must be made before work continues; or
+- the agent believes work is complete but cannot verify the criteria that
+  would justify closing it.
+
+Always pair the label with a comment stating what is needed, as a checkable
+list rather than a description of the problem. A flag with no instructions
+transfers the interruption without transferring the context, leaving the
+person to reconstruct what the agent already knew.
+
+### Do Not Leave It `in_progress`
+
+A bead waiting on a human is not being worked on. Leaving it `in_progress`
+makes blocked work indistinguishable from active work, and from work an agent
+abandoned mid-task.
+
+Return it to `open` alongside the label, so the status describes reality and
+the label carries the reason. Reserve `in_progress` for work happening now,
+per [Keep Work-in-Progress Status Honest](#keep-work-in-progress-status-honest).
+
+### Do Not Close Around the Human
+
+Never close a bead by satisfying its criteria a different way than it asks.
+When a criterion says the change was observed running, reading the code and
+concluding it must work is not that criterion — it is a substitution, made by
+the party least able to judge whether it holds.
+
+Flag it and wait. An agent closing its own unverifiable work is how a bug
+gets marked fixed several times while the user keeps hitting it.
+
 ## Pair IDs with Human-Readable Titles
 
 Never refer to a bead in human-facing prose solely by its opaque ID. Pair the

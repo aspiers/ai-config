@@ -11,6 +11,10 @@ worktree. This variant keeps the same queue discipline but overlaps the
 *implementation* of several independent beads, giving each subagent a private
 git worktree so their edits, builds, and commits cannot collide.
 
+Load and apply the `beads-best-practices` skill throughout. Its honest-WIP,
+comment, and human-attention rules remain authoritative in this parallel
+workflow.
+
 What is parallel and what is not:
 
 - **Parallel**: implementing beads. Each runs in a subagent, in its own
@@ -117,33 +121,60 @@ widen it, never fall back to the unfiltered queue. If it is ambiguous or
 matches nothing, ask rather than guessing; verify an epic ID with
 `bd show <id>` before using `--parent`.
 
+## Keep the human-attention queue separate
+
+Run `bd human list --json` during preflight and again before the final report.
+Every automatic queue read must use `bd ready --exclude-label=human` in
+addition to the active scope, so work waiting for a person is never dispatched
+to another agent as if it were ready.
+
+When a subagent or the orchestrator discovers that progress genuinely requires
+human judgement, access, hardware, credentials, or observation:
+
+1. Use `bd comments add <id> "<checklist>"` to record what the user must do.
+2. Add `human` with `bd label add <id> human`.
+3. Run `bd update <id> --status=open`, never leaving the waiting bead
+   `in_progress`.
+4. Run `bd human list --json` and verify that it appears.
+5. Preserve coherent partial work, clean up its worktree safely, and refill the
+   slot with agent-ready work.
+
+Create and link a separate blocker bead only when the human action is a
+distinct work item; otherwise flag the original bead. Keep a new blocker inside
+the active scope. If new evidence removes the need for a person, comment with
+that evidence, run `bd label remove <id> human`, and verify it disappears from
+`bd human list --json` before resuming. Never use `bd human respond` or
+`bd human dismiss` on the user's behalf.
+
 ## Preflight
 
 Before dispatching anything:
 
-0. Confirm both prerequisites: run `wt --version`, and load the upstream
+0. Run `bd human list --json` and record the existing human-attention queue.
+1. Confirm both prerequisites: run `wt --version`, and load the upstream
    `worktrunk` skill. Stop if either is unavailable.
-1. Note the current branch. It is the **base branch**: every worktree
+2. Note the current branch. It is the **base branch**: every worktree
    branches from its tip, and every merge lands on it. Pass it explicitly
    to `wt` rather than relying on the default, which is the repository's
    default branch and may not be where you are.
-2. `git status` — uncommitted work in the base worktree is not overwritten
+3. `git status` — uncommitted work in the base worktree is not overwritten
    by `wt merge` (it advances the branch rather than merging into your
    working tree), but a dirty tree makes it hard to tell your own changes
    from the merged ones. If it is dirty, say so and ask whether to commit,
    stash, or proceed.
-3. `wt hook show` — see which lifecycle hooks the repo configures, so you
+4. `wt hook show` — see which lifecycle hooks the repo configures, so you
    know what will run on create and merge, and what you still have to do
    yourself.
-4. `wt list` — check for leftover `bgp/*` worktrees from an interrupted
+5. `wt list` — check for leftover `bgp/*` worktrees from an interrupted
    earlier run, and clean them up before starting.
 
 Do not pick worktree paths yourself; `wt` derives them from its own config.
 
 ## Selecting a batch
 
-Run `bd ready` with the scope flags, **freshly, every time you are about to
-dispatch** — at the start, and again each time a slot frees. Never reuse an
+Run `bd ready --exclude-label=human` with the scope flags, **freshly, every
+time you are about to dispatch** — at the start, and again each time a slot
+frees. Never reuse an
 earlier listing or a remembered ordering. The human can reprioritise, close,
 add, or block beads at any moment while the grind runs, and a run that is
 overlapping work by design spends long stretches between queue reads. A
@@ -240,6 +271,11 @@ conversation. Include:
   those in its output or as a comment on its own bead; the orchestrator
   files them, so scope labels and parents stay consistent and duplicates are
   caught against the queue the subagent cannot see.
+
+  If only a person can unblock the bead, the subagent must immediately add a
+  checklist comment describing the required human action and call it out in
+  its report. It must not change labels or status; the orchestrator applies
+  the human-attention protocol after preserving the branch.
 
   Some setups back the database with a single server process (a lockfile,
   PID or port under `.beads/`). That is a reason to expect occasional
@@ -428,10 +464,15 @@ wrong place: uncommitted changes live in none of those stores.
 
 Do not retry blindly, and do not leave the bead in limbo:
 
-- **Reported a blocker**: create a bead for the blocker (`bd create ...`),
-  add the dependency (`bd dep add ...`), and return the original bead to
-  `open` with `bd update <id> --status=open`. Give the new bead the same
-  label or `--parent` so it stays inside the scope.
+- **Reported a human-only blocker**: preserve coherent partial work, then use
+  the human-attention protocol above. Flag the original bead unless the human
+  action is a distinct work item; in that case create the blocker, keep it in
+  scope, add the dependency, and flag that blocker. Return the original bead
+  to `open` and verify the flagged bead through `bd human list --json`.
+- **Reported an agent-resolvable blocker**: create a bead for the blocker
+  (`bd create ...`), add the dependency (`bd dep add ...`), and return the
+  original bead to `open` with `bd update <id> --status=open`. Give the new
+  bead the same label or `--parent` so it stays inside the scope.
 - **Produced partial work worth keeping**: merge it if it is coherent and
   green on its own, then reopen the bead with a note about what remains.
   Otherwise discard the branch.
@@ -496,11 +537,15 @@ alert every cycle is noise, and noise gets ignored.
 
 ## Continuing and stopping
 
-Keep refilling slots until `bd ready` returns nothing within scope. Then
-wait for the in-flight subagents, merge their branches, and stop.
+Keep refilling slots until `bd ready --exclude-label=human` returns nothing
+within scope. Then wait for the in-flight subagents, merge their branches, and
+stop.
 
-Report that the queue is empty. When a scope was given, name it, so it is
-clear the queue is empty *within that scope* rather than overall.
+Run `bd human list` before the final report. State that the **agent-ready**
+queue is empty, then list human-needed beads separately with their requested
+actions. When a scope was given, name it, so it is clear the agent-ready queue
+is empty *within that scope* rather than overall; do not imply the human queue
+shares that scope unless it was filtered separately.
 
 Between merges, do not pause to ask what to do next and do not summarise
 progress — keep the loop running. The exception is the concurrency question

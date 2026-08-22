@@ -23,6 +23,16 @@ used by similar Pi package audit reports.
 python3 tests/test_foss_comparison_reporting.py
 ```
 
+## Background Human-Attention Tests
+
+`test_background_human_attention.py` verifies that `/bg`, `/bgp`, and `/bed`
+keep human-needed beads out of automatic queues, flag and clear them with a
+durable checklist, and surface `bd human list` at unattended handoff.
+
+```bash
+python3 tests/test_background_human_attention.py
+```
+
 ## AI Cockpit Contract Tests
 
 `test_ai_cockpit_contract.py` validates the target-neutral orchestrator contract,

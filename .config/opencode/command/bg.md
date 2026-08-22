@@ -3,6 +3,8 @@ description: Grind through beads in priority order non-stop
 ---
 
 Work through beads continuously in priority order. DO NOT STOP between issues.
+Apply the `beads-best-practices` skill throughout, especially its human-attention
+and honest work-in-progress rules.
 
 ## Scope
 
@@ -36,8 +38,8 @@ before using `--parent`.
 
 Loop forever:
 
-1. Run `bd ready` with the scope flags to get the list of ready (unblocked)
-   issues.
+1. Run `bd ready --exclude-label=human` with the scope flags to get the list of
+   agent-ready (unblocked) issues.
 2. Look at the top 5 highest-priority issues from the output. Do NOT
    spend time analysing beyond these 5. Pick whichever one you can
    make the most immediate progress on.
@@ -51,18 +53,42 @@ Loop forever:
 8. **Go immediately to step 1.** Do NOT pause, do NOT ask the user
    what to do next, do NOT summarise what you've done so far.
 
+## Human attention
+
+Before entering the loop, run `bd human list --json` once to inventory work
+already waiting for the user. Never select a `human`-labelled bead for automatic
+work.
+
+When progress genuinely requires human judgement, access, hardware, credentials,
+or observation:
+
+1. Use `bd comments add <id> "<checklist>"` to record exactly what the user must do.
+2. Add the label with `bd label add <id> human`.
+3. Run `bd update <id> --status=open`; never leave the waiting bead `in_progress`.
+4. Run `bd human list --json` and verify the bead appears.
+5. Preserve coherent partial work, then continue with the next agent-ready bead.
+
+Create a separate blocker bead and dependency only when the human action is a
+distinct work item; otherwise flag the original bead. Keep any new blocker
+inside the active scope. If new evidence removes the need for a person, comment
+with that evidence, run `bd label remove <id> human`, and verify through
+`bd human list --json` before resuming. Never call `bd human respond` or
+`bd human dismiss` on the user's behalf.
+
 ## Rules
 
 - **Never stop.** After closing an issue, immediately start the next one.
 - **No lengthy analysis.** Glance at max 5 top-priority issues, pick one, go.
 - **No asking for permission.** Just do the work.
-- If `bd ready` returns no issues, report that the queue is empty and stop.
-  When a scope was given, say which scope was exhausted, so it is clear that
-  the queue is empty within that scope rather than overall.
-- If you hit a blocker you cannot resolve, create a new bead for it
-  (`bd create ...`), add the dependency (`bd dep add ...`), move on
-  to the next ready issue. Give the new bead the same label, or the same
-  `--parent`, as the bead it came from, so it stays inside the scope.
+- If `bd ready` returns no issues, run `bd human list` before stopping. Report
+  that the agent-ready queue is empty and list any human-needed beads separately.
+  When a scope was given, say which scope was exhausted; do not imply the human
+  queue shares that scope unless it was filtered separately.
+- If you hit an agent-resolvable blocker, create a new bead for it
+  (`bd create ...`), add the dependency (`bd dep add ...`), and move on. Give
+  the new bead the same label, or the same `--parent`, as the bead it came from,
+  so it stays inside the scope. For human-only blockers, use the human-attention
+  protocol above instead of leaving an ordinary blocker.
 - Keep commits atomic, and push frequently where pushing is permitted.
 
 ## Pushing

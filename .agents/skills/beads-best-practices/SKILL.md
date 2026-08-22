@@ -59,10 +59,14 @@ items are in scope.
 
 When a bead cannot progress without a person — a judgement only they can make,
 an environment only they can reach, or an observation only they can perform —
-label it `human` so it appears in their queue:
+label it `human` so it appears in their queue. Apply the complete transition,
+not only the label:
 
 ```bash
+bd comments add "$id" "$human_checklist"
 bd label add "$id" human
+bd update "$id" --status=open
+bd human list --json
 ```
 
 `bd human list` is how the user finds these. A bead that needs them but
@@ -97,6 +101,27 @@ abandoned mid-task.
 Return it to `open` alongside the label, so the status describes reality and
 the label carries the reason. Reserve `in_progress` for work happening now,
 per [Keep Work-in-Progress Status Honest](#keep-work-in-progress-status-honest).
+
+After adding the comment, label, and `open` status, run `bd human list --json`
+and verify the bead appears. This catches a failed or incomplete flag before an
+unattended workflow moves on.
+
+### Clear Human Flags Deliberately
+
+When the requested input arrives, or new evidence proves human attention is no
+longer needed, append a comment recording what changed, remove the label, and
+verify the bead disappears from the active human queue:
+
+```bash
+bd comments add "$id" "Human-attention requirement resolved: <evidence>"
+bd label remove "$id" human
+bd human list --json
+```
+
+Only return the bead to `in_progress` when an agent is actually resuming work.
+Do not use `bd human respond` or `bd human dismiss` on the user's behalf; those
+commands record a human disposition and may close or permanently dismiss the
+bead.
 
 ### Do Not Close Around the Human
 

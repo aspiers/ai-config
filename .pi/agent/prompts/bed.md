@@ -12,6 +12,18 @@ you get it wrong, it is not a disaster because we have git history so we can
 always revert or rewind later.  The worst outcome would be that you just stop
 and waste time, because we learn nothing that way.
 
+Apply the `beads-best-practices` skill and `/bg` human-attention protocol. Best
+judgement does not replace a criterion that genuinely requires my observation,
+access, hardware, credentials, or decision. Record a checklist with
+`bd comments add`, label the waiting bead `human`, run
+`bd update <id> --status=open`, and verify it with
+`bd human list --json`, and continue with other agent-ready work instead of
+stopping.
+
+Before the wake-up report, run `bd human list` again and put its outstanding
+checklists first. Distinguish an empty agent-ready queue from work still waiting
+for me.
+
 When I wake up, I expect to see a concise report of everything you have
 achieved, with any supporting information required in order to quickly test
 out the things you have done.

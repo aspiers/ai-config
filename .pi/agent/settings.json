@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "0.84.1",
+  "lastChangelogVersion": "0.84.2",
   "defaultProvider": "openai-codex",
   "defaultModel": "gpt-5.6-sol",
   "defaultThinkingLevel": "high",
@@ -9,7 +9,10 @@
     "npm:pi-mcp-adapter",
     "npm:pi-markdown-preview",
     "npm:@juicesharp/rpiv-btw",
-    "npm:pi-agent-browser-native",
+    {
+      "source": "npm:pi-agent-browser-native",
+      "extensions": []
+    },
     "npm:pi-mermaid",
     "npm:pi-web-access",
     "npm:pi-prompt-shelf",
@@ -31,19 +34,23 @@
     "npm:@tmustier/pi-session-recap",
     "npm:@brain0pia/pi-extension-times",
     "git:github.com/apmantza/pi-lens",
-    "npm:@lukemelnik/pi-monitor",
+    {
+      "source": "npm:@lukemelnik/pi-monitor",
+      "extensions": []
+    },
     "npm:pi-peek",
     "npm:@gotgenes/pi-github-tools",
     "npm:@gotgenes/pi-autoformat",
     "npm:@spences10/pi-skill-importer",
-    "git:github.com/aspiers/pi-ask-user@fix/number-custom-response",
+    "git:github.com/aspiers/pi-ask-user@working",
     "npm:@mzwing/pi-permission-auto-review",
     "git:github.com/aspiers/pi-herdr-tab-sync@fix/immediate-name-sync",
     "npm:pi-model-aware-compaction@0.1.5",
     "../../.GIT/3rd-party/pi-packages/packages/pi-permission-system",
     "npm:@gotgenes/pi-subagents@19.2.1",
     "npm:@gotgenes/pi-subagents-worktrees@0.2.3",
-    "git:github.com/aspiers/pi-shortcuts@configurable-shortcut"
+    "git:github.com/aspiers/pi-shortcuts@configurable-shortcut",
+    "npm:@jmfederico/pi-web@1.202608.1"
   ],
   "hideThinkingBlock": false,
   "powerline": {
@@ -104,12 +111,14 @@
   },
   "vstack": {
     "extensionManager": {
-      "disabledItems": [],
       "config": {
         "@vanillagreen/pi-session-manager": {
           "shortcutKey": "alt+m"
         }
-      }
+      },
+      "disabledItems": [
+        "package:pi-agent-browser-native"
+      ]
     }
   },
   "steeringMode": "all",

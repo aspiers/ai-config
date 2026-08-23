@@ -4,6 +4,18 @@ Adam's collection of configuration files and command-line utilities designed
 to streamline common development tasks and improve productivity when working
 with AI tools and configurations.
 
+## Research reports
+
+- [FOSS branch, worktree, and integration-mix tools for an AI development
+  cockpit](docs/foss-git-branch-worktree-cockpit-comparison-2026-08-18.html) —
+  the expanded 11-project comparison, including the capability-layer map and
+  recommendations for composing Worktrunk, branch topology, AgentBox, Herdr,
+  T3 Code, and a disposable fan-in target.
+- [Parallel Git branch and worktree management
+  comparison](docs/foss-git-branch-worktree-management-comparison-2026-08-11.html) —
+  the earlier six-project comparison retained as the original research
+  snapshot.
+
 ## Installation
 
 This configuration is designed to be installed using [GNU

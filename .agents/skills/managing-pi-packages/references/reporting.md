@@ -96,20 +96,45 @@ safety.
 
 ### Update the package-notes inventory
 
-After auditing a named package, update its existing entry—or add one if
-missing—in the durable package-notes file when that location is known. Record
-the audit date, exact version/source, verdict and decision, activation state,
-material behavior and risks, applied configuration, and report paths. Update
-an existing package heading rather than creating a duplicate. Do not copy
-credentials, private registry URLs, or other sensitive evidence into notes.
+After auditing a named package or applying any package state change, update its
+existing entry—or add one if missing—in the durable package-notes file when an
+existing location is known. Record the date, exact version/source, decision,
+activation state, material behavior and risks, applied configuration, and
+report paths when an audit report exists. Update an existing package heading
+rather than creating a duplicate. Do not copy credentials, private registry
+URLs, or other sensitive evidence into notes.
 
-Use `$PI_PACKAGE_NOTES` when set. Accept `$PI_EXTENSION_AUDIT_NOTES` as a
-backward-compatible fallback.
+For a user-waived audit, create no audit verdict/report. Instead record
+`NOT AUDITED — explicit user override`, what was installed or changed, the
+limited post-install checks, material warnings observed during installation,
+and rollback. Do not imply that identity/version checks reviewed the payload.
+
+Resolve the notes path in this order:
+
+1. `$PI_PACKAGE_NOTES` when set.
+2. `$PI_EXTENSION_AUDIT_NOTES` as a backward-compatible fallback.
+3. The author-specific fallback below.
+
+Update a candidate path **if and only if it is an existing regular file**.
+Never create a notes file or its parent directories as a package-management
+side effect. If no candidate exists, skip the notes update and state that.
 
 > **⚠️ AUTHOR-SPECIFIC:** In the author's environment, the fallback inventory
-> is `~/org/notes/PiAgent.org`, under `* package audits`. If that file exists,
-> update it automatically. Other users must configure their own notes path or
-> skip this step; the author's path is not a general Pi convention.
+> is `~/org/notes/PiAgent.org`. If that file exists, update it automatically in
+> both relevant places:
+>
+> 1. Under `* package audits`, update or add the package heading with the
+>    historical decision/evidence described above. Preserve older decisions
+>    when they remain useful history.
+> 2. In the relevant operational category (for example, workflows,
+>    orchestration, or tools), add or update the exact pinned `pi install`
+>    command and a concise purpose/status comment. On removal, make this
+>    operational inventory reflect that the package is no longer installed
+>    without deleting its historical audit entry.
+>
+> Never create this file if it is absent. Other users must configure their own
+> existing notes path or skip this step; the author's path and Org structure
+> are not general Pi conventions.
 
 ### Persist and open the report
 

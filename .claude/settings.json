@@ -221,6 +221,28 @@
         ]
       }
     ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "atuin hook claude-code"
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "atuin hook claude-code"
+          }
+        ]
+      }
+    ],
     "PreToolUse": [
       {
         "matcher": "Bash",
@@ -228,6 +250,30 @@
           {
             "type": "command",
             "command": "/home/adam/.local/bin/dcg"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "atuin hook claude-code"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/adam/bin/herdr-claude-title-watch",
+            "args": [
+              "--stop"
+            ],
+            "timeout": 10
           }
         ]
       }
@@ -249,21 +295,6 @@
           }
         ]
       }
-    ],
-    "SessionEnd": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/home/adam/bin/herdr-claude-title-watch",
-            "args": [
-              "--stop"
-            ],
-            "timeout": 10
-          }
-        ]
-      }
     ]
   },
   "statusLine": {
@@ -273,9 +304,9 @@
   "enabledPlugins": {
     "beads@beads-marketplace": true,
     "caveman@caveman": true,
+    "clangd-lsp@claude-plugins-official": true,
     "context-mode@context-mode": true,
-    "ruby-lsp@claude-plugins-official": true,
-    "clangd-lsp@claude-plugins-official": true
+    "ruby-lsp@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
     "caveman": {
@@ -293,7 +324,7 @@
     "mode": "hold"
   },
   "skipWorkflowUsageWarning": true,
-  "theme": "dark",
+  "theme": "auto",
   "verbose": true,
   "preferredNotifChannel": "terminal_bell",
   "autoCompactEnabled": true,

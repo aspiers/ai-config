@@ -1,0 +1,107 @@
+#!/bin/bash
+
+set -e
+
+if ! command -v skills >/dev/null 2>&1; then
+    echo "skills not found; aborting .cfg-post.d/skills" >&2
+    exit 1
+fi
+
+skill_agents=(claude-code opencode pi codex cursor)
+audit_url=https://add-skill.vercel.sh/audit
+
+audit_tools_available=1
+for command in curl jq; do
+    if ! command -v "$command" >/dev/null 2>&1; then
+        echo "$command not found; security audits cannot be verified" >&2
+        audit_tools_available=0
+    fi
+done
+
+security_allows_skill() {
+    local audit_data=$1
+    local skill=$2
+    local risks
+
+    if ! jq -e --arg skill "$skill" '
+        .[$skill] as $audits
+        | ($audits | type == "object" and length > 0)
+          and all(
+              $audits[];
+              .risk as $risk
+              | ["safe", "low", "medium", "high", "critical"]
+              | index($risk) != null
+          )
+    ' >/dev/null <<<"$audit_data"; then
+        echo "skipping $skill: security audit is missing or invalid" >&2
+        return 1
+    fi
+
+    risks=$(jq -r --arg skill "$skill" '
+        [
+            .[$skill]
+            | to_entries[]
+            | select(.value.risk == "high" or .value.risk == "critical")
+            | "\(.key)=\(.value.risk)"
+        ]
+        | join(", ")
+    ' <<<"$audit_data")
+
+    if [[ -n $risks ]]; then
+        echo "skipping $skill: security audit reports $risks" >&2
+        return 1
+    fi
+}
+
+install_skills() {
+    local source=${1%/}
+    shift
+
+    local requested_skills=("$@")
+    if (( ${#requested_skills[@]} == 0 )); then
+        requested_skills=("${source##*/}")
+    fi
+
+    local skill
+    if (( ! audit_tools_available )); then
+        for skill in "${requested_skills[@]}"; do
+            echo "skipping $skill: security audit is unavailable" >&2
+        done
+        return 0
+    fi
+
+    local skill_list
+    printf -v skill_list '%s,' "${requested_skills[@]}"
+    skill_list=${skill_list%,}
+
+    local audit_data
+    if ! audit_data=$(curl --fail --silent --show-error --get \
+        --data-urlencode "source=$source" \
+        --data-urlencode "skills=$skill_list" \
+        "$audit_url"); then
+        for skill in "${requested_skills[@]}"; do
+            echo "skipping $skill: security audit could not be retrieved" >&2
+        done
+        return 0
+    fi
+
+    local allowed_skills=()
+    for skill in "${requested_skills[@]}"; do
+        if security_allows_skill "$audit_data" "$skill"; then
+            allowed_skills+=("$skill")
+        fi
+    done
+
+    if (( ${#allowed_skills[@]} == 0 )); then
+        return 0
+    fi
+
+    skills add "$source" \
+        --global \
+        --yes \
+        --skill "${allowed_skills[@]}" \
+        --agent "${skill_agents[@]}"
+}
+
+# Call once per repository so selected skills share one clone.
+install_skills theclaymethod/unslop

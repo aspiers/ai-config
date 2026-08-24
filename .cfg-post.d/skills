@@ -104,4 +104,4 @@ install_skills() {
 }
 
 # Call once per repository so selected skills share one clone.
-install_skills theclaymethod/unslop
+install_skills cursor/plugins unslop

@@ -48,7 +48,7 @@ class BdEnrollSoloTestCase(unittest.TestCase):
             BD_ENROLL_SOLO.exists(), f"bd-enroll-solo not found at {BD_ENROLL_SOLO}"
         )
         self.test_dir = tempfile.mkdtemp(prefix="bd-enroll-solo-test-")
-        self.addCleanup(shutil.rmtree, self.test_dir, ignore_errors=True)
+        self.addCleanup(self.cleanup_test_dir)
         self.original_dir = os.getcwd()
         self.addCleanup(os.chdir, self.original_dir)
         os.chdir(self.test_dir)
@@ -67,6 +67,37 @@ class BdEnrollSoloTestCase(unittest.TestCase):
         Path("README.md").write_text("# test\n")
         self.run_git("add", "README.md")
         self.run_git("commit", "-m", "init")
+
+    def cleanup_test_dir(self):
+        """Stop the fixture's server, then remove its temporary repository."""
+        self.stop_dolt_server()
+        shutil.rmtree(self.test_dir, ignore_errors=True)
+
+    def stop_dolt_server(self):
+        """Stop a server created for this fixture before deleting its files."""
+        pid_file = Path(self.test_dir, ".beads", "dolt-server.pid")
+        if not pid_file.exists():
+            return
+
+        pid = int(pid_file.read_text().strip())
+        result = subprocess.run(
+            ["bd", "-C", self.test_dir, "dolt", "stop"],
+            capture_output=True,
+            text=True,
+            env=self.command_env,
+            timeout=30,
+        )
+        if result.returncode != 0:
+            self.fail(
+                "failed to stop the test Dolt server "
+                f"({result.returncode}):\n{result.stdout}\n{result.stderr}"
+            )
+
+        try:
+            os.kill(pid, 0)
+        except ProcessLookupError:
+            return
+        self.fail(f"test Dolt server PID {pid} survived 'bd dolt stop'")
 
     def run_git(self, *args):
         return subprocess.run(

@@ -121,30 +121,60 @@ widen it, never fall back to the unfiltered queue. If it is ambiguous or
 matches nothing, ask rather than guessing; verify an epic ID with
 `bd show <id>` before using `--parent`.
 
-## Keep the human-attention queue separate
+## Keep work that needs a person out of the agent queue
 
 Run `bd human list --json` during preflight and again before the final report.
-Every automatic queue read must use `bd ready --exclude-label=human` in
-addition to the active scope, so work waiting for a person is never dispatched
-to another agent as if it were ready.
 
-When a subagent or the orchestrator discovers that progress genuinely requires
-human judgement, access, hardware, credentials, or observation:
+**Every automatic queue read must exclude the label:**
 
-1. Use `bd comments add <id> "<checklist>"` to record what the user must do.
-2. Add `human` with `bd label add <id> human`.
-3. Run `bd update <id> --status=open`, never leaving the waiting bead
-   `in_progress`.
-4. Run `bd human list --json` and verify that it appears.
-5. Preserve coherent partial work, clean up its worktree safely, and refill the
-   slot with agent-ready work.
+```bash
+bd ready --exclude-label=human
+```
 
-Create and link a separate blocker bead only when the human action is a
-distinct work item; otherwise flag the original bead. Keep a new blocker inside
-the active scope. If new evidence removes the need for a person, comment with
-that evidence, run `bd label remove <id> human`, and verify it disappears from
-`bd human list --json` before resuming. Never use `bd human respond` or
-`bd human dismiss` on the user's behalf.
+A bead waiting on a person is usually blocked by nothing, so it appears in a
+plain `bd ready` like any other issue — `bd ready` has no knowledge of the
+label. Miss the flag once and a subagent gets dispatched to decide something
+that was explicitly reserved for the user. Treat it as an invariant on every
+call.
+
+When a subagent or the orchestrator finds that progress needs a person's
+judgement, access, hardware, credentials, or observation, **split the work at
+that point**. Their part becomes its own bead; the agent remainder stays in
+the original:
+
+```bash
+ask=$(bd create --title="Decide: <the question>" \
+                --description="<context, options, what turns on each>" \
+                --type=task --json | jq -r .id)
+bd label add "$ask" human
+bd dep add "$blocked" "$ask"
+bd update "$blocked" --status=open
+bd human list --json
+```
+
+Never label the in-flight bead and leave it at that. `bd human respond` closes
+whatever it answers, so a bead holding both their decision and unfinished
+implementation gets closed with the implementation undone. One bead, one doer
+— see
+[`beads-best-practices`](../beads-best-practices/SKILL.md#one-bead-one-doer).
+
+Only the orchestrator does this. A subagent that hits such a blocker adds a
+comment describing what is needed and says so in its report; it changes no
+labels and no statuses. Preserve its coherent partial work, clean up the
+worktree safely, and refill the slot with ready work.
+
+Keep the new bead inside the active scope, with the same label or `--parent`
+as the bead it came from.
+
+The user answers these with `/blockers`
+([`beads-blocker-review`](../beads-blocker-review/SKILL.md)), which closes each
+bead and automatically releases whatever depended on it. Since every dispatch
+re-reads the queue, released work reappears as ordinary ready work with no
+action from you. Do not answer them yourself, and never call `bd human respond`
+or `bd human dismiss` on the user's behalf.
+
+An answer can land mid-run, so never exclude a bead from dispatch because you
+remember creating it — the bead's current state is the only authority.
 
 ## Preflight
 
@@ -273,9 +303,9 @@ conversation. Include:
   caught against the queue the subagent cannot see.
 
   If only a person can unblock the bead, the subagent must immediately add a
-  checklist comment describing the required human action and call it out in
-  its report. It must not change labels or status; the orchestrator applies
-  the human-attention protocol after preserving the branch.
+  comment describing exactly what they must do and call it out in its report.
+  It must not change labels or status; the orchestrator splits the work into
+  the person's own bead after preserving the branch.
 
   Some setups back the database with a single server process (a lockfile,
   PID or port under `.beads/`). That is a reason to expect occasional
@@ -464,11 +494,10 @@ wrong place: uncommitted changes live in none of those stores.
 
 Do not retry blindly, and do not leave the bead in limbo:
 
-- **Reported a human-only blocker**: preserve coherent partial work, then use
-  the human-attention protocol above. Flag the original bead unless the human
-  action is a distinct work item; in that case create the blocker, keep it in
-  scope, add the dependency, and flag that blocker. Return the original bead
-  to `open` and verify the flagged bead through `bd human list --json`.
+- **Reported a blocker only a person can clear**: preserve coherent partial
+  work, then split it as above — create the person's bead, label it `human`,
+  keep it in scope, and make the original depend on it. Return the original to
+  `open` and verify the new bead appears in `bd human list --json`.
 - **Reported an agent-resolvable blocker**: create a bead for the blocker
   (`bd create ...`), add the dependency (`bd dep add ...`), and return the
   original bead to `open` with `bd update <id> --status=open`. Give the new
@@ -542,10 +571,15 @@ within scope. Then wait for the in-flight subagents, merge their branches, and
 stop.
 
 Run `bd human list` before the final report. State that the **agent-ready**
-queue is empty, then list human-needed beads separately with their requested
-actions. When a scope was given, name it, so it is clear the agent-ready queue
+queue is empty, then list the beads waiting on the user separately, with what
+each one asks of them. When a scope was given, name it, so it is clear the agent-ready queue
 is empty *within that scope* rather than overall; do not imply the human queue
 shares that scope unless it was filtered separately.
+
+If that queue is non-empty, end by telling the user they can run `/blockers`
+to work through it one bead at a time. Beads flagged during the run are the
+run's main unfinished business, and a count alone does not tell them how to
+clear it.
 
 Between merges, do not pause to ask what to do next and do not summarise
 progress — keep the loop running. The exception is the concurrency question

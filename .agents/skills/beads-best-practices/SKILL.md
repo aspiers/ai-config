@@ -55,29 +55,53 @@ workflow explicitly requires overlapping tracked work. Do not bulk-claim a
 label, epic, milestone, search result, or requested task set merely because all
 items are in scope.
 
-## Flag Work That Needs a Human
+## Work That Needs a Person
 
-When a bead cannot progress without a person — a judgement only they can make,
-an environment only they can reach, or an observation only they can perform —
-label it `human` so it appears in their queue. Apply the complete transition,
-not only the label:
+### One Bead, One Doer
+
+A bead is done by a person or by an agent, never by both. When part of the
+work needs a person and the rest needs an agent, that is two beads, joined by
+a dependency.
+
+This holds whichever order they come in:
+
+- **Decide, then build** — "Choose the storage backend" (person) blocks
+  "Implement the storage layer" (agent).
+- **Build, then check** — "Implement the export" (agent) blocks "Confirm the
+  exported PDF looks right" (person).
+
+Split at the point where the doer changes, and give the person's bead only
+their part. Keep it narrow: one decision, one observation, one approval.
+
+Why it matters: `bd human respond` **closes** the bead it answers. If the bead
+also contains agent work, answering it closes work nobody did. Split properly
+and the answer closes exactly what the person was asked for, and the
+dependency releases the rest.
+
+### Creating the Person's Bead
+
+Create the bead, describe what is needed, label it `human`, and make the
+dependent work wait on it:
 
 ```bash
-bd comments add "$id" "$human_checklist"
-bd label add "$id" human
-bd update "$id" --status=open
+ask=$(bd create --title="Decide: <the question>" \
+                --description="<context, options, what turns on each>" \
+                --type=task --json | jq -r .id)
+bd label add "$ask" human
+bd dep add "$work" "$ask"
 bd human list --json
 ```
 
-`bd human list` is how the user finds these. A bead that needs them but
-carries no label is invisible: it looks like every other open issue, and they
-have no reason to know they are the blocker.
+`bd human list` is how the user finds these, and it lists exactly the beads
+carrying the label. A bead needing a person but carrying no label is
+invisible: it looks like every other open issue, and they have no reason to
+know they are the blocker.
 
-Leaving the explanation in a comment is not enough. A comment reading
+Leaving the explanation in a comment alone is not enough. A comment reading
 "awaiting live verification before close" is only found by someone already
 reading that bead, which is precisely the person who is not looking.
 
-Use it when:
+Split out a person's bead when:
 
 - an acceptance criterion requires human observation, such as confirming a
   visual change on screen or that a sound plays;
@@ -87,41 +111,84 @@ Use it when:
 - the agent believes work is complete but cannot verify the criteria that
   would justify closing it.
 
-Always pair the label with a comment stating what is needed, as a checkable
-list rather than a description of the problem. A flag with no instructions
-transfers the interruption without transferring the context, leaving the
-person to reconstruct what the agent already knew.
+The last two are where mixed beads usually creep in. A bead written as
+"implement X and confirm it works on the device" is two beads that were never
+separated; split it rather than labelling the whole thing.
+
+Write the description for someone with no other context — they see the bead
+and its comments and nothing else. State what is needed as a checkable list,
+and where it is a choice, give the real options and what turns on each. A
+request with no instructions transfers the interruption without transferring
+the context, leaving the person to reconstruct what the agent already knew.
+
+### Keep the Person's Bead Out of the Agent Queue
+
+A person's bead is usually blocked by nothing, so **it appears in `bd ready`
+like any other issue**. Nothing upstream excludes it — `bd ready` has no
+knowledge of the label.
+
+So every automatic queue read must exclude it explicitly:
+
+```bash
+bd ready --exclude-label=human
+```
+
+Treat that as an invariant, not a suggestion. Miss it in one place and an
+agent picks up "Choose the storage backend" as ordinary ready work and chooses
+— which is the exact failure this whole arrangement exists to prevent.
+
+The dependency protects the *dependent work*; only `--exclude-label=human`
+protects the *question itself*. Both are needed.
 
 ### Do Not Leave It `in_progress`
 
-A bead waiting on a human is not being worked on. Leaving it `in_progress`
+A bead waiting on a person is not being worked on. Leaving it `in_progress`
 makes blocked work indistinguishable from active work, and from work an agent
 abandoned mid-task.
 
-Return it to `open` alongside the label, so the status describes reality and
-the label carries the reason. Reserve `in_progress` for work happening now,
-per [Keep Work-in-Progress Status Honest](#keep-work-in-progress-status-honest).
+Keep it `open`, so the status describes reality and the label carries the
+reason. Reserve `in_progress` for work happening now, per
+[Keep Work-in-Progress Status Honest](#keep-work-in-progress-status-honest).
 
-After adding the comment, label, and `open` status, run `bd human list --json`
-and verify the bead appears. This catches a failed or incomplete flag before an
-unattended workflow moves on.
+After creating the bead, labelling it, and adding the dependency, run
+`bd human list --json` and verify it appears. This catches an incomplete
+handoff before an unattended workflow moves on.
 
-### Clear Human Flags Deliberately
+### The User Drains the Queue, Not You
 
-When the requested input arrives, or new evidence proves human attention is no
-longer needed, append a comment recording what changed, remove the label, and
-verify the bead disappears from the active human queue:
+Once labelled, the bead is the user's. Do not answer it yourself, and do not
+keep checking whether the blocker went away — move on to other ready work.
+
+They drain the queue with the
+[`beads-blocker-review`](../beads-blocker-review/SKILL.md) skill, exposed as
+the `/blockers` command, which walks the beads one at a time and answers each
+with `bd human respond`. That closes the bead and releases whatever depended
+on it, so the work returns to `bd ready` on its own.
+
+An answer can arrive at any time, including mid-run. So re-read the queue
+fresh on every pass: never skip a bead because you remember labelling it, and
+never assume one you labelled is still waiting. The bead's current state is
+the only authority.
+
+When the queue is non-empty, point the user at `/blockers` rather than merely
+reporting a count. A queue nobody knows how to drain does not get drained.
+
+### Clearing the Label
+
+Normally you never do this — the user's answer closes the bead through
+`bd human respond`, and the label stays attached as a record of what happened.
+`bd human stats` reads it to report responded and dismissed counts.
+
+Only remove the label when new evidence proves a person was never needed:
 
 ```bash
-bd comments add "$id" "Human-attention requirement resolved: <evidence>"
+bd comments add "$id" "Human attention no longer needed: <evidence>"
 bd label remove "$id" human
 bd human list --json
 ```
 
-Only return the bead to `in_progress` when an agent is actually resuming work.
-Do not use `bd human respond` or `bd human dismiss` on the user's behalf; those
-commands record a human disposition and may close or permanently dismiss the
-bead.
+Never use `bd human respond` or `bd human dismiss` on the user's behalf. Those
+record a human's decision, and inventing one defeats the entire arrangement.
 
 ### Do Not Close Around the Human
 
@@ -130,8 +197,9 @@ When a criterion says the change was observed running, reading the code and
 concluding it must work is not that criterion — it is a substitution, made by
 the party least able to judge whether it holds.
 
-Flag it and wait. An agent closing its own unverifiable work is how a bug
-gets marked fixed several times while the user keeps hitting it.
+Split the verification into the person's own bead and let them do it. An
+agent closing its own unverifiable work is how a bug gets marked fixed several
+times while the user keeps hitting it.
 
 ## Pair IDs with Human-Readable Titles
 

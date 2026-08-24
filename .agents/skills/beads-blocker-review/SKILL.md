@@ -139,8 +139,8 @@ it will close work nobody did.
    **which beads are now unblocked and ready for agent work**; and any
    follow-up work the answers created.
 
-   That middle item is the point of the exercise — the user wants to know
-   what they just released, not merely that the queue is empty.
+   Name the released beads specifically. The user wants to know what their
+   answers freed up, not just that the queue is empty.
 
 ## Handling Interruption
 

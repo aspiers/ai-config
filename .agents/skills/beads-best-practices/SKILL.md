@@ -73,10 +73,10 @@ This holds whichever order they come in:
 Split at the point where the doer changes, and give the person's bead only
 their part. Keep it narrow: one decision, one observation, one approval.
 
-Why it matters: `bd human respond` **closes** the bead it answers. If the bead
-also contains agent work, answering it closes work nobody did. Split properly
-and the answer closes exactly what the person was asked for, and the
-dependency releases the rest.
+`bd human respond` **closes** the bead it answers. If the bead also contains
+agent work, answering it closes work nobody did. Split properly and the answer
+closes exactly what the person was asked for, while the dependency releases
+the rest.
 
 ### Creating the Person's Bead
 
@@ -99,7 +99,7 @@ know they are the blocker.
 
 Leaving the explanation in a comment alone is not enough. A comment reading
 "awaiting live verification before close" is only found by someone already
-reading that bead, which is precisely the person who is not looking.
+reading that bead — the one person who is not looking.
 
 Split out a person's bead when:
 
@@ -133,9 +133,8 @@ So every automatic queue read must exclude it explicitly:
 bd ready --exclude-label=human
 ```
 
-Treat that as an invariant, not a suggestion. Miss it in one place and an
-agent picks up "Choose the storage backend" as ordinary ready work and chooses
-— which is the exact failure this whole arrangement exists to prevent.
+Treat that as an invariant. Miss it in one place and an agent picks up
+"Choose the storage backend" as ordinary ready work and chooses.
 
 The dependency protects the *dependent work*; only `--exclude-label=human`
 protects the *question itself*. Both are needed.
@@ -171,7 +170,7 @@ never assume one you labelled is still waiting. The bead's current state is
 the only authority.
 
 When the queue is non-empty, point the user at `/blockers` rather than merely
-reporting a count. A queue nobody knows how to drain does not get drained.
+reporting a count.
 
 ### Clearing the Label
 
@@ -188,7 +187,7 @@ bd human list --json
 ```
 
 Never use `bd human respond` or `bd human dismiss` on the user's behalf. Those
-record a human's decision, and inventing one defeats the entire arrangement.
+record a human's decision; inventing one answers the question they were asked.
 
 ### Do Not Close Around the Human
 

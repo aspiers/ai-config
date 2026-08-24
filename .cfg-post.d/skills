@@ -105,3 +105,14 @@ install_skills() {
 
 # Call once per repository so selected skills share one clone.
 install_skills cursor/plugins unslop
+install_skills mattpocock/skills \
+    grilling \
+    domain-modeling \
+    grill-with-docs \
+    diagnosing-bugs \
+    codebase-design \
+    improve-codebase-architecture \
+    resolving-merge-conflicts \
+    prototype \
+    wait-what \
+    wizard

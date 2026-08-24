@@ -1,0 +1,1397 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Strategy for reusable AI skill groups</title>
+        <style>
+            :root {
+                color-scheme: light dark;
+                --bg: #f5f7fb;
+                --panel: #ffffff;
+                --panel-alt: #eef2f8;
+                --text: #18212f;
+                --muted: #5e6b7a;
+                --border: #d6dde8;
+                --accent: #3157c8;
+                --good: #18794e;
+                --good-bg: #e9f7f0;
+                --caution: #8a5a00;
+                --caution-bg: #fff5d6;
+                --poor: #b42318;
+                --poor-bg: #ffebe9;
+                --info: #5b3fa3;
+                --info-bg: #f1ecff;
+                --shadow: 0 8px 24px rgb(22 34 51 / 8%);
+            }
+
+            @media (prefers-color-scheme: dark) {
+                :root {
+                    --bg: #111722;
+                    --panel: #1a2230;
+                    --panel-alt: #232d3d;
+                    --text: #edf2f7;
+                    --muted: #aeb9c7;
+                    --border: #344054;
+                    --accent: #9ab2ff;
+                    --good: #65d9a7;
+                    --good-bg: #15382b;
+                    --caution: #f2c14e;
+                    --caution-bg: #3c3014;
+                    --poor: #ff8a80;
+                    --poor-bg: #451d1a;
+                    --info: #c4a7ff;
+                    --info-bg: #30254a;
+                    --shadow: 0 8px 24px rgb(0 0 0 / 24%);
+                }
+            }
+
+            * {
+                box-sizing: border-box;
+            }
+
+            html {
+                scroll-behavior: smooth;
+            }
+
+            body {
+                background: var(--bg);
+                color: var(--text);
+                font:
+                    16px/1.58 system-ui,
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Segoe UI",
+                    sans-serif;
+                margin: 0;
+            }
+
+            a {
+                color: var(--accent);
+            }
+
+            a:focus-visible {
+                outline: 3px solid var(--accent);
+                outline-offset: 3px;
+            }
+
+            code {
+                background: var(--panel-alt);
+                border-radius: 0.25rem;
+                font-size: 0.92em;
+                padding: 0.1rem 0.3rem;
+            }
+
+            pre {
+                background: #111827;
+                border-radius: 0.7rem;
+                color: #f9fafb;
+                overflow-x: auto;
+                padding: 1rem;
+            }
+
+            pre code {
+                background: transparent;
+                padding: 0;
+            }
+
+            header,
+            main,
+            footer {
+                margin: 0 auto;
+                max-width: 1180px;
+                padding: 1.5rem;
+            }
+
+            header {
+                padding-top: 3rem;
+            }
+
+            h1 {
+                font-size: clamp(2rem, 5vw, 3.35rem);
+                letter-spacing: -0.035em;
+                line-height: 1.07;
+                margin: 0 0 1rem;
+            }
+
+            h2 {
+                line-height: 1.2;
+                margin-top: 0;
+            }
+
+            h3 {
+                line-height: 1.3;
+                margin-bottom: 0.4rem;
+            }
+
+            .lede {
+                font-size: 1.15rem;
+                max-width: 80ch;
+            }
+
+            .meta,
+            .muted {
+                color: var(--muted);
+            }
+
+            .notice,
+            .recommendation,
+            .section-card,
+            .evidence-card {
+                background: var(--panel);
+                border: 1px solid var(--border);
+                border-radius: 14px;
+                box-shadow: var(--shadow);
+                margin: 1.5rem 0;
+                padding: clamp(1.1rem, 3vw, 2rem);
+            }
+
+            .notice {
+                border-left: 5px solid var(--caution);
+            }
+
+            .recommendation {
+                border-left: 6px solid var(--good);
+            }
+
+            .recommendation .verdict {
+                color: var(--good);
+                font-size: 1.25rem;
+                font-weight: 750;
+                margin-top: 0;
+            }
+
+            .quick-links {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.5rem 1rem;
+                list-style: none;
+                padding: 0;
+            }
+
+            .table-wrap {
+                background: var(--panel);
+                border: 1px solid var(--border);
+                border-radius: 14px;
+                box-shadow: var(--shadow);
+                margin: 1.5rem 0;
+                overflow-x: auto;
+            }
+
+            table {
+                border-collapse: collapse;
+                min-width: 920px;
+                width: 100%;
+            }
+
+            caption {
+                font-weight: 700;
+                padding: 1rem;
+                text-align: left;
+            }
+
+            th,
+            td {
+                border-top: 1px solid var(--border);
+                padding: 0.8rem 0.9rem;
+                text-align: left;
+                vertical-align: top;
+            }
+
+            th {
+                background: var(--panel-alt);
+            }
+
+            .rating-good,
+            .rating-caution,
+            .rating-poor,
+            .rating-info {
+                box-shadow: inset 4px 0 currentColor;
+                font-weight: 650;
+            }
+
+            .rating-good {
+                background: var(--good-bg);
+                color: var(--good);
+            }
+
+            .rating-caution {
+                background: var(--caution-bg);
+                color: var(--caution);
+            }
+
+            .rating-poor {
+                background: var(--poor-bg);
+                color: var(--poor);
+            }
+
+            .rating-info {
+                background: var(--info-bg);
+                color: var(--info);
+            }
+
+            .legend {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.7rem 1.1rem;
+                margin: 0.8rem 0 2rem;
+            }
+
+            .legend span {
+                align-items: center;
+                display: inline-flex;
+                gap: 0.4rem;
+            }
+
+            .swatch {
+                border-radius: 999px;
+                display: inline-block;
+                height: 0.8rem;
+                width: 0.8rem;
+            }
+
+            .swatch.good {
+                background: var(--good);
+            }
+
+            .swatch.caution {
+                background: var(--caution);
+            }
+
+            .swatch.poor {
+                background: var(--poor);
+            }
+
+            .swatch.info {
+                background: var(--info);
+            }
+
+            .flow {
+                display: grid;
+                gap: 0.75rem;
+                grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+                list-style: none;
+                padding: 0;
+            }
+
+            .flow li {
+                background: var(--panel-alt);
+                border: 1px solid var(--border);
+                border-radius: 10px;
+                min-height: 7rem;
+                padding: 0.9rem;
+            }
+
+            .flow strong {
+                display: block;
+                margin-bottom: 0.3rem;
+            }
+
+            .two-column {
+                display: grid;
+                gap: 1.2rem;
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            }
+
+            .compact-list li {
+                margin-bottom: 0.45rem;
+            }
+
+            .status {
+                border: 1px solid currentColor;
+                border-radius: 999px;
+                display: inline-block;
+                font-size: 0.82rem;
+                font-weight: 700;
+                padding: 0.08rem 0.48rem;
+                white-space: nowrap;
+            }
+
+            .status.open {
+                color: var(--caution);
+            }
+
+            .status.closed {
+                color: var(--poor);
+            }
+
+            .decision-list li {
+                margin-bottom: 0.8rem;
+            }
+
+            footer {
+                color: var(--muted);
+                padding-bottom: 3rem;
+            }
+        </style>
+    </head>
+    <body>
+        <header>
+            <h1>Strategy for reusable AI skill groups</h1>
+            <p class="lede">
+                Should the maintainer build skill groups in a friendly fork of
+                Vercel Skills, extend another manager, or keep group semantics
+                in a separate tool? This report compares the options and
+                recommends a companion compiler with a deliberately small
+                downstream patch stack.
+            </p>
+            <p class="meta">
+                Evidence checked 2026-08-24 UTC. Upstream project:
+                <a href="https://github.com/vercel-labs/skills">Vercel Skills</a
+                >.
+            </p>
+        </header>
+
+        <main>
+            <aside class="notice" role="note">
+                <h2>Author-specific scope</h2>
+                <p>
+                    <strong>AUTHOR-SPECIFIC:</strong> This report evaluates the
+                    maintainer's existing fork, contribution history, agent
+                    targets, security policy, and local installer. Other users
+                    should substitute their own maintenance capacity and agent
+                    requirements.
+                </p>
+                <p>
+                    <strong>Revision note:</strong> The first version narrowed
+                    the alternatives too aggressively and discussed only
+                    skiletto in detail. This revision restores the full FOSS
+                    shortlist: Vercel Skills, reskill, skiletto, GSKILL, and
+                    owainlewis/skills.
+                </p>
+            </aside>
+
+            <nav class="section-card" aria-label="Report sections">
+                <h2>Contents</h2>
+                <ul class="quick-links">
+                    <li><a href="#recommendation">Recommendation</a></li>
+                    <li><a href="#option-matrix">Option matrix</a></li>
+                    <li>
+                        <a href="#other-managers">Other skill managers</a>
+                    </li>
+                    <li><a href="#upstream-evidence">Upstream evidence</a></li>
+                    <li><a href="#proposed-design">Proposed design</a></li>
+                    <li><a href="#fork-policy">Fork policy</a></li>
+                    <li><a href="#delivery-plan">Delivery plan</a></li>
+                    <li><a href="#decisions">Decisions still needed</a></li>
+                </ul>
+            </nav>
+
+            <section class="recommendation" id="recommendation">
+                <h2>Recommendation</h2>
+                <p class="verdict">
+                    Put reusable groups in a companion compiler. Keep a friendly
+                    fork only for changes that cannot be implemented outside
+                    Vercel Skills.
+                </p>
+                <p>
+                    A conventional long-lived fork gives full control, but it
+                    also ties group development to a fast-moving CLI and an
+                    unresponsive contribution queue. The group model does not
+                    need that coupling. A separate tool can read group
+                    definitions, compose them, audit every member, produce a
+                    resolved lock, batch members by source, and invoke stock
+                    Vercel Skills once per repository.
+                </p>
+                <p>
+                    The other managers do not overturn this recommendation.
+                    <a href="https://github.com/kumekay/skiletto">skiletto</a>
+                    and <a href="https://github.com/glapsfun/gskill">GSKILL</a>
+                    have stronger lock and integrity models, but each lacks
+                    required agent coverage and still needs a group layer.
+                    <a href="https://github.com/kanyun-inc/reskill">reskill</a>
+                    has the best manifest ergonomics and custom-target support,
+                    but its install and lock security is too weak for untrusted
+                    sources.
+                    <a href="https://github.com/owainlewis/skills"
+                        >owainlewis/skills</a
+                    >
+                    is pleasantly small and configurable, but would need most
+                    of the hardening built from scratch.
+                </p>
+                <p>
+                    This is not a vote against the existing fork. It changes its
+                    job. The fork becomes a small patch queue for transport and
+                    enforcement gaps such as commit pins, authoritative lock
+                    checks, or persistent caching. Group names, group
+                    composition, security decisions, and generated locks stay
+                    outside it.
+                </p>
+            </section>
+
+            <section id="option-matrix">
+                <h2>Option matrix</h2>
+                <div class="table-wrap">
+                    <table>
+                        <caption>
+                            Suitability for cross-repository, security-gated,
+                            reproducible groups
+                        </caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Option</th>
+                                <th scope="col">Cross-repo groups</th>
+                                <th scope="col">Security and locks</th>
+                                <th scope="col">Upstream maintenance cost</th>
+                                <th scope="col">Time to useful result</th>
+                                <th scope="col">Verdict</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th scope="row">
+                                    Companion compiler over stock Vercel Skills
+                                </th>
+                                <td class="rating-good">
+                                    Strong. The schema is ours.
+                                </td>
+                                <td class="rating-good">
+                                    Strong if resolution and policy stay outside
+                                    the installer.
+                                </td>
+                                <td class="rating-good">
+                                    Low. The backend remains replaceable.
+                                </td>
+                                <td class="rating-good">
+                                    Short. Existing batching and audit code can
+                                    be reused.
+                                </td>
+                                <td class="rating-good">Recommended</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Patch-stack friendly fork</th>
+                                <td class="rating-good">
+                                    Strong. Any model can be added.
+                                </td>
+                                <td class="rating-good">
+                                    Strong, with full control of install paths.
+                                </td>
+                                <td class="rating-poor">
+                                    High. Frequent rebases and conflict testing.
+                                </td>
+                                <td class="rating-caution">
+                                    Mixed. Fast first patch, expensive upkeep.
+                                </td>
+                                <td class="rating-caution">
+                                    Use only for unwrappable gaps
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">
+                                    Extend PR #1562, curated skill bundles
+                                </th>
+                                <td class="rating-poor">
+                                    Weak. Members must share one repository.
+                                </td>
+                                <td class="rating-caution">
+                                    Uses existing advisory audit and lock
+                                    behavior.
+                                </td>
+                                <td class="rating-poor">
+                                    High. Large unreviewed branch plus local
+                                    extensions.
+                                </td>
+                                <td class="rating-caution">
+                                    Mixed. Useful code exists, but the model is
+                                    too narrow.
+                                </td>
+                                <td class="rating-caution">
+                                    Reference implementation, not the base
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Skiletto plus a group layer</th>
+                                <td class="rating-caution">
+                                    Still requires new composition logic.
+                                </td>
+                                <td class="rating-good">
+                                    Strong commits, hashes, cache, drift checks,
+                                    scanner hook.
+                                </td>
+                                <td class="rating-caution">
+                                    No Vercel rebase cost, but adapters become
+                                    ours.
+                                </td>
+                                <td class="rating-caution">
+                                    Longer because agent coverage needs work.
+                                </td>
+                                <td class="rating-caution">
+                                    Good second backend
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">reskill plus a group layer</th>
+                                <td class="rating-caution">
+                                    Multi-source manifests help, but named
+                                    installable groups still need new logic.
+                                </td>
+                                <td class="rating-poor">
+                                    Weak. The recorded commit is not
+                                    authoritative and install-time scanning does
+                                    not protect ordinary sources.
+                                </td>
+                                <td class="rating-caution">
+                                    Medium. Custom targets help, but a safer
+                                    resolver and installer become our work.
+                                </td>
+                                <td class="rating-caution">
+                                    Medium. Good schema starting point, poor
+                                    security starting point.
+                                </td>
+                                <td class="rating-caution">
+                                    Borrow its manifest UX, not its executor
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">GSKILL plus a group layer</th>
+                                <td class="rating-caution">
+                                    Multi-source locks help, but composition
+                                    still needs new logic.
+                                </td>
+                                <td class="rating-good">
+                                    Strongest frozen restore, hashes, path
+                                    safety, and offline cache. No semantic
+                                    scanner.
+                                </td>
+                                <td class="rating-caution">
+                                    Medium to high. Pi and OpenCode adapters
+                                    must be added and maintained.
+                                </td>
+                                <td class="rating-caution">
+                                    Longer. Excellent lock base, incomplete
+                                    agent base.
+                                </td>
+                                <td class="rating-caution">
+                                    Best integrity reference and possible CI
+                                    backend
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">
+                                    owainlewis/skills plus a group layer
+                                </th>
+                                <td class="rating-caution">
+                                    Whole manifests can emulate profiles, but
+                                    composition is external.
+                                </td>
+                                <td class="rating-poor">
+                                    Weak. State-only locks, no content hashes,
+                                    scanner, drift defence, or cache.
+                                </td>
+                                <td class="rating-caution">
+                                    Medium. Custom targets reduce adapter work,
+                                    but hardening becomes ours.
+                                </td>
+                                <td class="rating-caution">
+                                    Short prototype, long security rewrite.
+                                </td>
+                                <td class="rating-poor">
+                                    Not suitable as the trusted executor
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Wait for upstream</th>
+                                <td class="rating-info">
+                                    Unknown. Several competing proposals exist.
+                                </td>
+                                <td class="rating-poor">
+                                    Current enforcement remains insufficient.
+                                </td>
+                                <td class="rating-good">
+                                    Low local code cost.
+                                </td>
+                                <td class="rating-poor">
+                                    Unbounded. No maintainer commitment is
+                                    visible.
+                                </td>
+                                <td class="rating-poor">Do not wait</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="legend" role="note" aria-label="Rating legend">
+                    <span
+                        ><i class="swatch good" aria-hidden="true"></i>Strong or
+                        suitable</span
+                    >
+                    <span
+                        ><i class="swatch caution" aria-hidden="true"></i
+                        >Conditional or costly</span
+                    >
+                    <span
+                        ><i class="swatch poor" aria-hidden="true"></i>Weak or
+                        blocking</span
+                    >
+                    <span
+                        ><i class="swatch info" aria-hidden="true"></i>Unknown
+                        or not comparable</span
+                    >
+                </div>
+            </section>
+
+            <section id="other-managers">
+                <h2>Where the other skill managers fit</h2>
+                <p>
+                    None has first-class composable named groups. That does not
+                    make them irrelevant. Each provides code or design choices
+                    worth reusing, and two could become alternate execution
+                    backends after the group contract is stable.
+                </p>
+                <div class="table-wrap">
+                    <table>
+                        <caption>
+                            Reusable parts and blockers in the full FOSS
+                            shortlist
+                        </caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Manager</th>
+                                <th scope="col">What to reuse</th>
+                                <th scope="col">Blockers for this use case</th>
+                                <th scope="col">Recommended role</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th scope="row">
+                                    <a href="https://github.com/vercel-labs/skills"
+                                        >Vercel Skills</a
+                                    >
+                                </th>
+                                <td>
+                                    All five target agents, source discovery,
+                                    broad ecosystem compatibility, and current
+                                    repository batching.
+                                </td>
+                                <td>
+                                    No desired-state manifest or named groups.
+                                    Audits are advisory and lock restoration is
+                                    not frozen.
+                                </td>
+                                <td class="rating-good">
+                                    Primary transport backend behind the
+                                    companion compiler
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">
+                                    <a href="https://github.com/kanyun-inc/reskill"
+                                        >reskill</a
+                                    >
+                                </th>
+                                <td>
+                                    Clear intent manifest, multi-source
+                                    installation, custom project and global
+                                    targets, and monorepo selection.
+                                </td>
+                                <td>
+                                    Its groups are registry namespaces, not
+                                    installable bundles. Normal installation
+                                    does not restore the recorded commit, and
+                                    scanning gates publishing rather than
+                                    installation.
+                                </td>
+                                <td class="rating-caution">
+                                    Schema and user-experience reference. Avoid
+                                    as the security enforcement backend.
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">
+                                    <a href="https://github.com/kumekay/skiletto"
+                                        >skiletto</a
+                                    >
+                                </th>
+                                <td>
+                                    Separate intent and lock files, exact
+                                    commits, content hashes, shared repository
+                                    cache, drift refusal, and a fail-closed
+                                    machine-owned scanner hook.
+                                </td>
+                                <td>
+                                    No named groups, OpenCode adapter, or custom
+                                    targets. The project is early and scanner
+                                    bypasses need policy controls.
+                                </td>
+                                <td class="rating-good">
+                                    Best second-backend pilot for
+                                    security-sensitive global and project use
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">
+                                    <a href="https://github.com/glapsfun/gskill"
+                                        >GSKILL</a
+                                    >
+                                </th>
+                                <td>
+                                    Frozen locks, exact commits, multiple
+                                    content hashes, safe path handling, drift
+                                    tooling, signed releases, and offline
+                                    restoration.
+                                </td>
+                                <td>
+                                    No named groups or semantic scanner. Pi,
+                                    OpenCode, and custom target adapters are
+                                    missing.
+                                </td>
+                                <td class="rating-good">
+                                    Integrity model to copy, and a possible CI
+                                    backend if agent coverage expands
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">
+                                    <a href="https://github.com/owainlewis/skills"
+                                        >owainlewis/skills</a
+                                    >
+                                </th>
+                                <td>
+                                    Small codebase, simple TOML, project and
+                                    global scopes, built-in Pi support, and
+                                    arbitrary target paths.
+                                </td>
+                                <td>
+                                    No named groups, frozen restore, content
+                                    hash, scanner, drift check, or persistent
+                                    cache. Path and symlink hardening is weak.
+                                </td>
+                                <td class="rating-poor">
+                                    Syntax inspiration only. Do not use it for
+                                    unreviewed skills.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p>
+                    The practical order is therefore Vercel Skills for immediate
+                    compatibility, skiletto for a second backend experiment,
+                    GSKILL as the integrity benchmark, reskill as a manifest UX
+                    reference, and owainlewis/skills as a minimalist syntax
+                    reference. The group catalogue should not depend on any one
+                    of them.
+                </p>
+            </section>
+
+            <section class="section-card" id="why-not-full-fork">
+                <h2>Why a full fork is the wrong default</h2>
+                <div class="two-column">
+                    <div>
+                        <h3>The maintenance signal is bad</h3>
+                        <ul class="compact-list">
+                            <li>
+                                The maintainer's audit-results branch
+                                <code>feat/surface-audit-results</code> contains
+                                one downstream commit and is already 144
+                                upstream commits behind.
+                            </li>
+                            <li>
+                                The corresponding contribution has received
+                                automated review but no maintainer response
+                                after three direct review requests.
+                            </li>
+                            <li>
+                                Upstream ships frequently. A fork must absorb
+                                changes in discovery, source parsing, locks,
+                                agents, authentication, archive handling, and
+                                update behavior.
+                            </li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3>
+                            The desired model does not belong in transport code
+                        </h3>
+                        <ul class="compact-list">
+                            <li>
+                                Groups are user intent. Installation is an
+                                execution detail.
+                            </li>
+                            <li>
+                                A group may contain skills from several
+                                repositories and may include other groups.
+                            </li>
+                            <li>
+                                The resolved lock should survive a future move
+                                from Vercel Skills to skiletto or another
+                                backend.
+                            </li>
+                            <li>
+                                Security policy should reject one member without
+                                silently changing the trust policy for its
+                                siblings.
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <section id="upstream-evidence">
+                <h2>Upstream evidence</h2>
+                <p>
+                    The upstream queue shows strong demand but no settled
+                    architecture. Existing proposals split into consumer-side
+                    groups, publisher-side bundles, manifests, and package
+                    manager work. None covers the complete requirement.
+                </p>
+                <div class="table-wrap">
+                    <table>
+                        <caption>
+                            Relevant Vercel Skills work checked on 2026-08-24
+                            UTC
+                        </caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Item</th>
+                                <th scope="col">Status</th>
+                                <th scope="col">What it provides</th>
+                                <th scope="col">Why it is not enough</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th scope="row">
+                                    <a
+                                        href="https://github.com/vercel-labs/skills/pull/482"
+                                        >PR #482, surface audit results</a
+                                    >
+                                </th>
+                                <td>
+                                    <span class="status open">Open</span
+                                    ><br />Created 2026-03-03
+                                </td>
+                                <td>
+                                    Audit badges, safer discovery defaults, and
+                                    a stronger warning before installation.
+                                </td>
+                                <td>
+                                    No maintainer response after three review
+                                    requests. It also warns rather than
+                                    enforcing the required fail-closed policy.
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">
+                                    <a
+                                        href="https://github.com/vercel-labs/skills/issues/502"
+                                        >Issue #502, dependency groups</a
+                                    >
+                                </th>
+                                <td>
+                                    <span class="status open">Open</span
+                                    ><br />Created 2026-03-05
+                                </td>
+                                <td>
+                                    Consumer-side group CRUD and bulk add,
+                                    remove, and list behavior.
+                                </td>
+                                <td>
+                                    Membership is based on installed skill
+                                    names. It does not define cross-source
+                                    provenance, immutable pins, or a generated
+                                    environment lock.
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">
+                                    <a
+                                        href="https://github.com/vercel-labs/skills/pull/512"
+                                        >PR #512, dependency groups
+                                        implementation</a
+                                    >
+                                </th>
+                                <td>
+                                    <span class="status closed"
+                                        >Closed unmerged</span
+                                    ><br />Closed 2026-06-08
+                                </td>
+                                <td>
+                                    A complete implementation with group CRUD
+                                    and 24 tests.
+                                </td>
+                                <td>
+                                    Closed without review or a replacement
+                                    direction. Its fate is a warning against
+                                    basing delivery on upstream acceptance.
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">
+                                    <a
+                                        href="https://github.com/vercel-labs/skills/issues/992"
+                                        >Issue #992, first-class group or track
+                                        install</a
+                                    >
+                                </th>
+                                <td>
+                                    <span class="status open">Open</span
+                                    ><br />Created 2026-04-23
+                                </td>
+                                <td>
+                                    Publisher-declared groups for large skill
+                                    repositories.
+                                </td>
+                                <td>
+                                    Useful for one publisher repository. It does
+                                    not compose local groups across sources.
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">
+                                    <a
+                                        href="https://github.com/vercel-labs/skills/pull/1562"
+                                        >PR #1562, curated skill bundles</a
+                                    >
+                                </th>
+                                <td>
+                                    <span class="status open">Open</span
+                                    ><br />Updated 2026-07-05
+                                </td>
+                                <td>
+                                    Thin same-repository bundles, exact path
+                                    selection, install delegation, and
+                                    bundle-aware locks.
+                                </td>
+                                <td>
+                                    All members must be co-located. Security
+                                    inherits the advisory installer policy. The
+                                    patch is large and has no review.
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">
+                                    <a
+                                        href="https://github.com/vercel-labs/skills/issues/165"
+                                        >Issue #165, package manager workflow</a
+                                    >
+                                </th>
+                                <td>
+                                    <span class="status open">Open</span
+                                    ><br />Updated 2026-06-19
+                                </td>
+                                <td>
+                                    Manifest, content-addressed cache,
+                                    integrity, offline use, and configured
+                                    agents.
+                                </td>
+                                <td>
+                                    A proposal, not an upstream implementation.
+                                    It validates the need for a separate
+                                    desired-state model.
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">
+                                    <a
+                                        href="https://github.com/vercel-labs/skills/issues/729"
+                                        >Issue #729, declarative Skillfile</a
+                                    >
+                                </th>
+                                <td>
+                                    <span class="status open">Open</span
+                                    ><br />Updated 2026-07-12
+                                </td>
+                                <td>
+                                    Multi-source project and global
+                                    declarations, agent targets, diff, and lock
+                                    generation.
+                                </td>
+                                <td>
+                                    No accepted schema or implementation. This
+                                    is close to the companion layer proposed
+                                    here.
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">
+                                    <a
+                                        href="https://github.com/vercel-labs/skills/pull/1439"
+                                        >PR #1439, commit SHA installation</a
+                                    >
+                                </th>
+                                <td>
+                                    <span class="status open">Open</span
+                                    ><br />Updated 2026-08-14
+                                </td>
+                                <td>Full commit-SHA support on clone paths.</td>
+                                <td>
+                                    A good example of a transport feature that
+                                    may justify a temporary downstream patch.
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">
+                                    <a
+                                        href="https://github.com/vercel-labs/skills/pull/1254"
+                                        >PR #1254, default-deny policy and
+                                        inventory</a
+                                    >
+                                </th>
+                                <td>
+                                    <span class="status open"
+                                        >Open, conflicting</span
+                                    ><br />Updated 2026-06-20
+                                </td>
+                                <td>
+                                    Source policy, mirror routing, safer
+                                    defaults, and a machine-readable inventory.
+                                </td>
+                                <td>
+                                    Strong ideas, but it is another large
+                                    unreviewed fork candidate rather than a
+                                    dependable upstream base.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="section-card" id="proposed-design">
+                <h2>Proposed design</h2>
+                <p>
+                    Keep the input model small and explicit. A versioned group
+                    catalogue records intent. A generated lock records the exact
+                    resolved environment. Only the lock is accepted for
+                    unattended installation.
+                </p>
+
+                <h3>Processing flow</h3>
+                <ol class="flow">
+                    <li>
+                        <strong>1. Read groups</strong>
+                        Load named groups and recursively expand included
+                        groups.
+                    </li>
+                    <li>
+                        <strong>2. Resolve</strong>
+                        Normalize source, path, ref, agent targets, and scope
+                        for every skill.
+                    </li>
+                    <li>
+                        <strong>3. Audit</strong>
+                        Apply policy to each skill. Rejected or unverifiable
+                        members remain explicit.
+                    </li>
+                    <li>
+                        <strong>4. Lock</strong>
+                        Record commit, content hash, provenance, audit
+                        disposition, and selected groups.
+                    </li>
+                    <li>
+                        <strong>5. Plan</strong>
+                        Deduplicate skills, expose conflicts, and batch allowed
+                        members by source and ref.
+                    </li>
+                    <li>
+                        <strong>6. Apply</strong>
+                        Call stock Vercel Skills once per batch, then verify the
+                        installed state.
+                    </li>
+                </ol>
+
+                <h3>Illustrative group catalogue</h3>
+                <pre><code>version: 1
+
+groups:
+  web-frontend:
+    include:
+      - code-quality
+    skills:
+      - source: example/frontend-skills
+        path: skills/react-review
+        ref: v2.1.0
+
+  code-quality:
+    skills:
+      - source: example/general-skills
+        path: skills/security-review
+        ref: 0123456789abcdef0123456789abcdef01234567
+</code></pre>
+                <p class="muted">
+                    The names and sources above are placeholders. They do not
+                    represent the maintainer's installed skill inventory.
+                </p>
+
+                <h3>Ownership boundary</h3>
+                <div class="two-column">
+                    <div>
+                        <h3>The companion tool owns</h3>
+                        <ul class="compact-list">
+                            <li>Group definitions and recursive composition</li>
+                            <li>Cycle, duplicate, and conflict handling</li>
+                            <li>Security policy and audit exceptions</li>
+                            <li>Source and commit resolution</li>
+                            <li>The generated environment lock</li>
+                            <li>
+                                Batch planning, drift checks, and reconciliation
+                            </li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3>Vercel Skills owns</h3>
+                        <ul class="compact-list">
+                            <li>Repository and skill discovery</li>
+                            <li>Agent path knowledge</li>
+                            <li>Copy and symlink installation behavior</li>
+                            <li>Interactive UX when explicitly requested</li>
+                            <li>
+                                Ecosystem compatibility and new agent support
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section-card" id="fork-policy">
+                <h2>How to keep the friendly fork manageable</h2>
+                <p>
+                    Keep the fork, but treat it as a tested patch queue rather
+                    than a separate product. Do not put group definitions or the
+                    group schema on the fork's main branch.
+                </p>
+                <ol class="compact-list">
+                    <li>
+                        Maintain one branch per downstream change, each rebased
+                        directly onto upstream <code>main</code>.
+                    </li>
+                    <li>
+                        Keep each patch independently testable and removable.
+                        Record the upstream issue or pull request it replaces.
+                    </li>
+                    <li>
+                        Run scheduled rebase and test jobs. A conflict should
+                        fail visibly rather than leaving an old fork installed.
+                    </li>
+                    <li>
+                        Build a downstream release branch by applying the patch
+                        branches in a fixed order.
+                    </li>
+                    <li>
+                        Delete a patch as soon as upstream provides equivalent
+                        behavior. The companion lock must continue to work
+                        before and after that deletion.
+                    </li>
+                </ol>
+                <p>
+                    Likely patch candidates are commit-SHA transport support,
+                    enforced lock verification, and persistent repository
+                    caching. Group composition is not a patch candidate because
+                    it belongs above the installer.
+                </p>
+            </section>
+
+            <section id="delivery-plan">
+                <h2>Delivery plan</h2>
+                <div class="table-wrap">
+                    <table>
+                        <caption>
+                            A staged path that avoids an early fork commitment
+                        </caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Stage</th>
+                                <th scope="col">Deliverable</th>
+                                <th scope="col">Proof required</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th scope="row">1. Contract</th>
+                                <td>
+                                    Finish <code>ai-czl.1.1</code>, specify
+                                    reusable skill-group semantics and safety
+                                    requirements.
+                                </td>
+                                <td>
+                                    Examples cover overlapping groups,
+                                    conflicts, rejected members, unavailable
+                                    audits, scopes, and two skills from one
+                                    source.
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">2. Read-only compiler</th>
+                                <td>
+                                    Parse and compose groups, then emit a
+                                    deterministic install plan without changing
+                                    the machine.
+                                </td>
+                                <td>
+                                    Stable output, cycle detection,
+                                    deduplication, and source batching tests.
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">3. Security and lock</th>
+                                <td>
+                                    Resolve commits, audit members, and generate
+                                    a reviewable lock.
+                                </td>
+                                <td>
+                                    Fail-closed behavior, explicit exceptions,
+                                    content hashes, and reproducible
+                                    re-resolution.
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">4. Stock backend</th>
+                                <td>
+                                    Invoke the current installer and stock
+                                    Vercel Skills from the approved lock.
+                                </td>
+                                <td>
+                                    Project and global installs, all required
+                                    agents, one fetch per repository, and
+                                    idempotent repeat.
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">5. Fork only where measured</th>
+                                <td>
+                                    List any acceptance criteria the stock
+                                    backend cannot satisfy, then add the
+                                    smallest downstream patches.
+                                </td>
+                                <td>
+                                    Each patch has a failing backend conformance
+                                    test before implementation and can be
+                                    removed independently.
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">
+                                    6. Second backend experiment
+                                </th>
+                                <td>
+                                    Run the same resolved lock through skiletto
+                                    and GSKILL adapters. Use reskill as a
+                                    manifest-ergonomics reference rather than a
+                                    trusted executor.
+                                </td>
+                                <td>
+                                    The group catalogue remains unchanged. The
+                                    conformance suite compares exact restore,
+                                    audit enforcement, cache use, agent
+                                    coverage, and drift handling.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="section-card" id="risks">
+                <h2>Risks and controls</h2>
+                <div class="two-column">
+                    <div>
+                        <h3>CLI coupling</h3>
+                        <p>
+                            Calling a CLI is less stable than a library API.
+                            Keep the adapter narrow, pass explicit flags, avoid
+                            parsing decorative output, and test against a pinned
+                            supported Vercel Skills version.
+                        </p>
+                    </div>
+                    <div>
+                        <h3>Two lock formats</h3>
+                        <p>
+                            Vercel Skills writes its own state. Treat the
+                            companion lock as authoritative and the backend lock
+                            as observed execution state. Verify agreement after
+                            each apply.
+                        </p>
+                    </div>
+                    <div>
+                        <h3>Audit service failure</h3>
+                        <p>
+                            An unavailable or malformed audit must reject the
+                            affected member unless an explicit reviewed
+                            exception exists. It must not block unrelated
+                            allowed members.
+                        </p>
+                    </div>
+                    <div>
+                        <h3>Backend replacement</h3>
+                        <p>
+                            Keep backend-specific fields out of group
+                            definitions. Store normalized provenance and content
+                            hashes in the resolved lock so another adapter can
+                            consume the same plan.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section-card" id="decisions">
+                <h2>Decisions still needed</h2>
+                <p>
+                    The architecture can proceed once these choices are made.
+                    They are listed separately so they can be discussed without
+                    another dense questionnaire preamble.
+                </p>
+                <ol class="decision-list">
+                    <li>
+                        <strong>Primary direction.</strong> Confirm companion
+                        compiler first, or choose a full downstream fork despite
+                        the maintenance cost.
+                    </li>
+                    <li>
+                        <strong>Implementation language.</strong> A shell and
+                        <code>jq</code> prototype would extend the current
+                        installer quickly. TypeScript would reuse Vercel Skills
+                        types and libraries more easily. Python would make the
+                        compiler and tests independent of the Node toolchain.
+                    </li>
+                    <li>
+                        <strong>Lock authority.</strong> Decide whether the
+                        first release must pin exact commits and content hashes,
+                        or whether that can follow a dry-run group compiler.
+                    </li>
+                    <li>
+                        <strong>Fork threshold.</strong> Define which failed
+                        backend conformance tests justify a downstream patch.
+                        This prevents convenience changes from accumulating in
+                        the fork.
+                    </li>
+                </ol>
+            </section>
+
+            <section class="evidence-card" id="methodology">
+                <h2>Method and limits</h2>
+                <p>
+                    This report combines the earlier comparison of Vercel
+                    Skills, reskill, skiletto, GSKILL, and owainlewis/skills,
+                    the current local fork state, and live GitHub issue and pull
+                    request data observed on 2026-08-24 UTC. It assesses
+                    architecture for the maintainer's stated requirements:
+                    reusable cross-repository groups, global and project scopes,
+                    Claude Code, OpenCode, Pi, Codex, and Cursor, per-skill
+                    fail-closed audits, source batching, reproducible locks, and
+                    idempotent reconciliation.
+                </p>
+                <p>
+                    GitHub activity is evidence about governance risk, not proof
+                    that upstream will never merge a proposal. The companion
+                    recommendation remains reversible. If upstream later adopts
+                    a compatible manifest or bundle model, an adapter can emit
+                    that format and retire local installation code.
+                </p>
+                <p>
+                    Tracking bead:
+                    <code>ai-czl.1.1</code>, Specify reusable skill-group
+                    semantics and safety requirements.
+                </p>
+            </section>
+        </main>
+
+        <footer>
+            <p>
+                Self-contained report generated from public upstream evidence
+                and local repository state observed on 2026-08-24 UTC. No remote
+                scripts, stylesheets, fonts, or images are used.
+            </p>
+        </footer>
+    </body>
+</html>

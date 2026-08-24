@@ -5,6 +5,7 @@ description: >-
   interactive questionnaire UI rather than plain-text prompts. Use when asked
   to go through blockers, clear the human queue, answer beads waiting on the
   user, triage `bd human list`, or unblock agent work that needs a decision.
+allowed-tools: Bash(.agents/skills/beads-blocker-review/scripts/list-actionable-human-beads.py:*) Bash(~/.agents/skills/beads-blocker-review/scripts/list-actionable-human-beads.py:*) Bash(*/.agents/skills/beads-blocker-review/scripts/list-actionable-human-beads.py:*)
 ---
 
 # Beads Blocker Review
@@ -25,8 +26,10 @@ Use this skill when the user asks to:
 
 Two mechanisms park work on a person, and they do not overlap. Check both.
 
-1. **Beads labelled `human`** — listed by `bd human list`. This is the main
-   queue and where nearly everything will be.
+1. **Beads labelled `human`** — listed by `bd human list`. This is the raw
+   inventory, not the actionable queue: a human bead can itself be waiting on
+   unfinished agent work. The bundled helper intersects it with `bd ready` so
+   only decisions whose prerequisites are complete are asked.
 2. **Open human gates** — `bd gate list` shows open gates; the human ones are
    those of type `human`, which resolve only by hand. A gate blocks another
    bead until someone resolves it. Gates do **not** carry the `human` label,
@@ -55,19 +58,30 @@ it will close work nobody did.
 
 ## Workflow
 
-1. **Inventory both queues.**
+1. **Inventory both queues freshly.**
+
+   Resolve the bundled `scripts/list-actionable-human-beads.py` relative to
+   this `SKILL.md`, run it, then run:
 
    ```bash
-   bd human list --json
-   bd gate list
+   bd gate list --limit=0 --json
    ```
 
-   If both are empty, say so and stop. Do not go hunting for other work.
+   The helper returns `actionable` human beads that also appear in Beads'
+   authoritative `bd ready` result, plus `waiting` human beads whose
+   prerequisites are incomplete. Never prompt an item from `waiting`. Use
+   `bd show "$id" --json` for each waiting bead to identify and report its
+   unfinished blocking prerequisites without asking the user anything.
 
-2. **Report the total up front** so the user knows how many questions are
-   coming — e.g. "7 beads and 1 gate waiting on you."
+   If `actionable` and the human-gate queue are both empty, report any
+   `waiting` beads separately and stop. Do not go hunting for other work.
 
-3. **For each item, in priority order** (P0 first), repeat steps 4-7.
+2. **Report the actionable total up front** so the user knows how many
+   questions are coming — e.g. "7 beads and 1 gate are ready for you; 2 more
+   human beads are waiting on agent prerequisites."
+
+3. **For each actionable item, in priority order** (P0 first), repeat steps
+   4-7.
 
 4. **Read it fully**, including comments — the question is often in a comment
    rather than the description:
@@ -160,20 +174,30 @@ first option.
 - **Never answer on the user's behalf.** Do not call `bd human respond`,
   `bd human dismiss`, or `bd gate resolve` with a decision you invented. If
   you cannot construct sensible options, ask in prose rather than guessing.
-- **Never skip an item silently.** If one cannot be asked about, say why.
+- **Never skip an item silently.** Report prerequisite-blocked human beads as
+  `waiting`, without prompting them. If an actionable item cannot be asked
+  about, say why.
 - **Verify before recording.** Only record what the user actually chose,
   including any free text they added to their selection.
-- **Re-read both queues if the session is long.** Items can be added or
-  closed while the review runs; check again before declaring them empty.
+- **Re-read both queues if the session is long.** Run the helper again rather
+  than reusing its output: closing the final prerequisite must make a human
+  bead actionable on the next fresh read. Items can be added or closed while
+  the review runs; check again before declaring the queues empty.
 
 ## Verification
 
+Run the bundled `scripts/list-actionable-human-beads.py` again, resolving it
+relative to this `SKILL.md`, then run:
+
 ```bash
-bd human list          # empty, or only the beads that were skipped
-bd gate list           # no open human gates left
-bd human stats         # responded and dismissed counts
-bd ready               # work released by the answers
+bd gate list --limit=0 --json  # no open human gates left
+bd human stats                 # responded and dismissed counts
+bd ready                       # work released by the answers
 ```
+
+The final helper output should have an empty `actionable` list. A non-empty
+`waiting` list is not an unanswered human queue; report which agent
+prerequisites still prevent those questions from being asked.
 
 ## Related Skills
 

@@ -1,6 +1,6 @@
 ---
 description: Review every bead blocking on human input, one by one, via the questionnaire UI
-allowed-tools: Skill(beads-blocker-review), AskUserQuestion, Bash(bd human:*), Bash(bd show:*), Bash(bd comments:*), Bash(bd label:*)
+allowed-tools: Skill(beads-blocker-review), AskUserQuestion, Bash(.agents/skills/beads-blocker-review/scripts/list-actionable-human-beads.py:*), Bash(~/.agents/skills/beads-blocker-review/scripts/list-actionable-human-beads.py:*), Bash(*/.agents/skills/beads-blocker-review/scripts/list-actionable-human-beads.py:*), Bash(bd human:*), Bash(bd show:*), Bash(bd comments:*), Bash(bd label:*), Bash(bd gate:*), Bash(bd dep:*), Bash(bd ready:*)
 ---
 
 Use the `beads-blocker-review` skill to work through every bead waiting on

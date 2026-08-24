@@ -33,6 +33,16 @@ durable checklist, and surface `bd human list` at unattended handoff.
 python3 tests/test_background_human_attention.py
 ```
 
+## Beads Blocker-Review Tests
+
+`test_beads_blocker_review.py` verifies that `/blockers` separates actionable
+human decisions from decisions still waiting on agent prerequisites, and that
+a fresh queue read releases a decision after its final prerequisite closes.
+
+```bash
+python3 tests/test_beads_blocker_review.py
+```
+
 ## AI Cockpit Contract Tests
 
 `test_ai_cockpit_contract.py` validates the target-neutral orchestrator contract,

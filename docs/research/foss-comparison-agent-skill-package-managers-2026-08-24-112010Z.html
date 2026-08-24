@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>FOSS agent-skill package managers: security, reproducibility, and reusable groups</title>
+    <style>
+        :root { color-scheme: light dark; --bg:#f6f7fb; --panel:#fff; --text:#18212f; --muted:#5e6b7a; --border:#d8dee8; --accent:#3157c8; --good:#18794e; --caution:#9a6700; --poor:#c9372c; --unknown:#6f42c1; --shadow:0 8px 24px rgb(22 34 51 / 8%); }
+        @media (prefers-color-scheme: dark) { :root { --bg:#111722; --panel:#1a2230; --text:#edf2f7; --muted:#aeb9c7; --border:#344054; --accent:#8ca8ff; --good:#5bd6a2; --caution:#f2c14e; --poor:#ff8a80; --unknown:#c4a7ff; --shadow:0 8px 24px rgb(0 0 0 / 24%); } }
+        * { box-sizing:border-box; }
+        html { scroll-behavior:smooth; }
+        body { background:var(--bg); color:var(--text); font:16px/1.55 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; margin:0; }
+        a { color:var(--accent); }
+        a:focus-visible { outline:3px solid var(--accent); outline-offset:3px; }
+        header,main,footer { margin:0 auto; max-width:1240px; padding:1.5rem; }
+        header { padding-top:3rem; }
+        h1 { font-size:clamp(2rem,5vw,3.4rem); letter-spacing:-.035em; line-height:1.05; margin:0 0 1rem; }
+        h2 { line-height:1.2; margin-top:0; }
+        h3 { margin-bottom:.35rem; }
+        .lede { font-size:1.15rem; max-width:85ch; }
+        .meta,.muted { color:var(--muted); }
+        .table-wrap { background:var(--panel); border:1px solid var(--border); border-radius:14px; box-shadow:var(--shadow); margin-bottom:2rem; overflow-x:auto; }
+        table { border-collapse:collapse; min-width:980px; width:100%; }
+        caption { font-weight:700; padding:1rem; text-align:left; }
+        th,td { border-top:1px solid var(--border); padding:.8rem 1rem; text-align:left; vertical-align:top; }
+        th { background:color-mix(in srgb,var(--panel),var(--accent) 6%); }
+        #comparison-summary td:nth-child(3),#comparison-summary th:nth-child(3) { font-variant-numeric:tabular-nums; text-align:right; }
+        .rating-cell.rating-good,.rating-cell.rating-caution,.rating-cell.rating-poor,.rating-cell.rating-unknown { background:color-mix(in srgb,var(--panel),var(--rating-color) 12%); box-shadow:inset 4px 0 var(--rating-color); }
+        .rating-good { --rating-color:var(--good); }
+        .rating-caution { --rating-color:var(--caution); }
+        .rating-poor { --rating-color:var(--poor); }
+        .rating-unknown { --rating-color:var(--unknown); }
+        .rating-judgement { font-weight:700; }
+        .rating-legend { align-items:center; display:flex; flex-wrap:wrap; gap:.65rem 1rem; margin:-.75rem 0 2rem; }
+        .rating-key { align-items:center; display:inline-flex; gap:.35rem; }
+        .rating-swatch { background:var(--rating-color); border:1px solid currentColor; border-radius:999px; display:inline-block; height:.75rem; width:.75rem; }
+        .comparison-facets { margin:2rem 0; }
+        .project-detail,.methodology,.recommendation,.finding { background:var(--panel); border:1px solid var(--border); border-radius:14px; box-shadow:var(--shadow); margin:1.5rem 0; padding:clamp(1.1rem,3vw,2rem); scroll-margin-top:1rem; }
+        .facts { display:grid; gap:.8rem; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); margin:1rem 0; }
+        .fact { border-left:4px solid var(--border); padding:.25rem .8rem; }
+        .fact strong { display:block; }
+        .badge { border:1px solid currentColor; border-radius:999px; display:inline-block; font-size:.86rem; font-weight:700; padding:.12rem .55rem; }
+        .good { color:var(--good); } .caution { color:var(--caution); } .poor { color:var(--poor); } .unknown { color:var(--unknown); }
+        .evidence li,li { margin-bottom:.35rem; }
+        .back { display:inline-block; margin-top:1rem; }
+        code { background:color-mix(in srgb,var(--panel),var(--accent) 8%); border-radius:4px; padding:.08rem .28rem; }
+        footer { color:var(--muted); padding-bottom:3rem; }
+    </style>
+</head>
+<body>
+<header>
+    <h1>FOSS agent-skill package managers</h1>
+    <p class="lede">A security- and reproducibility-focused comparison of five open-source tools, with special attention to declarative collections, reusable stack/workflow groups, project and global installation, and avoiding repeated repository fetches.</p>
+    <p class="meta">Evidence observed 2026-08-24 11:20 UTC · 5 candidates · Common activity window: 2026-05-24 to 2026-08-24</p>
+</header>
+<main>
+    <div class="table-wrap">
+        <table id="comparison-summary">
+            <caption>Comparison summary</caption>
+            <thead><tr><th scope="col">Project</th><th scope="col">Domain fit</th><th scope="col">GitHub stars</th><th scope="col">Maintenance</th><th scope="col">Licence</th><th scope="col">Recommendation</th></tr></thead>
+            <tbody>
+                <tr><td><a href="#project-vercel-skills">Vercel Skills</a></td><td class="rating-cell rating-caution"><span class="rating-judgement">Mixed</span> — huge ecosystem and all target agents, but no true manifest or frozen lock</td><td>29,556</td><td class="rating-cell rating-good"><span class="badge good">Highly active</span></td><td>MIT</td><td class="rating-cell rating-caution"><span class="rating-judgement">Keep as baseline</span>, not as the security/reproducibility layer</td></tr>
+                <tr><td><a href="#project-reskill">reskill</a></td><td class="rating-cell rating-caution"><span class="rating-judgement">Mixed</span> — strong declarative UX and custom targets; weak frozen/security guarantees</td><td>59</td><td class="rating-cell rating-good"><span class="badge good">Active</span></td><td>MIT</td><td class="rating-cell rating-caution"><span class="rating-judgement">Evaluate cautiously</span> for manifest ergonomics</td></tr>
+                <tr><td><a href="#project-skiletto">skiletto</a></td><td class="rating-cell rating-good"><span class="rating-judgement">Strong</span> — exact pins, hashes, cache, global manifests, and scanner hook</td><td>2</td><td class="rating-cell rating-good"><span class="badge good">Active, early</span></td><td>MIT</td><td class="rating-cell rating-good"><span class="rating-judgement">Best pilot</span> for this security-first use case</td></tr>
+                <tr><td><a href="#project-gskill">GSKILL</a></td><td class="rating-cell rating-good"><span class="rating-judgement">Strong integrity</span> — best frozen restore, but missing Pi/OpenCode/custom targets</td><td>3</td><td class="rating-cell rating-good"><span class="badge good">Active, pre-1.0</span></td><td>MIT</td><td class="rating-cell rating-caution"><span class="rating-judgement">Best when supported agents suffice</span></td></tr>
+                <tr><td><a href="#project-owainlewis-skills">owainlewis/skills</a></td><td class="rating-cell rating-poor"><span class="rating-judgement">Weak for security</span> — declarative and flexible, but state-only locks and little hardening</td><td>3</td><td class="rating-cell rating-caution"><span class="badge caution">Low recent activity</span></td><td>MIT</td><td class="rating-cell rating-poor"><span class="rating-judgement">Not recommended</span> for untrusted skills</td></tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="rating-legend" role="note" aria-label="Rating legend">
+        <span class="rating-key rating-good"><span class="rating-swatch" aria-hidden="true"></span>Stronger / suitable</span>
+        <span class="rating-key rating-caution"><span class="rating-swatch" aria-hidden="true"></span>Mixed / trade-off</span>
+        <span class="rating-key rating-poor"><span class="rating-swatch" aria-hidden="true"></span>Weaker / blocker</span>
+        <span class="rating-key rating-unknown"><span class="rating-swatch" aria-hidden="true"></span>Unknown / not comparable</span>
+    </div>
+
+    <section class="finding" aria-labelledby="headline-finding">
+        <h2 id="headline-finding">Headline finding: collections yes, reusable named groups no</h2>
+        <p>Every candidate can represent or restore <em>a collection</em> of skills in one operation. None provides a mature, first-class, locally declarative abstraction for several reusable, composable named bundles such as <code>next-frontend</code>, <code>security-audit</code>, <code>blockchain</code>, or <code>finance</code>, then applying one or more bundles to a project or global scope.</p>
+        <p>Vercel’s hosted skills.sh packs are the nearest installable collection, but are not a version-controlled local profile. reskill’s “groups” are registry namespaces and access-control domains, not installable bundles. The other tools treat the entire manifest or lockfile as one environment. Separate manifests/config roots can emulate profiles, but composition, deduplication, conflict policy, and per-group updates remain external work.</p>
+        <p>This is a material ecosystem gap. A safe group mechanism should expand to a concrete lock that pins every skill independently, preserve per-skill provenance and audit results, deduplicate shared skills and repositories, define conflict semantics, and fail or skip per skill without silently weakening the rest of the group.</p>
+    </section>
+
+    <section class="comparison-facets" aria-labelledby="facet-heading-declarative-groups">
+        <h2 id="facet-heading-declarative-groups">Declarative collections and groups</h2>
+        <div class="table-wrap">
+            <table id="comparison-facet-declarative-groups">
+                <caption>Whether a whole environment can be declared and installed in one go, and whether smaller named bundles can be reused and composed.</caption>
+                <thead><tr><th scope="col">Project</th><th scope="col">Declarative collection</th><th scope="col">Named reusable groups</th><th scope="col">Project / global one-go install</th><th scope="col">Repository reuse</th></tr></thead>
+                <tbody>
+                    <tr><td><a href="#project-vercel-skills">Vercel Skills</a></td><td class="rating-cell rating-caution"><span class="rating-judgement">Partial</span> — generated project lock only</td><td class="rating-cell rating-poor"><span class="rating-judgement">No local groups</span>; hosted packs only</td><td>Project: experimental restore; global: no declarative restore</td><td class="rating-cell rating-poor"><span class="rating-judgement">No persistent Git cache</span></td></tr>
+                    <tr><td><a href="#project-reskill">reskill</a></td><td class="rating-cell rating-good"><span class="rating-judgement">Yes</span> — <code>skills.json</code> + <code>skills.lock</code></td><td class="rating-cell rating-poor"><span class="rating-judgement">No</span>; registry groups are namespaces</td><td>Project: yes; global installs generally bypass project manifests</td><td class="rating-cell rating-caution"><span class="rating-judgement">Persistent cache</span>, but mutable/staleness concerns</td></tr>
+                    <tr><td><a href="#project-skiletto">skiletto</a></td><td class="rating-cell rating-good"><span class="rating-judgement">Yes</span> — intent manifest + exact lock</td><td class="rating-cell rating-poor"><span class="rating-judgement">No</span>; separate config roots can emulate profiles</td><td>Yes, separate project and machine manifests/locks</td><td class="rating-cell rating-good"><span class="rating-judgement">Shared per-repository cache</span></td></tr>
+                    <tr><td><a href="#project-gskill">GSKILL</a></td><td class="rating-cell rating-good"><span class="rating-judgement">Yes</span> — combined intent/resolution lock</td><td class="rating-cell rating-poor"><span class="rating-judgement">No</span></td><td>Project lock installs all; can deploy locked targets globally</td><td class="rating-cell rating-good"><span class="rating-judgement">Commit-keyed shared cache</span> and offline restore</td></tr>
+                    <tr><td><a href="#project-owainlewis-skills">owainlewis/skills</a></td><td class="rating-cell rating-good"><span class="rating-judgement">Yes</span> — <code>skills.toml</code></td><td class="rating-cell rating-poor"><span class="rating-judgement">No</span></td><td>Yes; entries carry project/global scope</td><td class="rating-cell rating-poor"><span class="rating-judgement">Fresh clone per entry/run</span></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="comparison-facets" aria-labelledby="facet-heading-security-integrity">
+        <h2 id="facet-heading-security-integrity">Security and integrity</h2>
+        <div class="table-wrap">
+            <table id="comparison-facet-security-integrity">
+                <caption>Security ratings distinguish malicious-content assessment from reproducibility and structural file safety.</caption>
+                <thead><tr><th scope="col">Project</th><th scope="col">Pre-install content policy</th><th scope="col">Frozen resolution / integrity</th><th scope="col">Path and symlink safety</th><th scope="col">Key caveat</th></tr></thead>
+                <tbody>
+                    <tr><td><a href="#project-vercel-skills">Vercel Skills</a></td><td class="rating-cell rating-caution"><span class="rating-judgement">Advisory remote audits</span>; fail-open and <code>--yes</code> bypasses confirmation</td><td class="rating-cell rating-poor"><span class="rating-judgement">Weak</span>; hashes track upstream, no frozen verification</td><td class="rating-cell rating-caution"><span class="rating-judgement">Good archives, mixed Git symlinks</span></td><td>Broad scanner visibility, but no enforceable policy flag</td></tr>
+                    <tr><td><a href="#project-reskill">reskill</a></td><td class="rating-cell rating-poor"><span class="rating-judgement">Install path unscanned</span>; scanner gates publishing only</td><td class="rating-cell rating-poor"><span class="rating-judgement">Recorded commit, not authoritative</span>; no Git content hash</td><td class="rating-cell rating-poor"><span class="rating-judgement">Material concerns</span> in shell-built Git commands and HTTP extraction</td><td>Registry integrity is stronger than direct Git/HTTP sources</td></tr>
+                    <tr><td><a href="#project-skiletto">skiletto</a></td><td class="rating-cell rating-good"><span class="rating-judgement">Fail-closed machine-owned hook</span>; supports external scanners</td><td class="rating-cell rating-good"><span class="rating-judgement">Exact commit + content hash</span>; drift refused</td><td class="rating-cell rating-caution"><span class="rating-judgement">Partial</span>; inner escaping symlinks remain a caveat</td><td><code>--no-hooks</code>, editable sources, and already-locked content bypass scanning</td></tr>
+                    <tr><td><a href="#project-gskill">GSKILL</a></td><td class="rating-cell rating-caution"><span class="rating-judgement">No semantic scanner</span>; fetched skill content is never executed</td><td class="rating-cell rating-good"><span class="rating-judgement">Strongest</span>; frozen lock, hashes, verify, drift tooling</td><td class="rating-cell rating-good"><span class="rating-judgement">Strong</span>; rejects escaping symlinks and traversal</td><td>Integrity proves locked bytes, not publisher trust or benign intent</td></tr>
+                    <tr><td><a href="#project-owainlewis-skills">owainlewis/skills</a></td><td class="rating-cell rating-poor"><span class="rating-judgement">None</span></td><td class="rating-cell rating-poor"><span class="rating-judgement">State-only commit lock</span>; ordinary sync re-resolves refs</td><td class="rating-cell rating-poor"><span class="rating-judgement">Weak/unclear</span>; no comprehensive confinement evident</td><td>Best limited to trusted repositories and explicitly pinned commits</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="comparison-facets" aria-labelledby="facet-heading-agent-targets">
+        <h2 id="facet-heading-agent-targets">Agent targets</h2>
+        <div class="table-wrap">
+            <table id="comparison-facet-agent-targets">
+                <caption>First-class or configurable support for the target set: Claude Code, Cursor, Codex, Pi, and OpenCode.</caption>
+                <thead><tr><th scope="col">Project</th><th scope="col">Coverage</th><th scope="col">Custom targets</th><th scope="col">Notes</th></tr></thead>
+                <tbody>
+                    <tr><td><a href="#project-vercel-skills">Vercel Skills</a></td><td class="rating-cell rating-good"><span class="rating-judgement">All five built in</span></td><td>No arbitrary aliases</td><td>Best out-of-box coverage</td></tr>
+                    <tr><td><a href="#project-reskill">reskill</a></td><td class="rating-cell rating-good"><span class="rating-judgement">Four built in; Pi configurable</span></td><td>Yes, project/global paths</td><td>Open Codex-path issue at observation date</td></tr>
+                    <tr><td><a href="#project-skiletto">skiletto</a></td><td class="rating-cell rating-caution"><span class="rating-judgement">Claude, Cursor, Codex, Pi</span></td><td>No</td><td>No registered OpenCode adapter</td></tr>
+                    <tr><td><a href="#project-gskill">GSKILL</a></td><td class="rating-cell rating-poor"><span class="rating-judgement">Claude, Cursor, Codex</span></td><td>No</td><td>Also Gemini; no Pi or OpenCode</td></tr>
+                    <tr><td><a href="#project-owainlewis-skills">owainlewis/skills</a></td><td class="rating-cell rating-good"><span class="rating-judgement">Claude, Codex, Pi; others configurable</span></td><td>Yes</td><td>Generic <code>.agents/skills</code> target also available</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="project-detail" id="project-vercel-skills">
+        <h2><a href="https://github.com/vercel-labs/skills">Vercel Skills</a></h2>
+        <p><strong>Verdict:</strong> Best ecosystem baseline and agent compatibility, but not a package-lock-grade or security-policy-grade manager. Best for discovering and installing reviewed skills, especially when compatibility matters more than frozen reproducibility.</p>
+        <div class="facts"><div class="fact"><strong>GitHub stars</strong>29,556 as of 2026-08-24</div><div class="fact"><strong>Maintenance</strong>Highly active: 182 commits, 16 releases and 81 merged PRs in the 90-day window</div><div class="fact"><strong>Licence</strong><a href="https://github.com/vercel-labs/skills/blob/main/LICENSE">MIT</a></div><div class="fact"><strong>Release / commit</strong><a href="https://github.com/vercel-labs/skills/releases/tag/v1.5.23">v1.5.23</a>, 2026-08-18; <a href="https://github.com/vercel-labs/skills/commit/435076e78988e1e6ec40d00b0b1d76bdbbc5419a">435076e</a></div></div>
+        <h3>Domain fit</h3>
+        <p>It installs several selected skills from one repository in one invocation and supports every requested agent. Project installs generate <code>skills-lock.json</code>; global installs generate hidden update state. Project restoration groups entries by source, but remains experimental. There is no first-class desired-state manifest, global declarative restore, or local named-profile model. skills.sh pack URLs are installable hosted collections, and Claude plugin manifests provide presentation groups, but neither is a general version-controlled bundle definition.</p>
+        <h3>Security and reproducibility</h3>
+        <p>ATH, Socket and Snyk audit data is useful discovery evidence, but fetching has a short timeout and deliberately returns null on errors; the audit is advisory and <code>--yes</code> installs despite unsafe results. Lock entries record source/ref/path plus a folder hash, not the repository commit. Experimental restoration re-fetches the source and does not enforce the recorded hash. Direct archives receive useful size, traversal, encryption, link and CRC checks. Git-source symlinks are dereferenced during copy, which can expose readable host files through malicious links. No fetched installation hook runs automatically, although agents may later execute scripts shipped inside a skill.</p>
+        <h3>Popularity and maintenance</h3>
+        <p>The canonical repository was not archived and had 29,556 stars. It was by far the largest ecosystem in the shortlist. The latest default-branch commit and v1.5.23 release were both dated 2026-08-18. High issue volume (1,106 open issues/PRs reported by GitHub’s combined counter) reflects scale as well as maintenance burden; no response-time score was assigned.</p>
+        <h3>Licence</h3>
+        <p>The compared CLI is released under the OSI-approved MIT licence, permitting use, modification and redistribution subject to preservation of the licence notice. Individual third-party skills retain their own licensing and trust conditions.</p>
+        <h3>Strengths and trade-offs</h3>
+        <p>Strengths are adoption, broad agent-path support, straightforward multi-skill selection, hosted packs and comparatively careful archive extraction. Trade-offs are fail-open security advice, non-authoritative lock hashes, no persistent Git cache, no general named groups, and best-effort lock writes. It is a good transport/discovery layer but should be wrapped by explicit policy and immutable source pinning for sensitive groups.</p>
+        <h3>Evidence</h3>
+        <ul class="evidence"><li><a href="https://github.com/vercel-labs/skills">Canonical repository</a> — checked 2026-08-24</li><li><a href="https://github.com/vercel-labs/skills/releases">Release history</a></li><li><a href="https://github.com/vercel-labs/skills/blob/435076e78988e1e6ec40d00b0b1d76bdbbc5419a/README.md">Pinned README</a></li><li><a href="https://github.com/vercel-labs/skills/blob/435076e78988e1e6ec40d00b0b1d76bdbbc5419a/src/telemetry.ts#L94-L136">Fail-open audit implementation</a></li><li><a href="https://github.com/vercel-labs/skills/blob/435076e78988e1e6ec40d00b0b1d76bdbbc5419a/src/install.ts#L9-L82">Lock restoration implementation</a></li><li><a href="https://github.com/vercel-labs/skills/issues/992">Open named-group request</a></li><li><a href="https://github.com/vercel-labs/skills/blob/main/LICENSE">Governing licence text</a></li></ul>
+        <a class="back" href="#comparison-summary">Back to comparison</a>
+    </section>
+
+    <section class="project-detail" id="project-reskill">
+        <h2><a href="https://github.com/kanyun-inc/reskill">reskill</a></h2>
+        <p><strong>Verdict:</strong> The most npm-like declarative user experience and the easiest fit for custom agent targets, but not yet a trustworthy frozen installer. Best for trusted skill sources where manifest ergonomics and broad target configuration dominate.</p>
+        <div class="facts"><div class="fact"><strong>GitHub stars</strong>59 as of 2026-08-24</div><div class="fact"><strong>Maintenance</strong>Active: 32 commits, 2 releases and 15 merged PRs in the 90-day window</div><div class="fact"><strong>Licence</strong><a href="https://github.com/kanyun-inc/reskill/blob/main/LICENSE">MIT</a></div><div class="fact"><strong>Release / commit</strong><a href="https://github.com/kanyun-inc/reskill/releases/tag/v1.26.0">v1.26.0</a>, 2026-08-11; <a href="https://github.com/kanyun-inc/reskill/commit/d047721cab9970bab587c705c90ac47ca50abe90">d047721</a></div></div>
+        <h3>Domain fit</h3>
+        <p><code>skills.json</code> declares many sources, selected skills, defaults, registries and custom agents; <code>reskill install</code> can process independent references concurrently and monorepo children together. This gives a strong one-command project environment. Global installs generally skip the project manifest/lock, so declarative global groups are weaker. Despite its terminology, registry “groups” are namespaces, visibility boundaries and member-role domains—not installable bundles or profiles.</p>
+        <h3>Security and reproducibility</h3>
+        <p><code>skills.lock</code> records the exact commit fetched, but normal reinstall resolves <code>skills.json</code> again rather than restoring that commit, and it records no Git content digest. The persistent cache is keyed by textual source/ref rather than immutable content and can be stale or concurrency-sensitive. The built-in malicious-content scanner blocks high-risk <em>publishing</em>, not ordinary Git, HTTP or registry installation. Registry archives can carry enforced SHA-256/SHA-512 integrity and traversal controls, but empty integrity skips verification; direct HTTP extraction is less constrained. Source URLs and refs are interpolated into shell command strings, which raises command-injection concerns for untrusted manifests.</p>
+        <h3>Popularity and maintenance</h3>
+        <p>The canonical repository was not archived, had 59 stars, and released v1.26.0 on 2026-08-11. Its 32 commits and 15 merged PRs in the activity window indicate continuing development, although the project and its lock semantics remain young.</p>
+        <h3>Licence</h3>
+        <p>The compared CLI is MIT-licensed and qualifies as FOSS. Registry-hosted skills and private registry services can have separate terms; the public comparison covers the open-source CLI.</p>
+        <h3>Strengths and trade-offs</h3>
+        <p>Strengths are the clearest separate intent file, multi-source installation, custom project/global targets, a persistent cache and good monorepo selection. Trade-offs are a non-authoritative lock, no install-time scanner gate for direct sources, cache correctness concerns, and security-sensitive shell/archive handling. It is the easiest basis for manually maintaining stack-specific manifest files, but not the safest executor for untrusted financial, blockchain or security-audit skills.</p>
+        <h3>Evidence</h3>
+        <ul class="evidence"><li><a href="https://github.com/kanyun-inc/reskill">Canonical repository</a> — checked 2026-08-24</li><li><a href="https://github.com/kanyun-inc/reskill/releases">Release history</a></li><li><a href="https://github.com/kanyun-inc/reskill/blob/d047721cab9970bab587c705c90ac47ca50abe90/README.md">Pinned README</a></li><li><a href="https://github.com/kanyun-inc/reskill/blob/d047721cab9970bab587c705c90ac47ca50abe90/fixtures/skills.json">Manifest example</a></li><li><a href="https://github.com/kanyun-inc/reskill/blob/d047721cab9970bab587c705c90ac47ca50abe90/fixtures/skills.lock">Lock example</a></li><li><a href="https://github.com/kanyun-inc/reskill/blob/d047721cab9970bab587c705c90ac47ca50abe90/src/core/content-scanner.ts#L214-L536">Content scanner</a></li><li><a href="https://github.com/kanyun-inc/reskill/blob/main/LICENSE">Governing licence text</a></li></ul>
+        <a class="back" href="#comparison-summary">Back to comparison</a>
+    </section>
+
+    <section class="project-detail" id="project-skiletto">
+        <h2><a href="https://github.com/kumekay/skiletto">skiletto</a></h2>
+        <p><strong>Verdict:</strong> The best architectural match for a security-first declarative global/project workflow, provided its early maturity and OpenCode gap are acceptable. Best as a pilot with a machine-owned external scanner such as SkillSpector.</p>
+        <div class="facts"><div class="fact"><strong>GitHub stars</strong>2 as of 2026-08-24</div><div class="fact"><strong>Maintenance</strong>Active but early: 33 commits, 4 releases and 28 merged PRs since creation in the activity window</div><div class="fact"><strong>Licence</strong><a href="https://github.com/kumekay/skiletto/blob/main/LICENSE">MIT</a></div><div class="fact"><strong>Release / commit</strong><a href="https://github.com/kumekay/skiletto/releases/tag/v0.4.0">v0.4.0</a>, 2026-08-09; <a href="https://github.com/kumekay/skiletto/commit/755cbc4f49aac551977cfed25951f09d0590d5b0">755cbc4</a>, 2026-08-23</div></div>
+        <h3>Domain fit</h3>
+        <p><code>skiletto.toml</code> stores intent and <code>skiletto.lock</code> stores exact commit SHAs and content hashes. <code>sync</code> converges every declared source while preserving existing pins; <code>update</code> is the operation that moves them. Project and machine scopes have separate manifests and locks. Multiple skills from one repository share a single resolved snapshot, and a user-wide repository cache avoids repeated clones. The manifest is one collection, but has no named bundle/profile table or profile composition.</p>
+        <h3>Security and reproducibility</h3>
+        <p>A pre-install command configured only in the trusted machine manifest can scan staged content. Non-zero scanner exit aborts before installation or locking; malformed hook configuration fails closed. This avoids letting a cloned project define executable hooks. Exact commits, content hashes and drift refusal provide strong consistency. Caveats: <code>--no-hooks</code> bypasses scanning; editable and already-locked content are not scanned; internal skill symlinks can still point outside the skill; and hash comparison on locked materialization occurs after promotion, so a rare mismatch can replace prior canonical content before erroring.</p>
+        <h3>Popularity and maintenance</h3>
+        <p>The repository was created on 2026-07-01, explicitly labels itself “Early development,” was not archived, and had 2 stars. Nevertheless, 33 commits, 28 merged PRs, four releases and a 2026-08-23 latest commit show intense current development. This is promising activity, not maturity or broad field validation.</p>
+        <h3>Licence</h3>
+        <p>The project is MIT-licensed FOSS. External scanners invoked by hooks have their own licences and data-handling models; an LLM-backed scanner may transmit skill content, whereas an offline static scanner does not.</p>
+        <h3>Strengths and trade-offs</h3>
+        <p>Strengths are clean intent/lock separation, exact pins, hash-based drift handling, machine-level declarative state, cache reuse, no execution of fetched skill code, and a well-designed trusted scanner hook. It supports Claude, Cursor, Codex and Pi, but has no OpenCode/custom-target adapter. It also lacks strict “frozen means do not complete a missing lock” mode and reusable named groups. Its architecture is closest to the requested end state, but adoption should be staged behind tests because the project is only weeks old.</p>
+        <h3>Evidence</h3>
+        <ul class="evidence"><li><a href="https://github.com/kumekay/skiletto">Canonical repository</a> — checked 2026-08-24</li><li><a href="https://github.com/kumekay/skiletto/releases">Release history</a></li><li><a href="https://github.com/kumekay/skiletto/blob/755cbc4f49aac551977cfed25951f09d0590d5b0/README.md">Pinned README and security-hook documentation</a></li><li><a href="https://github.com/kumekay/skiletto/blob/755cbc4f49aac551977cfed25951f09d0590d5b0/internal/lockfile/lockfile.go">Lock schema</a></li><li><a href="https://github.com/kumekay/skiletto/blob/755cbc4f49aac551977cfed25951f09d0590d5b0/internal/gitcli/gitcli.go">Git cache and source handling</a></li><li><a href="https://github.com/kumekay/skiletto/blob/main/LICENSE">Governing licence text</a></li></ul>
+        <a class="back" href="#comparison-summary">Back to comparison</a>
+    </section>
+
+    <section class="project-detail" id="project-gskill">
+        <h2><a href="https://github.com/glapsfun/gskill">GSKILL</a></h2>
+        <p><strong>Verdict:</strong> Strongest deterministic restoration and structural integrity model. Best for CI and security-sensitive repositories when Claude, Cursor, Codex or Gemini are the required targets; currently a poor fit for Pi/OpenCode-wide global deployment.</p>
+        <div class="facts"><div class="fact"><strong>GitHub stars</strong>3 as of 2026-08-24</div><div class="fact"><strong>Maintenance</strong>Very active, pre-1.0: 164 commits, 11 releases and 51 merged PRs in the 90-day window</div><div class="fact"><strong>Licence</strong><a href="https://github.com/glapsfun/gskill/blob/main/LICENSE">MIT</a></div><div class="fact"><strong>Release / commit</strong><a href="https://github.com/glapsfun/gskill/releases/tag/v0.6.0">v0.6.0</a>, 2026-08-03; <a href="https://github.com/glapsfun/gskill/commit/5fc91c5f56dcc3aa31707f89c23f41659042b0b1">5fc91c5</a>, 2026-08-19</div></div>
+        <h3>Domain fit</h3>
+        <p>A versioned <code>skills-lock.json</code> combines user intent with exact commit, version, hashes, target agents and installation mode. <code>install --frozen-lockfile</code> restores all entries without rewriting the lock and fails when required metadata or integrity is inconsistent. Multiple sources in the lock install together; multiple skills can be selected from one source. The commit-keyed shared cache and committed canonical project content support efficient and offline restoration. There is no separate named group/profile abstraction.</p>
+        <h3>Security and reproducibility</h3>
+        <p>This is the strongest built-in consistency design: frozen installs, full commit SHA, multiple content hashes, explicit verification, drift checks, and conservative sync/repair. Discovery does not follow symlinks; escaping symlinks and traversal are rejected; removals are bounded and checked against trusted adapter paths. Fetched skill content is never executed, and release artifacts have checksums, Sigstore material, SBOMs and provenance. The missing piece is malicious-intent assessment: exact hashes faithfully reproduce malicious content too, and there is no scanner hook, publisher signature or trust-policy engine.</p>
+        <h3>Popularity and maintenance</h3>
+        <p>The repository was created on 2026-06-20, was not archived, and had 3 stars. It explicitly warns that CLI and schema changes may occur before 1.0. Its 164 commits, 51 merged PRs and 11 releases show exceptional current development effort, but its tiny user base means limited independent operational evidence.</p>
+        <h3>Licence</h3>
+        <p>The CLI is MIT-licensed FOSS. Its signed binary-release supply chain is a defence-in-depth benefit, but does not attest to third-party skill publishers.</p>
+        <h3>Strengths and trade-offs</h3>
+        <p>Strengths are frozen reproducibility, byte-level integrity, safe path handling, drift visibility, offline cache reuse and excellent documentation. Trade-offs are no semantic scanner, no user-defined adapters, no Pi/OpenCode support, no Windows support, a pre-1.0 schema, and no named groups. It is the strongest substrate if agent coverage is expanded or if a narrower target set is acceptable.</p>
+        <h3>Evidence</h3>
+        <ul class="evidence"><li><a href="https://github.com/glapsfun/gskill">Canonical repository</a> — checked 2026-08-24</li><li><a href="https://github.com/glapsfun/gskill/releases">Release history</a></li><li><a href="https://github.com/glapsfun/gskill/blob/5fc91c5f56dcc3aa31707f89c23f41659042b0b1/README.md">Pinned README</a></li><li><a href="https://github.com/glapsfun/gskill/blob/5fc91c5f56dcc3aa31707f89c23f41659042b0b1/docs/explanation/reproducibility-model.md">Reproducibility model</a></li><li><a href="https://github.com/glapsfun/gskill/blob/5fc91c5f56dcc3aa31707f89c23f41659042b0b1/docs/explanation/integrity-and-trust.md">Integrity and trust model</a></li><li><a href="https://github.com/glapsfun/gskill/blob/5fc91c5f56dcc3aa31707f89c23f41659042b0b1/docs/reference/agents.md">Agent support</a></li><li><a href="https://github.com/glapsfun/gskill/blob/main/LICENSE">Governing licence text</a></li></ul>
+        <a class="back" href="#comparison-summary">Back to comparison</a>
+    </section>
+
+    <section class="project-detail" id="project-owainlewis-skills">
+        <h2><a href="https://github.com/owainlewis/skills">owainlewis/skills</a></h2>
+        <p><strong>Verdict:</strong> A clear and flexible minimalist manifest manager, but not a security-hardened or reproducible package manager. Best only for small sets of trusted, pinned repositories where custom target paths matter.</p>
+        <div class="facts"><div class="fact"><strong>GitHub stars</strong>3 as of 2026-08-24</div><div class="fact"><strong>Maintenance</strong>Low recent activity: 7 commits, 3 releases and 1 merged PR in the 90-day window; latest commit 2026-07-05</div><div class="fact"><strong>Licence</strong><a href="https://github.com/owainlewis/skills/blob/main/LICENSE">MIT</a></div><div class="fact"><strong>Release / commit</strong><a href="https://github.com/owainlewis/skills/releases/tag/v0.2.1">v0.2.1</a>, 2026-05-30; <a href="https://github.com/owainlewis/skills/commit/e8cadb3786b5a54eeaa3568c905b41bd5640ec3d">e8cadb3</a>, 2026-07-05</div></div>
+        <h3>Domain fit</h3>
+        <p><code>skills.toml</code> is a straightforward source of truth containing many source entries, skill selections, refs, targets and project/global scopes. <code>skills sync</code> processes the collection in one operation and supports custom agent paths, so stack-specific manifests are easy to author. It has no named bundle/profile schema. By default the manifest is user-global, while project entries resolve relative to the current working directory; a committed project manifest requires explicit <code>--config</code> or <code>SKILLS_CONFIG</code>.</p>
+        <h3>Security and reproducibility</h3>
+        <p>Per-target <code>.skills.lock.toml</code> records the installed commit, but ordinary sync resolves the manifest ref again and treats lock state as reporting rather than authoritative input. There is no content hash, frozen mode, installed-file drift check, semantic scanner, hook, executable warning, or persistent cache. Explicitly putting a commit SHA in the manifest is therefore essential for reproducibility. Source subpaths, frontmatter-derived names and recreated symlinks lack the comprehensive adversarial confinement evident in GSKILL.</p>
+        <h3>Popularity and maintenance</h3>
+        <p>The repository was created on 2026-05-30, was not archived, and had 3 stars. Development was much quieter than the other young candidates: the latest release was v0.2.1 on its creation date and the latest commit was 2026-07-05. This may reflect minimalist scope, but there is insufficient evidence of mature adoption or ongoing hardening.</p>
+        <h3>Licence</h3>
+        <p>The project is MIT-licensed FOSS. As elsewhere, installed skills can carry different licences and should be reviewed independently.</p>
+        <h3>Strengths and trade-offs</h3>
+        <p>Strengths are a small understandable codebase, declarative multi-source sync, project/global entries, built-in Pi support and arbitrary custom agents. Trade-offs are fresh clones for every entry/run, moving refs during normal sync, no content verification, no drift defence and weak path/symlink evidence. It offers grouping ergonomics only at whole-manifest level and should not be entrusted with unreviewed security, blockchain or financial skill sets.</p>
+        <h3>Evidence</h3>
+        <ul class="evidence"><li><a href="https://github.com/owainlewis/skills">Canonical repository</a> — checked 2026-08-24</li><li><a href="https://github.com/owainlewis/skills/releases">Release history</a></li><li><a href="https://github.com/owainlewis/skills/blob/e8cadb3786b5a54eeaa3568c905b41bd5640ec3d/README.md">Pinned README</a></li><li><a href="https://github.com/owainlewis/skills/blob/e8cadb3786b5a54eeaa3568c905b41bd5640ec3d/internal/config/manifest.go">Manifest schema</a></li><li><a href="https://github.com/owainlewis/skills/blob/e8cadb3786b5a54eeaa3568c905b41bd5640ec3d/internal/command/sync.go">Sync semantics</a></li><li><a href="https://github.com/owainlewis/skills/blob/main/LICENSE">Governing licence text</a></li></ul>
+        <a class="back" href="#comparison-summary">Back to comparison</a>
+    </section>
+
+    <section class="methodology" id="methodology">
+        <h2>Methodology and shortlist</h2>
+        <p>The domain was interpreted as FOSS tools that install Agent Skills-compatible directories and can manage more than one skill. The five candidates were user-supplied through the preceding discussion: Vercel Skills as the incumbent, plus reskill, skiletto, GSKILL and owainlewis/skills. Primary evidence came from each canonical repository at the pinned default-branch revisions linked above, source code, schemas, security/reproducibility documentation, release pages and licence files.</p>
+        <p>GitHub statistics were observed on 2026-08-24 UTC. The common activity window was 2026-05-24 through 2026-08-24; commit and merged-PR counts are activity proxies, not quality guarantees, and automated commits were not exhaustively removed. Stars measure attention, not fitness. Issue response times were not scored. All five repositories were unarchived and MIT-licensed at observation time.</p>
+        <p>Smaller wrappers and adjacent projects such as skills-lock, skilled and skillsdock were excluded because the requested set was these five and they offered less complete end-to-end agent/manifest coverage. “Security” was split into malicious-content assessment, source authenticity, deterministic resolution, byte integrity, drift detection, structural path/symlink safety, execution of fetched code, and installer supply-chain controls; no single score can substitute for those distinctions. Source review was bounded rather than a formal penetration test or legal audit.</p>
+    </section>
+
+    <section class="recommendation" id="recommendation">
+        <h2>Comparative recommendation</h2>
+        <p><strong>No candidate completely satisfies the requested combination today.</strong> In particular, none has first-class composable named skill groups. Treat group support as a separate desired-state layer that expands named bundles into a fully pinned environment lock.</p>
+        <ol>
+            <li><strong>Pilot skiletto first</strong> for global/project declarative management: it best combines exact commits, content hashes, shared repository caching, drift handling and a trusted fail-closed pre-install scanner hook. Validate OpenCode delivery, project-root behavior, internal symlinks and early-version upgrades before migration.</li>
+            <li><strong>Use GSKILL where integrity outranks agent coverage.</strong> Its frozen lock, offline restore, verify/repair workflow and path controls are the strongest. It becomes the leading option if Pi/OpenCode/custom adapters and a scanner hook are added.</li>
+            <li><strong>Consider reskill only for trusted sources or after hardening.</strong> Its <code>skills.json</code>, custom targets and multi-source UX are attractive for group generation, but its lock is not authoritative and its direct-source security model has material weaknesses.</li>
+            <li><strong>Retain Vercel Skills as ecosystem/discovery infrastructure</strong>, or behind the existing fail-closed wrapper, rather than treating its audit and locks as enforcement.</li>
+            <li><strong>Avoid owainlewis/skills for untrusted groups</strong> until it gains frozen restoration, hashes, drift/path hardening and security policy.</li>
+        </ol>
+        <p>For stack/workflow groups, keep a version-controlled catalogue such as <code>next-frontend</code>, <code>security-audit</code>, <code>blockchain</code> and <code>finance</code>, but compile selected groups into a concrete manager manifest/lock before installation. The compiled lock should pin each skill, record provenance and audit disposition, deduplicate repositories, expose conflicts, and be the only input accepted by CI or unattended global installation. This preserves the time-saving value of groups without turning one convenient group name into an unauditable supply-chain wildcard.</p>
+    </section>
+</main>
+<footer><p>Generated from public evidence observed 2026-08-24 UTC. Repository popularity and activity figures change over time. This report is not legal advice.</p></footer>
+</body>
+</html>

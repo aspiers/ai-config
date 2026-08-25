@@ -88,6 +88,23 @@ State evidence precisely and remove secrets, personal data, private URLs, and
 unrelated local details. Do not invent labels, severity, maintainer decisions,
 or implementation requirements that the project has not established.
 
+### Do not hard-wrap prose
+
+Leave each paragraph of issue, discussion, pull-request, and comment text as
+one long line. These bodies are rendered, not read as source: the wrapping
+adds nothing, and it turns any later edit into a reflowed diff that obscures
+the real change.
+
+This holds even when the text was drafted in a local file wrapped to a column
+limit — an `.editorconfig` `max_line_length` governs the file, not the
+submission. Unwrap the prose when transferring it.
+
+Keep the line structure that carries meaning: code blocks, tables, headings,
+list items, and deliberate line breaks such as one URL or entry per line.
+Wrap prose only where the destination genuinely calls for it, such as a
+project whose contribution guide requires it, a plain-text patch submitted by
+email, or a commit message.
+
 ### Code changes
 
 Only use this path when code is actually being contributed.

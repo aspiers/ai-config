@@ -303,7 +303,7 @@
   },
   "enabledPlugins": {
     "beads@beads-marketplace": true,
-    "caveman@caveman": true,
+    "caveman@caveman": false,
     "clangd-lsp@claude-plugins-official": true,
     "context-mode@context-mode": true,
     "ruby-lsp@claude-plugins-official": true

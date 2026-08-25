@@ -2,8 +2,22 @@
 
 ## Context
 
-- This repository contains configs for AI agents such as Claude Code, OpenCode
-  etc., as well as associated shell scripts and other utility files.
+- This repository contains configs for AI agents, as well as associated shell
+  scripts and other utility files. The agents configured here are:
+
+  | Agent       | Config              |
+  | ----------- | ------------------- |
+  | Claude Code | `.claude/`          |
+  | OpenCode    | `.config/opencode/` |
+  | Pi          | `.pi/agent/`        |
+  | Codex       | `.codex/`           |
+
+  See [README.md](README.md) for links and per-agent detail.
+
+  Keep all four in parity when changing shared behaviour, even where one is
+  not in active daily use. Every one of them reads this file: Claude Code via
+  the `CLAUDE.md` symlink, and the others through their own `AGENTS.md`
+  discovery.
 
 - **⚠️ THIS REPOSITORY IS PUBLIC.** Its skills and configs are published for
   consumption by people other than the author. Read "Public repository — no

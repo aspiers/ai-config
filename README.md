@@ -6,9 +6,13 @@ with AI tools and configurations.
 
 ## Research reports
 
+- [FOSS managers for many active, interdependent Git
+  branches](docs/research/foss-comparison-active-git-branch-managers-2026-08-25-135148Z.html) —
+  the focused 11-project comparison of topology, fleet-wide restacking,
+  landing, pruning, conflict recovery, worktree behavior and automation.
 - [FOSS branch, worktree, and integration-mix tools for an AI development
-  cockpit](docs/foss-git-branch-worktree-cockpit-comparison-2026-08-18.html) —
-  the expanded 11-project comparison, including the capability-layer map and
+  cockpit](docs/research/foss-comparison-git-branch-worktree-cockpit-2026-08-25-133027Z.html) —
+  the expanded 12-project comparison, including git-stint, the capability-layer map, and
   recommendations for composing Worktrunk, branch topology, AgentBox, Herdr,
   T3 Code, and a disposable fan-in target.
 - [Parallel Git branch and worktree management
@@ -141,6 +145,52 @@ this public repository.
   which reapplies the configured title after Pi's `/name` command or
   `pi-tmux-window-name`'s asynchronous `/rename` command changes it.
 
+#### `.codex/`
+
+[Codex](https://developers.openai.com/codex/) configuration containing:
+
+- `config.toml` - Model, reasoning effort, approvals, feature flags, hook
+  trust state, and MCP server definitions
+- `hooks.json` - Session and tool-use hooks
+
+Codex reads `AGENTS.md` automatically, so the repository's instructions apply
+without further configuration.
+
+#### Response output styles
+
+The agents here share a single response style, sourced from
+[attention-span](https://github.com/alexgreensh/attention-span) (answer-first,
+plain English, built for skimming).
+
+attention-span is AGPL-3.0, so its text is **not** vendored into this public
+repository. `bin/attention-span-install` wires a local clone into each agent
+instead, using whichever mechanism that agent actually supports:
+
+| Agent | Mechanism | Path |
+| ----- | --------- | ---- |
+| Claude Code | native output styles | `~/.claude/output-styles/` |
+| Pi | appended system prompt | `~/.pi/agent/APPEND_SYSTEM.md` |
+| OpenCode | global instructions | `~/.config/opencode/AGENTS.md` |
+| Codex | global instructions | `~/.codex/AGENTS.md` |
+
+Only Claude Code has a real output-style feature, including a `/style` picker
+for switching between the bundled styles. For the others the style is a
+system-prompt fragment applied at startup, so switching means re-running the
+installer with `ATTENTION_SPAN_STYLE` set and restarting the agent.
+
+The installer strips the Claude-Code-specific YAML frontmatter for the other
+agents, since feeding them a `name:`/`keep-coding-instructions:` block would
+only waste tokens describing a key they cannot use.
+
+```bash
+git clone https://github.com/alexgreensh/attention-span \
+    ~/.GIT/3rd-party/attention-span
+bin/attention-span-install                        # default: attention-kind
+ATTENTION_SPAN_STYLE=spartan bin/attention-span-install
+```
+
+Re-run it after updating the clone to refresh the generated prompt bodies.
+
 #### Command and Agent Delegation
 
 Commands (`.claude/commands/` and `.config/opencode/command/`) and agents
@@ -159,6 +209,9 @@ See [AGENTS.md](AGENTS.md) for the detailed delegation pattern.
   - Tracked+unmodified files: deleted directly (recoverable from git)
   - Tracked+modified files: backed up to `.safe-rm/` with content hash
   - Untracked files: backed up to `.safe-rm/` with content hash
+- **`attention-span-install`** - Deploys the shared response output style to
+  Claude Code, Pi, OpenCode, and Codex from a local attention-span clone. See
+  "Response output styles" above.
 - **`audit-npm-packages`** - Downloads npm tarballs with `npm pack --ignore-scripts`
   and emits a JSON security-audit summary covering npm metadata, lifecycle
   scripts, Pi extension metadata, dependency names, and simple risky source

@@ -1,0 +1,106 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2012,SC2035,SC2088
+# SC2012/SC2035: filenames here are our own style names, all plain.
+# SC2088: the tildes are display text in progress output, never paths.
+#
+# Deploy the attention-span output styles to every agent configured here.
+#
+# attention-span (https://github.com/alexgreensh/attention-span) is AGPL-3.0,
+# so its text is deliberately NOT vendored into this public repository. It is
+# consumed from a local clone, and this script wires that clone into each
+# agent. Only the wiring lives here; the prose stays upstream.
+#
+# Claude Code has a native output-style mechanism, so it gets the files as-is.
+# The other agents have no such concept and instead take a plain system-prompt
+# fragment, which must not carry Claude Code's YAML frontmatter -- hence the
+# body-only copies generated below.
+
+set -euo pipefail
+
+
+SRC="${ATTENTION_SPAN_SRC:-$HOME/.GIT/3rd-party/attention-span}"
+BODIES="${ATTENTION_SPAN_BODIES:-$HOME/.config/attention-span-bodies}"
+STYLE="${ATTENTION_SPAN_STYLE:-attention-kind}"
+
+die() { printf 'attention-span-install: %s\n' "$*" >&2; exit 1; }
+note() { printf '  %s\n' "$*"; }
+
+[ -d "$SRC/output-styles" ] ||
+    die "no attention-span clone at $SRC
+Clone it first:
+  git clone https://github.com/alexgreensh/attention-span $SRC"
+
+[ -f "$SRC/output-styles/$STYLE.md" ] ||
+    die "unknown style '$STYLE'; available: $(cd "$SRC/output-styles" && ls *.md | sed 's/\.md$//' | tr '\n' ' ')"
+
+version=$(cat "$SRC/VERSION" 2>/dev/null || echo unknown)
+echo "attention-span $version from $SRC"
+
+# Claude Code: native output styles, frontmatter and all.
+echo "Claude Code:"
+mkdir -p "$HOME/.claude/output-styles"
+for f in "$SRC"/output-styles/*.md; do
+    ln -sfn "$f" "$HOME/.claude/output-styles/${f##*/}"
+    note "~/.claude/output-styles/${f##*/}"
+done
+if [ -f "$SRC/commands/style.md" ]; then
+    mkdir -p "$HOME/.claude/commands"
+    ln -sfn "$SRC/commands/style.md" "$HOME/.claude/commands/style.md"
+    note "~/.claude/commands/style.md (/style picker)"
+fi
+
+# Everyone else: body only. The frontmatter is Claude Code configuration, and
+# feeding it to another agent just wastes tokens describing a key it cannot use.
+echo "Shared prompt bodies:"
+mkdir -p "$BODIES"
+for f in "$SRC"/output-styles/*.md; do
+    name=${f##*/}
+    if grep -q '<!-- body-start -->' "$f"; then
+        sed -n '/<!-- body-start -->/,$p' "$f" | tail -n +2 > "$BODIES/$name"
+    else
+        # No marker: drop a leading YAML block if there is one, else copy whole.
+        if [ "$(head -n1 "$f")" = '---' ]; then
+            sed '1{/^---$/!q}; 1,/^---$/d' "$f" > "$BODIES/$name"
+        else
+            cat "$f" > "$BODIES/$name"
+        fi
+    fi
+done
+note "$BODIES ($(ls "$BODIES" | wc -l) styles)"
+
+# Pi: APPEND_SYSTEM.md is appended to Pi's own system prompt, so the coding
+# instructions survive. SYSTEM.md would replace them, which we do not want.
+echo "Pi:"
+if [ -d "$HOME/.pi/agent" ]; then
+    ln -sfn "$BODIES/$STYLE.md" "$HOME/.pi/agent/APPEND_SYSTEM.md"
+    note "~/.pi/agent/APPEND_SYSTEM.md -> $STYLE"
+else
+    note "skipped, no ~/.pi/agent"
+fi
+
+# OpenCode: global AGENTS.md is additive, unlike an agent's `prompt` field,
+# which may replace OpenCode's built-in instructions.
+echo "OpenCode:"
+oc_dir="$HOME/.config/opencode"
+if [ -d "$oc_dir" ]; then
+    ln -sfn "$BODIES/$STYLE.md" "$oc_dir/AGENTS.md"
+    note "~/.config/opencode/AGENTS.md -> $STYLE"
+else
+    note "skipped, no $oc_dir"
+fi
+
+# Codex: ~/.codex/AGENTS.md is merged with project AGENTS.md files.
+echo "Codex:"
+if [ -d "$HOME/.codex" ]; then
+    ln -sfn "$BODIES/$STYLE.md" "$HOME/.codex/AGENTS.md"
+    note "~/.codex/AGENTS.md -> $STYLE"
+else
+    note "skipped, no ~/.codex"
+fi
+
+cat <<EOF
+
+Active style: $STYLE
+Claude Code also needs "outputStyle": "<name>" in settings; switch with /style.
+Re-run this after updating the clone to refresh the generated bodies.
+EOF

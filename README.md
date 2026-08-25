@@ -178,6 +178,14 @@ for switching between the bundled styles. For the others the style is a
 system-prompt fragment applied at startup, so switching means re-running the
 installer with `ATTENTION_SPAN_STYLE` set and restarting the agent.
 
+For OpenCode and Codex the style is the *weakest* layer: it is merged ahead of
+this repository's own `AGENTS.md`, so project instructions win on conflict.
+
+> **Codex budget:** Codex reads at most `project_doc_max_bytes` (32 KiB by
+> default) across all `AGENTS.md` files combined, skipping the remainder once
+> that is exhausted. The style file plus this repository's `AGENTS.md` come to
+> roughly 24 KiB, so keep an eye on the headroom before adding much more.
+
 The installer strips the Claude-Code-specific YAML frontmatter for the other
 agents, since feeding them a `name:`/`keep-coding-instructions:` block would
 only waste tokens describing a key they cannot use.

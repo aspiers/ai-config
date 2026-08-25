@@ -10,6 +10,34 @@ fi
 skill_agents=(claude-code opencode pi codex cursor)
 audit_url=https://add-skill.vercel.sh/audit
 
+agents_skills_dir=$HOME/.agents/skills
+claude_skills_dir=$HOME/.claude/skills
+
+# Claude Code still reads ~/.claude/skills, so alias it to the
+# cross-platform ~/.agents/skills rather than installing skills twice.
+link_claude_skills_dir() {
+    mkdir -p "$agents_skills_dir"
+
+    if [[ -L $claude_skills_dir ]]; then
+        local current
+        current=$(readlink -f "$claude_skills_dir")
+        if [[ $current == "$(readlink -f "$agents_skills_dir")" ]]; then
+            return 0
+        fi
+        echo "$claude_skills_dir points at $current; repointing" >&2
+        rm "$claude_skills_dir"
+    elif [[ -e $claude_skills_dir ]]; then
+        # Never clobber real content; the user decides how to merge it.
+        echo "$claude_skills_dir exists and is not a symlink; leaving alone" >&2
+        return 0
+    fi
+
+    mkdir -p "$(dirname "$claude_skills_dir")"
+    ln -s "$agents_skills_dir" "$claude_skills_dir"
+}
+
+link_claude_skills_dir
+
 audit_tools_available=1
 for command in curl jq; do
     if ! command -v "$command" >/dev/null 2>&1; then

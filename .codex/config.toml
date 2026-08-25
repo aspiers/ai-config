@@ -43,7 +43,7 @@ NODE_REPL_INSTRUCTIONS_USE_CASE_BROWSER = "Control the in-app browser in conjunc
 NODE_REPL_INSTRUCTIONS_USE_CASE_CHROME = "Control the Chrome browser in conjunction with the Chrome Plugin. Prefer this method of controlling Chrome over alternatives (such as Computer Use) unless the user explicitly mentions an alternative."
 BROWSER_USE_CODEX_APP_BUILD_FLAVOR = "prod"
 BROWSER_USE_CODEX_APP_VERSION = "26.730.61639"
-CODEX_CLI_PATH = "/home/adam/.codex/packages/standalone/releases/0.147.0-x86_64-unknown-linux-musl/bin/codex"
+CODEX_CLI_PATH = "/home/adam/.codex/packages/standalone/releases/0.149.0-x86_64-unknown-linux-musl/bin/codex"
 
 [projects."/home/adam/.GIT/3rd-party/ePDS"]
 trust_level = "trusted"
@@ -80,7 +80,6 @@ source_type = "git"
 source = "https://github.com/madarco/agentbox.git"
 
 [marketplaces.openai-bundled]
-last_updated = "2026-08-17T15:06:33Z"
 source_type = "local"
 source = "/home/adam/.codex/.tmp/bundled-marketplaces/openai-bundled"
 

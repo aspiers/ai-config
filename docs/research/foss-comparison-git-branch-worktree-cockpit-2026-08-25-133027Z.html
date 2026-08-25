@@ -1,0 +1,1307 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>FOSS branch, worktree, and integration-mix tools for an AI development cockpit</title>
+        <style>
+            :root {
+                color-scheme: light dark;
+                --bg: #f4f7fb;
+                --panel: #ffffff;
+                --panel-2: #eef4ff;
+                --text: #172033;
+                --muted: #5d6a7d;
+                --border: #d6deea;
+                --accent: #3157c8;
+                --accent-2: #087f8c;
+                --good: #147a4d;
+                --caution: #946200;
+                --poor: #bd2c2c;
+                --unknown: #6e44aa;
+                --map-specialist: #3157c8;
+                --map-holistic: #7a42b8;
+                --map-model: #b65712;
+                --map-reference: #087f8c;
+                --shadow: 0 10px 28px rgb(26 42 68 / 9%);
+            }
+            @media (prefers-color-scheme: dark) {
+                :root {
+                    --bg: #0f1622;
+                    --panel: #182231;
+                    --panel-2: #202d41;
+                    --text: #edf3fa;
+                    --muted: #aeb9c8;
+                    --border: #35445a;
+                    --accent: #91abff;
+                    --accent-2: #65ced7;
+                    --good: #67d8a8;
+                    --caution: #f0c35a;
+                    --poor: #ff8b82;
+                    --unknown: #c4a7ff;
+                    --map-specialist: #91abff;
+                    --map-holistic: #c5a1ff;
+                    --map-model: #ffb06b;
+                    --map-reference: #65ced7;
+                    --shadow: 0 10px 28px rgb(0 0 0 / 26%);
+                }
+            }
+            * { box-sizing: border-box; }
+            html { scroll-behavior: smooth; }
+            body {
+                background: var(--bg);
+                color: var(--text);
+                font: 16px/1.56 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+                margin: 0;
+                overflow-x: hidden;
+            }
+            a { color: var(--accent); }
+            a:hover { text-decoration-thickness: 2px; }
+            a:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+            code {
+                background: color-mix(in srgb, var(--panel), var(--accent) 10%);
+                border: 1px solid color-mix(in srgb, var(--border), var(--accent) 20%);
+                border-radius: 5px;
+                font-size: 0.94em;
+                padding: 0.06rem 0.28rem;
+            }
+            header, main, footer { margin: 0 auto; max-width: 1320px; padding: 1.5rem; }
+            header { padding-top: 3.2rem; }
+            h1 {
+                font-size: clamp(2.15rem, 5.4vw, 3.8rem);
+                letter-spacing: -0.045em;
+                line-height: 1.02;
+                margin: 0 0 1rem;
+                max-width: 19ch;
+            }
+            h2 { line-height: 1.2; margin-top: 0; }
+            h3 { line-height: 1.3; margin-bottom: 0.35rem; }
+            p, li { max-width: 90ch; }
+            .lede { font-size: 1.17rem; max-width: 84ch; }
+            .meta, .muted, .source-note { color: var(--muted); }
+            .source-note { font-size: 0.91rem; }
+            .eyebrow {
+                color: var(--accent-2);
+                font-size: 0.78rem;
+                font-weight: 800;
+                letter-spacing: 0.13em;
+                margin-bottom: 0.7rem;
+                text-transform: uppercase;
+            }
+            .panel, .project-detail, .methodology, .recommendation, .capabilities {
+                background: var(--panel);
+                border: 1px solid var(--border);
+                border-radius: 16px;
+                box-shadow: var(--shadow);
+                margin: 1.5rem 0;
+                padding: clamp(1.15rem, 3vw, 2rem);
+                scroll-margin-top: 1rem;
+            }
+            .hero-result {
+                background: linear-gradient(135deg, var(--panel-2), var(--panel));
+                border-left: 6px solid var(--accent-2);
+            }
+            .hero-result strong { color: var(--accent-2); }
+            .cards {
+                display: grid;
+                gap: 1rem;
+                grid-template-columns: repeat(auto-fit, minmax(245px, 1fr));
+                margin-top: 1.2rem;
+            }
+            .card {
+                background: color-mix(in srgb, var(--panel), var(--accent) 3%);
+                border: 1px solid var(--border);
+                border-radius: 12px;
+                padding: 1rem;
+            }
+            .card h3 { margin-top: 0; }
+            .card p:last-child { margin-bottom: 0; }
+            .table-wrap {
+                background: var(--panel);
+                border: 1px solid var(--border);
+                border-radius: 14px;
+                box-shadow: var(--shadow);
+                margin: 1.5rem 0 2rem;
+                overflow-x: auto;
+            }
+            table { border-collapse: collapse; min-width: 940px; width: 100%; }
+            caption { font-weight: 750; padding: 1rem; text-align: left; }
+            th, td {
+                border-top: 1px solid var(--border);
+                padding: 0.78rem 0.9rem;
+                text-align: left;
+                vertical-align: top;
+            }
+            th { background: color-mix(in srgb, var(--panel), var(--accent) 6%); }
+            #comparison-summary td:nth-child(3),
+            #comparison-summary th:nth-child(3) {
+                font-variant-numeric: tabular-nums;
+                text-align: right;
+            }
+            .compact td, .compact th { font-size: 0.94rem; padding: 0.68rem 0.78rem; }
+            .badge {
+                border: 1px solid currentColor;
+                border-radius: 999px;
+                display: inline-block;
+                font-size: 0.82rem;
+                font-weight: 750;
+                line-height: 1.3;
+                padding: 0.14rem 0.52rem;
+            }
+            .good { color: var(--good); }
+            .caution { color: var(--caution); }
+            .poor { color: var(--poor); }
+            .unknown { color: var(--unknown); }
+            .yes { color: var(--good); font-weight: 750; }
+            .partial { color: var(--caution); font-weight: 750; }
+            .no { color: var(--poor); font-weight: 750; }
+            .facts {
+                display: grid;
+                gap: 0.8rem;
+                grid-template-columns: repeat(auto-fit, minmax(205px, 1fr));
+                margin: 1rem 0;
+            }
+            .fact { border-left: 4px solid var(--border); padding: 0.25rem 0.8rem; }
+            .fact strong { display: block; }
+            .verdict {
+                background: var(--panel-2);
+                border-radius: 10px;
+                padding: 0.8rem 1rem;
+            }
+            .evidence li, .key-points li { margin-bottom: 0.38rem; }
+            .warning {
+                border-left: 5px solid var(--caution);
+                margin: 1rem 0;
+                padding: 0.2rem 0 0.2rem 1rem;
+            }
+            .danger {
+                border-left: 5px solid var(--poor);
+                margin: 1rem 0;
+                padding: 0.2rem 0 0.2rem 1rem;
+            }
+            .architecture {
+                display: grid;
+                gap: 0.75rem;
+                grid-template-columns: minmax(190px, 0.8fr) minmax(230px, 1fr) minmax(280px, 1.5fr);
+                margin: 1rem 0;
+            }
+            .architecture > div {
+                border: 1px solid var(--border);
+                padding: 0.8rem;
+            }
+            .architecture .head { background: var(--panel-2); font-weight: 750; }
+            .stack-flow {
+                align-items: stretch;
+                display: grid;
+                gap: 0.75rem;
+                grid-template-columns: repeat(5, 1fr);
+                margin: 1.2rem 0;
+            }
+            .stack-flow > div {
+                background: var(--panel-2);
+                border: 1px solid var(--border);
+                border-radius: 11px;
+                min-height: 116px;
+                padding: 0.8rem;
+                position: relative;
+            }
+            .stack-flow strong { display: block; margin-bottom: 0.35rem; }
+            .diagram-scroll {
+                background: color-mix(in srgb, var(--panel), var(--accent) 2%);
+                border: 1px solid var(--border);
+                border-radius: 14px;
+                margin: 1.2rem 0 0.8rem;
+                overflow-x: auto;
+            }
+            .layer-map {
+                display: block;
+                height: auto;
+                min-width: 1260px;
+                width: 100%;
+            }
+            .layer-map text {
+                fill: var(--text);
+                font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            }
+            .layer-map .map-muted { fill: var(--muted); }
+            .layer-map .map-band { fill: var(--panel); }
+            .layer-map .map-band-alt { fill: var(--panel-2); }
+            .layer-map .map-rule { stroke: var(--border); stroke-width: 1; }
+            .layer-map .map-divider { stroke: var(--border); stroke-dasharray: 5 5; stroke-width: 1.5; }
+            .layer-map .map-reference-box {
+                fill: color-mix(in srgb, var(--panel), var(--map-reference) 11%);
+                stroke: var(--map-reference);
+                stroke-width: 1.5;
+            }
+            .layer-map .map-reference-text { fill: var(--map-reference); font-weight: 750; }
+            .layer-map .map-route {
+                fill: none;
+                stroke-linecap: round;
+                stroke-width: 12;
+                stroke-opacity: 0.22;
+            }
+            .layer-map .map-route-specialist { stroke: var(--map-specialist); }
+            .layer-map .map-route-holistic { stroke: var(--map-holistic); }
+            .layer-map .map-route-model { stroke: var(--map-model); }
+            .layer-map .map-node-strong { stroke-width: 2; }
+            .layer-map .map-node-partial { fill: var(--panel); stroke-width: 3; }
+            .layer-map .map-specialist { fill: var(--map-specialist); stroke: var(--map-specialist); }
+            .layer-map .map-holistic { fill: var(--map-holistic); stroke: var(--map-holistic); }
+            .layer-map .map-model { fill: var(--map-model); stroke: var(--map-model); }
+            .layer-map .map-node-partial.map-specialist,
+            .layer-map .map-node-partial.map-holistic,
+            .layer-map .map-node-partial.map-model { fill: var(--panel); }
+            .layer-map .map-candidate { font-size: 12px; font-weight: 750; text-anchor: middle; }
+            .layer-map .map-layer-title { font-size: 15px; font-weight: 800; }
+            .layer-map .map-layer-detail { font-size: 11px; }
+            .layer-map .map-section-title { font-size: 13px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
+            .layer-map .map-legend { font-size: 12px; }
+            .back { display: inline-block; margin-top: 1rem; }
+            footer { color: var(--muted); padding-bottom: 3rem; }
+            @media (max-width: 820px) {
+                .architecture { grid-template-columns: 1fr; }
+                .architecture .head:not(:first-child) { margin-top: 0.4rem; }
+                .stack-flow { grid-template-columns: 1fr; }
+            }
+            @media print {
+                body { background: #fff; color: #111; }
+                .panel, .project-detail, .methodology, .recommendation, .capabilities, .table-wrap {
+                    box-shadow: none;
+                    break-inside: avoid;
+                }
+                a { color: #1744a0; }
+                .diagram-scroll { overflow: visible; }
+            }
+        </style>
+    </head>
+    <body>
+        <header>
+            <p class="eyebrow">Evidence-led FOSS comparison</p>
+            <h1>Branches, worktrees, and integration mixes for an AI development cockpit</h1>
+            <p class="lede">
+                A detailed comparison of Git-native and next-generation FOSS tools for tracking many branches against upstream,
+                making each branch easy to develop and test, and composing active work into one runnable integration target.
+                It refreshes earlier research recovered through the local AgentsView history and evaluates the tools against a
+                Herdr + AgentBox cockpit architecture.
+            </p>
+            <p class="meta">
+                Evidence observed 25 August 2026 UTC · 12 detailed candidates · GitHub activity window 25 August 2025–25 August 2026
+            </p>
+        </header>
+
+        <main>
+            <div class="warning" id="author-specific-scope">
+                <strong>⚠️ Author-specific architecture.</strong> The recommendations below are evaluated against Adam Spiers’
+                planned Herdr + Collie + AgentBox cockpit and its existing Worktrunk and branch-mixer integrations. Other readers
+                should reuse the capability evidence and ownership model, but substitute their own control plane, sandbox,
+                workspace and publication constraints before adopting the recommended stack.
+            </div>
+            <section class="panel hero-result" id="result">
+                <p class="eyebrow">Bottom line</p>
+                <h2>Keep the solution layered; use one authority per concern</h2>
+                <p>
+                    <strong>Recommended remote-cockpit stack:</strong> Worktrunk for host/control-plane worktree lifecycle,
+                    Git Machete for explicit branch dependency topology and upstream synchronization, AgentBox for remote box and
+                    agent lifecycle, Herdr for interactive presentation, and <code>ggmx</code>/<code>ggmxd</code> for the disposable,
+                    unpublished fan-in branch. Git Machete and worktrunk-sync should not both write topology for the same repository.
+                    <strong>T3 Code merits a separate control-surface pilot</strong>: it can replace much of the Herdr/Collie experience for supported agents,
+                    but its native worktree and session ownership should not be layered casually on top of Worktrunk.
+                    <strong>git-stint is a second local lifecycle lane, not another layer</strong>: trial it instead of Worktrunk for Claude Code sessions,
+                    while retaining <code>ggmxd</code> for a durable, continuously refreshed mix.
+                </p>
+                <div class="cards">
+                    <div class="card">
+                        <h3>Local, all-worktree repos</h3>
+                        <p><strong>Worktrunk + worktrunk-sync</strong> is the smallest natural pilot when every active branch has a Worktrunk worktree. Start with dry runs and no push/prune.</p>
+                    </div>
+                    <div class="card">
+                        <h3>Remote AgentBox cockpit</h3>
+                        <p><strong>Worktrunk + Git Machete</strong> is the better default because cloud boxes are independent clones and scratch branches, not host Worktrunk worktrees.</p>
+                    </div>
+                    <div class="card">
+                        <h3>Holistic challenger</h3>
+                        <p><strong>Stax</strong> is the most cockpit-like all-in-one pilot; <strong>Stackit</strong> is the runner-up. Both are only about eight months old and overlap existing layers.</p>
+                    </div>
+                    <div class="card">
+                        <h3>Agent-native control surface</h3>
+                        <p><strong>T3 Code</strong> is the strongest web/desktop/mobile agent-harness candidate. Pilot it as an alternative execution lane, not as branch topology or a second worktree authority.</p>
+                    </div>
+                    <div class="card">
+                        <h3>Claude-local alternative</h3>
+                        <p><strong>git-stint</strong> tightly couples one agent session to one branch and worktree, with checkpoints and temporary combined tests. Pilot it instead of Worktrunk, not beside it.</p>
+                    </div>
+                    <div class="card">
+                        <h3>Strategic alternative</h3>
+                        <p><strong>Jujutsu</strong> has the most coherent native primitives, including multi-parent merge changes, but adopting it changes the VCS model rather than adding a Git helper.</p>
+                    </div>
+                </div>
+            </section>
+
+            <div class="table-wrap">
+                <table id="comparison-summary">
+                    <caption>Comparison summary</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Project</th>
+                            <th scope="col">Domain fit</th>
+                            <th scope="col">GitHub stars</th>
+                            <th scope="col">Maintenance</th>
+                            <th scope="col">Licence</th>
+                            <th scope="col">Recommendation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><a href="#project-worktrunk">Worktrunk</a></td>
+                            <td>Worktree lifecycle and branch development UX</td>
+                            <td>6,606</td>
+                            <td><span class="badge good">Very active</span></td>
+                            <td>MIT OR Apache-2.0</td>
+                            <td>Adopt as the local workspace chassis; pair with one topology manager and the mixer.</td>
+                        </tr>
+                        <tr>
+                            <td><a href="#project-t3-code">T3 Code</a></td>
+                            <td>Agent-native web/desktop/mobile cockpit with branch/worktree threads</td>
+                            <td>20,416</td>
+                            <td><span class="badge caution">Very active; very early</span></td>
+                            <td>MIT</td>
+                            <td>Pilot as an alternative cockpit lane; do not co-own its worktrees with Worktrunk yet.</td>
+                        </tr>
+                        <tr>
+                            <td><a href="#project-worktrunk-sync">worktrunk-sync</a></td>
+                            <td>Automatic dependency inference for Worktrunk worktrees</td>
+                            <td>16</td>
+                            <td><span class="badge caution">Young; quiet since April</span></td>
+                            <td>MIT declared; no licence file</td>
+                            <td>Pilot for local all-worktree repos; do not make it co-authoritative with Machete.</td>
+                        </tr>
+                        <tr>
+                            <td><a href="#project-git-machete">Git Machete</a></td>
+                            <td>Explicit branch topology, upstream sync, stacked PRs</td>
+                            <td>1,135</td>
+                            <td><span class="badge good">Active and mature</span></td>
+                            <td>MIT</td>
+                            <td>Recommended topology authority for the heterogeneous remote cockpit.</td>
+                        </tr>
+                        <tr>
+                            <td><a href="#project-ggmx-ggmxd">ggmx + ggmxd</a></td>
+                            <td>Arbitrary peer-branch fan-in testing</td>
+                            <td>105</td>
+                            <td><span class="badge caution">Active repo; niche tool</span></td>
+                            <td>GPL-3.0-or-later</td>
+                            <td>Keep for its unique disposable integration role; harden its safety and observability.</td>
+                        </tr>
+                        <tr>
+                            <td><a href="#project-git-spice">git-spice</a></td>
+                            <td>Composable, multi-forge branch stacks and PRs</td>
+                            <td>750</td>
+                            <td><span class="badge good">Very active</span></td>
+                            <td>GPL-3.0</td>
+                            <td>Best modular Machete alternative when forge-neutral stack submission is central.</td>
+                        </tr>
+                        <tr>
+                            <td><a href="#project-stax">Stax</a></td>
+                            <td>Holistic stacks, worktrees, agents, TUI/GUI</td>
+                            <td>123</td>
+                            <td><span class="badge caution">Intense but very young</span></td>
+                            <td>MIT</td>
+                            <td>First all-in-one pilot; avoid replacing mature layers before a disposable-repo trial.</td>
+                        </tr>
+                        <tr>
+                            <td><a href="#project-stackit">Stackit</a></td>
+                            <td>Holistic stacks, managed worktrees, agents, dashboard</td>
+                            <td>32</td>
+                            <td><span class="badge caution">Intense but very young</span></td>
+                            <td>MIT</td>
+                            <td>Second all-in-one pilot; disable automatic cleanup and test recovery semantics first.</td>
+                        </tr>
+                        <tr>
+                            <td><a href="#project-jujutsu">Jujutsu</a></td>
+                            <td>VCS replacement: DAG, workspaces, rewrites, merge changes</td>
+                            <td>31,185</td>
+                            <td><span class="badge good">Very active and established</span></td>
+                            <td>Apache-2.0</td>
+                            <td>Explore separately as the strongest strategic model, not an incremental cockpit plug-in.</td>
+                        </tr>
+                        <tr>
+                            <td><a href="#project-git-town">Git Town</a></td>
+                            <td>Branch hierarchy, sync, PR lifecycle and undo</td>
+                            <td>3,365</td>
+                            <td><span class="badge good">Active; worktree caveats</span></td>
+                            <td>MIT</td>
+                            <td>Do not choose for this multi-worktree cockpit until current worktree defects are resolved.</td>
+                        </tr>
+                        <tr>
+                            <td><a href="#project-git-branchless">git-branchless</a></td>
+                            <td>Commit-DAG visualization, restacking and speculative merges</td>
+                            <td>4,115</td>
+                            <td><span class="badge caution">Active; explicitly alpha</span></td>
+                            <td>MIT OR Apache-2.0</td>
+                            <td>Use only as a graph/undo specialist; it is not the worktree or cockpit manager.</td>
+                        </tr>
+                        <tr>
+                            <td><a href="#project-git-stint">git-stint</a></td>
+                            <td>Agent-session branches, worktrees, checkpoints and temporary combined tests</td>
+                            <td>35</td>
+                            <td><span class="badge caution">Young; activity slowed</span></td>
+                            <td>MIT</td>
+                            <td>Pilot as a Claude-local Worktrunk alternative; do not use it beside Worktrunk or instead of ggmxd.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <section class="capabilities" id="capabilities">
+                <h2>The category distinction that prevents a bad tool choice</h2>
+                <p>
+                    A <strong>stack</strong> records dependency: child B contains or depends on parent A, so restacking B on a rewritten A is meaningful.
+                    A <strong>mix</strong> is a temporary fan-in of unrelated peers A, B, and C solely so the combined result can run. Most stack tools
+                    can make the tip of one linear stack contain its ancestors; that is not an arbitrary, refreshable integration mix.
+                </p>
+                <div class="table-wrap">
+                    <table class="compact">
+                        <caption>Capability matrix — “mix” means arbitrary active siblings, not landing a linear stack</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Project</th>
+                                <th scope="col">Topology / upstream</th>
+                                <th scope="col">Owns worktree DX</th>
+                                <th scope="col">Restacks dependencies</th>
+                                <th scope="col">Arbitrary fan-in mix</th>
+                                <th scope="col">Agent/cockpit surface</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Worktrunk</td><td><span class="partial">Partial</span> — branch/upstream status</td><td><span class="yes">Yes</span> — strongest</td><td><span class="no">No</span></td><td><span class="partial">Partial</span> — imperative merges only</td><td>JSON, hooks, aliases, agent launch/status</td></tr>
+                            <tr><td>T3 Code</td><td><span class="partial">Partial</span> — refs/status/PRs per checkout</td><td><span class="yes">Yes</span> — native per-thread</td><td><span class="no">No</span></td><td><span class="no">No</span> — project-script workaround only</td><td>Web/desktop/mobile; five agent providers</td></tr>
+                            <tr><td>worktrunk-sync</td><td><span class="yes">Yes</span> — inferred from worktrees</td><td><span class="no">No</span> — relies on Worktrunk</td><td><span class="yes">Yes</span></td><td><span class="no">No</span></td><td>Narrow <code>wt sync</code> extension</td></tr>
+                            <tr><td>Git Machete</td><td><span class="yes">Yes</span> — explicit forest + remotes</td><td><span class="partial">Aware</span>, not lifecycle owner</td><td><span class="yes">Yes</span></td><td><span class="no">No</span></td><td>CLI, hooks, PR/MR and agent skill</td></tr>
+                            <tr><td>ggmx + ggmxd</td><td><span class="no">No</span></td><td><span class="no">No</span></td><td><span class="no">No</span></td><td><span class="yes">Yes</span> — exact role</td><td>Simple Git config + shell; needs JSON/lock</td></tr>
+                            <tr><td>git-spice</td><td><span class="yes">Yes</span> — local stack metadata</td><td><span class="partial">Compatible</span>; recipe only</td><td><span class="yes">Yes</span></td><td><span class="no">No</span></td><td>CLI, multiple forges, offline-first</td></tr>
+                            <tr><td>Stax</td><td><span class="yes">Yes</span></td><td><span class="yes">Yes</span> — lanes/worktrees</td><td><span class="yes">Yes</span></td><td><span class="no">No</span> — stack merges only</td><td>TUI/GUI, tmux, parallel agents/commands</td></tr>
+                            <tr><td>Stackit</td><td><span class="yes">Yes</span></td><td><span class="yes">Yes</span> — managed worktrees</td><td><span class="yes">Yes</span></td><td><span class="no">No</span> — stack ship only</td><td>JSON, skills, hooks, dashboard</td></tr>
+                            <tr><td>Jujutsu</td><td><span class="yes">Yes</span> — native DAG/bookmarks</td><td><span class="yes">Yes</span> — native workspaces</td><td><span class="yes">Yes</span> — automatic descendants</td><td><span class="yes">Yes*</span> — multi-parent merge change</td><td>Powerful primitives; different VCS model</td></tr>
+                            <tr><td>Git Town</td><td><span class="yes">Yes</span></td><td><span class="partial">Problematic today</span></td><td><span class="yes">Yes</span></td><td><span class="no">No</span> — adjacent combine only</td><td>CLI, PRs, undo; open worktree defects</td></tr>
+                            <tr><td>git-branchless</td><td><span class="yes">Yes</span> — commit DAG</td><td><span class="partial">Compatible</span>, not managed</td><td><span class="yes">Yes</span></td><td><span class="partial">Preflight</span>, not persistent</td><td>Smartlog, in-memory ops, repo undo</td></tr>
+                            <tr><td>git-stint</td><td><span class="no">No</span> — peer sessions, no dependency tree</td><td><span class="yes">Yes</span> — session worktrees</td><td><span class="no">No</span></td><td><span class="partial">Partial</span> — temporary <code>test --combine</code></td><td>Claude Code hooks, checkpoints and PR flow</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="source-note">
+                    *Jujutsu can create an octopus merge working-copy change such as <code>jj new A B C</code>. It is the closest coherent alternative,
+                    but it is not a named-mix registry/daemon and may need explicit update when a source bookmark advances by a new child.
+                </p>
+            </section>
+
+            <section class="panel" id="layer-map">
+                <h2>Capability-layer map: specialists, broad cockpit tools, and the fan-in gap</h2>
+                <p>
+                    The rows are ownership concerns rather than a command sequence. The reference column shows the recommended
+                    modular owner for each concern; the remaining columns show exactly which layers each reviewed option covers.
+                    Filled nodes mean a native, direct capability. Ring nodes mean partial coverage, compatibility, or a material caveat.
+                </p>
+                <div class="diagram-scroll">
+                    <svg class="layer-map" viewBox="0 0 1620 765" role="img" aria-labelledby="layer-map-title layer-map-desc" xmlns="http://www.w3.org/2000/svg">
+                        <title id="layer-map-title">Layer coverage of the twelve reviewed branch, worktree, mix, and cockpit tools</title>
+                        <desc id="layer-map-desc">Six horizontal layers run from operator cockpit through publication. A recommended modular stack assigns one owner to each layer. Candidate columns use filled circles for strong native support and rings for partial or caveated support. T3 Code, Stax, and Stackit span many cockpit layers but do not cover arbitrary branch fan-in. git-stint spans local agent sessions and worktrees, with temporary combined testing but no dependency topology. ggmx and ggmxd uniquely maintain a durable fan-in target. Jujutsu spans workspace, topology, fan-in, and publication through a different version-control model.</desc>
+
+                        <text class="map-section-title map-muted" x="345" y="34" text-anchor="middle">Recommended modular stack</text>
+                        <text class="map-section-title map-muted" x="1045" y="34" text-anchor="middle">Options analysed</text>
+                        <text class="map-muted" x="1045" y="55" text-anchor="middle" font-size="11">blue = modular specialist · purple = broad cockpit · orange = VCS-model alternative</text>
+
+                        <rect class="map-band-alt" x="18" y="150" width="1584" height="74" rx="10" />
+                        <rect class="map-band" x="18" y="240" width="1584" height="74" rx="10" />
+                        <rect class="map-band-alt" x="18" y="330" width="1584" height="74" rx="10" />
+                        <rect class="map-band" x="18" y="420" width="1584" height="74" rx="10" />
+                        <rect class="map-band-alt" x="18" y="510" width="1584" height="74" rx="10" />
+                        <rect class="map-band" x="18" y="600" width="1584" height="74" rx="10" />
+
+                        <line class="map-divider" x1="246" y1="72" x2="246" y2="680" />
+                        <line class="map-divider" x1="472" y1="72" x2="472" y2="680" />
+                        <line class="map-rule" x1="18" y1="232" x2="1602" y2="232" />
+                        <line class="map-rule" x1="18" y1="322" x2="1602" y2="322" />
+                        <line class="map-rule" x1="18" y1="412" x2="1602" y2="412" />
+                        <line class="map-rule" x1="18" y1="502" x2="1602" y2="502" />
+                        <line class="map-rule" x1="18" y1="592" x2="1602" y2="592" />
+
+                        <g aria-label="Layer names">
+                            <text class="map-layer-title" x="34" y="181">Operator cockpit</text>
+                            <text class="map-layer-detail map-muted" x="34" y="201">presentation, mobile, agent overview</text>
+                            <text class="map-layer-title" x="34" y="271">Agent and session</text>
+                            <text class="map-layer-detail map-muted" x="34" y="291">launch, resume, remote execution</text>
+                            <text class="map-layer-title" x="34" y="361">Workspace and DX</text>
+                            <text class="map-layer-detail map-muted" x="34" y="381">worktrees, setup, dev services</text>
+                            <text class="map-layer-title" x="34" y="451">Topology and upstream</text>
+                            <text class="map-layer-detail map-muted" x="34" y="471">dependencies, sync, restack</text>
+                            <text class="map-layer-title" x="34" y="541">Combined-test fan-in</text>
+                            <text class="map-layer-detail map-muted" x="34" y="561">arbitrary active peer branches</text>
+                            <text class="map-layer-title" x="34" y="631">Publication</text>
+                            <text class="map-layer-detail map-muted" x="34" y="651">commit, push, PR/MR, landing</text>
+                        </g>
+
+                        <g aria-label="Recommended modular owners">
+                            <g><title>Herdr and Collie own presentation and interactive control.</title><rect class="map-reference-box" x="266" y="166" width="160" height="38" rx="10" /><text class="map-reference-text" x="346" y="190" text-anchor="middle">Herdr + Collie</text></g>
+                            <g><title>AgentBox owns remote box, agent, queue, and session lifecycle.</title><rect class="map-reference-box" x="266" y="256" width="160" height="38" rx="10" /><text class="map-reference-text" x="346" y="280" text-anchor="middle">AgentBox</text></g>
+                            <g><title>Worktrunk owns host worktree lifecycle and development bootstrap.</title><rect class="map-reference-box" x="266" y="346" width="160" height="38" rx="10" /><text class="map-reference-text" x="346" y="370" text-anchor="middle">Worktrunk</text></g>
+                            <g><title>Git Machete is the recommended explicit topology authority for the remote cockpit.</title><rect class="map-reference-box" x="266" y="436" width="160" height="38" rx="10" /><text class="map-reference-text" x="346" y="460" text-anchor="middle">Git Machete</text></g>
+                            <g><title>ggmx and ggmxd own the disposable, unpublished integration target.</title><rect class="map-reference-box" x="266" y="526" width="160" height="38" rx="10" /><text class="map-reference-text" x="346" y="550" text-anchor="middle">ggmx / ggmxd</text></g>
+                            <g><title>Normal Git branches and forge pull or merge requests own publication.</title><rect class="map-reference-box" x="266" y="616" width="160" height="38" rx="10" /><text class="map-reference-text" x="346" y="640" text-anchor="middle">Git + forge PRs</text></g>
+                        </g>
+
+                        <g aria-label="Candidate labels">
+                            <a href="#project-worktrunk"><text class="map-candidate" x="570" y="101">Worktrunk</text></a>
+                            <a href="#project-t3-code"><text class="map-candidate" x="655" y="101"><tspan x="655">T3</tspan><tspan x="655" dy="16">Code</tspan></text></a>
+                            <a href="#project-worktrunk-sync"><text class="map-candidate" x="740" y="101"><tspan x="740">worktrunk-</tspan><tspan x="740" dy="16">sync</tspan></text></a>
+                            <a href="#project-git-machete"><text class="map-candidate" x="825" y="101"><tspan x="825">Git</tspan><tspan x="825" dy="16">Machete</tspan></text></a>
+                            <a href="#project-ggmx-ggmxd"><text class="map-candidate" x="910" y="101"><tspan x="910">ggmx +</tspan><tspan x="910" dy="16">ggmxd</tspan></text></a>
+                            <a href="#project-git-spice"><text class="map-candidate" x="995" y="101">git-spice</text></a>
+                            <a href="#project-stax"><text class="map-candidate" x="1080" y="101">Stax</text></a>
+                            <a href="#project-stackit"><text class="map-candidate" x="1165" y="101">Stackit</text></a>
+                            <a href="#project-jujutsu"><text class="map-candidate" x="1250" y="101">Jujutsu</text></a>
+                            <a href="#project-git-town"><text class="map-candidate" x="1335" y="101"><tspan x="1335">Git</tspan><tspan x="1335" dy="16">Town</tspan></text></a>
+                            <a href="#project-git-branchless"><text class="map-candidate" x="1420" y="101"><tspan x="1420">git-</tspan><tspan x="1420" dy="16">branchless</tspan></text></a>
+                            <a href="#project-git-stint"><text class="map-candidate" x="1505" y="101"><tspan x="1505">git-</tspan><tspan x="1505" dy="16">stint</tspan></text></a>
+                        </g>
+
+                        <g aria-label="Worktrunk layer coverage">
+                            <title>Worktrunk: strong workspace ownership; partial cockpit, agent, topology, mix, and publication-adjacent coverage.</title>
+                            <line class="map-route map-route-specialist" x1="570" y1="190" x2="570" y2="640" />
+                            <circle class="map-node-partial map-specialist" cx="570" cy="190" r="8"><title>Partial: machine-readable cockpit data, not a full operator surface.</title></circle>
+                            <circle class="map-node-partial map-specialist" cx="570" cy="280" r="8"><title>Partial: launches and marks local agents but is not a remote session authority.</title></circle>
+                            <circle class="map-node-strong map-specialist" cx="570" cy="370" r="9"><title>Strong: native worktree lifecycle, hooks, paths, and development setup.</title></circle>
+                            <circle class="map-node-partial map-specialist" cx="570" cy="460" r="8"><title>Partial: branch and upstream status without dependency restacking.</title></circle>
+                            <circle class="map-node-partial map-specialist" cx="570" cy="550" r="8"><title>Partial: imperative merges can combine branches but do not maintain an arbitrary named mix.</title></circle>
+                            <circle class="map-node-partial map-specialist" cx="570" cy="640" r="8"><title>Partial: shows PR and CI state; publication needs Git or another stack tool.</title></circle>
+                        </g>
+
+                        <g aria-label="T3 Code layer coverage">
+                            <title>T3 Code: broad cockpit, agent/session, worktree, and publication coverage; partial topology; no native arbitrary fan-in.</title>
+                            <line class="map-route map-route-holistic" x1="655" y1="190" x2="655" y2="460" />
+                            <circle class="map-node-strong map-holistic" cx="655" cy="190" r="9"><title>Strong: web, desktop, and mobile operator surface.</title></circle>
+                            <circle class="map-node-strong map-holistic" cx="655" cy="280" r="9"><title>Strong: owns supported agent processes, terminals, and thread checkpoints.</title></circle>
+                            <circle class="map-node-strong map-holistic" cx="655" cy="370" r="9"><title>Strong: native per-thread branch and worktree lifecycle.</title></circle>
+                            <circle class="map-node-partial map-holistic" cx="655" cy="460" r="8"><title>Partial: per-checkout refs, status, and PR awareness without a dependency forest or restacking.</title></circle>
+                            <circle class="map-node-strong map-holistic" cx="655" cy="640" r="9"><title>Strong: commit, push, and pull-request workflow.</title></circle>
+                        </g>
+
+                        <g aria-label="worktrunk-sync layer coverage">
+                            <title>worktrunk-sync: topology and restacking inferred from Worktrunk worktrees.</title>
+                            <line class="map-route map-route-specialist" x1="740" y1="370" x2="740" y2="460" />
+                            <circle class="map-node-partial map-specialist" cx="740" cy="370" r="8"><title>Partial: consumes Worktrunk worktrees but does not own their lifecycle.</title></circle>
+                            <circle class="map-node-strong map-specialist" cx="740" cy="460" r="9"><title>Strong: infers dependency topology and synchronizes or restacks the worktree tree.</title></circle>
+                        </g>
+
+                        <g aria-label="Git Machete layer coverage">
+                            <title>Git Machete: explicit topology, upstream synchronization, and stacked publication; worktree-aware but not the lifecycle owner.</title>
+                            <line class="map-route map-route-specialist" x1="825" y1="370" x2="825" y2="460" />
+                            <circle class="map-node-partial map-specialist" cx="825" cy="370" r="8"><title>Partial: worktree-aware traversal without creating or removing worktrees.</title></circle>
+                            <circle class="map-node-strong map-specialist" cx="825" cy="460" r="9"><title>Strong: explicit branch forest, remotes, sync, rebase, and slide-out.</title></circle>
+                            <circle class="map-node-strong map-specialist" cx="825" cy="640" r="9"><title>Strong: stacked PR and merge-request lifecycle.</title></circle>
+                        </g>
+
+                        <g aria-label="ggmx and ggmxd layer coverage">
+                            <title>ggmx and ggmxd: the dedicated arbitrary peer-branch fan-in specialist.</title>
+                            <circle class="map-node-strong map-specialist" cx="910" cy="550" r="9"><title>Strong: refreshable named integration target combining unrelated active branches.</title></circle>
+                        </g>
+
+                        <g aria-label="git-spice layer coverage">
+                            <title>git-spice: stack topology and multi-forge publication; compatible with external worktree management.</title>
+                            <line class="map-route map-route-specialist" x1="995" y1="370" x2="995" y2="460" />
+                            <circle class="map-node-partial map-specialist" cx="995" cy="370" r="8"><title>Partial: documented worktree recipe, not permanent worktree lifecycle ownership.</title></circle>
+                            <circle class="map-node-strong map-specialist" cx="995" cy="460" r="9"><title>Strong: local stack metadata and restacking.</title></circle>
+                            <circle class="map-node-strong map-specialist" cx="995" cy="640" r="9"><title>Strong: forge-neutral stacked review submission.</title></circle>
+                        </g>
+
+                        <g aria-label="Stax layer coverage">
+                            <title>Stax: broad TUI and GUI cockpit, parallel agents, worktrees, stacks, and publication; no arbitrary fan-in registry.</title>
+                            <line class="map-route map-route-holistic" x1="1080" y1="190" x2="1080" y2="460" />
+                            <circle class="map-node-strong map-holistic" cx="1080" cy="190" r="9"><title>Strong: TUI and GUI cockpit.</title></circle>
+                            <circle class="map-node-strong map-holistic" cx="1080" cy="280" r="9"><title>Strong: parallel agent lanes, commands, and tmux integration.</title></circle>
+                            <circle class="map-node-strong map-holistic" cx="1080" cy="370" r="9"><title>Strong: real worktree and lane lifecycle.</title></circle>
+                            <circle class="map-node-strong map-holistic" cx="1080" cy="460" r="9"><title>Strong: stack topology and restacking.</title></circle>
+                            <circle class="map-node-strong map-holistic" cx="1080" cy="640" r="9"><title>Strong: stacked branch and review workflow.</title></circle>
+                        </g>
+
+                        <g aria-label="Stackit layer coverage">
+                            <title>Stackit: broad dashboard, agent, managed-worktree, stack, and publication coverage; no arbitrary fan-in registry.</title>
+                            <line class="map-route map-route-holistic" x1="1165" y1="190" x2="1165" y2="460" />
+                            <circle class="map-node-strong map-holistic" cx="1165" cy="190" r="9"><title>Strong: JSON state and experimental local dashboard.</title></circle>
+                            <circle class="map-node-strong map-holistic" cx="1165" cy="280" r="9"><title>Strong: generated skills, hooks, and parallel worktree execution.</title></circle>
+                            <circle class="map-node-strong map-holistic" cx="1165" cy="370" r="9"><title>Strong: managed worktree lifecycle.</title></circle>
+                            <circle class="map-node-strong map-holistic" cx="1165" cy="460" r="9"><title>Strong: stack topology and dependency operations.</title></circle>
+                            <circle class="map-node-strong map-holistic" cx="1165" cy="640" r="9"><title>Strong: stack shipping and review workflow.</title></circle>
+                        </g>
+
+                        <g aria-label="Jujutsu layer coverage">
+                            <title>Jujutsu: native workspaces, DAG rewriting, multi-parent merge changes, and Git publication interoperability; a different VCS model.</title>
+                            <line class="map-route map-route-model" x1="1250" y1="370" x2="1250" y2="640" />
+                            <circle class="map-node-strong map-model" cx="1250" cy="370" r="9"><title>Strong: native workspaces.</title></circle>
+                            <circle class="map-node-strong map-model" cx="1250" cy="460" r="9"><title>Strong: native DAG, bookmarks, and automatic descendant rewriting.</title></circle>
+                            <circle class="map-node-strong map-model" cx="1250" cy="550" r="9"><title>Strong: multi-parent merge working-copy changes can combine unrelated lines of work.</title></circle>
+                            <circle class="map-node-partial map-model" cx="1250" cy="640" r="8"><title>Partial: publication works through Git interoperability and forge tooling rather than a complete native PR cockpit.</title></circle>
+                        </g>
+
+                        <g aria-label="Git Town layer coverage">
+                            <title>Git Town: branch hierarchy, synchronization, undo, and publication; worktree support is currently caveated.</title>
+                            <line class="map-route map-route-specialist" x1="1335" y1="370" x2="1335" y2="460" />
+                            <circle class="map-node-partial map-specialist" cx="1335" cy="370" r="8"><title>Partial: material open defects make current multi-worktree use unsuitable for this cockpit.</title></circle>
+                            <circle class="map-node-strong map-specialist" cx="1335" cy="460" r="9"><title>Strong: branch hierarchy, sync, and restacking.</title></circle>
+                            <circle class="map-node-strong map-specialist" cx="1335" cy="640" r="9"><title>Strong: pull-request and landing lifecycle.</title></circle>
+                        </g>
+
+                        <g aria-label="git-branchless layer coverage">
+                            <title>git-branchless: commit-DAG and restacking specialist with speculative merge preflight; worktree-compatible but not a manager.</title>
+                            <line class="map-route map-route-specialist" x1="1420" y1="370" x2="1420" y2="550" />
+                            <circle class="map-node-partial map-specialist" cx="1420" cy="370" r="8"><title>Partial: compatible with worktrees but does not own their lifecycle.</title></circle>
+                            <circle class="map-node-strong map-specialist" cx="1420" cy="460" r="9"><title>Strong: smartlog, commit-DAG operations, bulk restacking, and undo.</title></circle>
+                            <circle class="map-node-partial map-specialist" cx="1420" cy="550" r="8"><title>Partial: predicts or preflights merges but does not maintain a persistent combined branch.</title></circle>
+                        </g>
+
+                        <g aria-label="git-stint layer coverage">
+                            <title>git-stint: Claude Code session, branch, worktree, checkpoint, and GitHub PR workflow, with disposable combined tests but no dependency topology.</title>
+                            <line class="map-route map-route-specialist" x1="1505" y1="190" x2="1505" y2="370" />
+                            <line class="map-route map-route-specialist" x1="1505" y1="550" x2="1505" y2="640" />
+                            <circle class="map-node-partial map-specialist" cx="1505" cy="190" r="8"><title>Partial: CLI list and status, not a graphical or remote operator cockpit.</title></circle>
+                            <circle class="map-node-strong map-specialist" cx="1505" cy="280" r="9"><title>Strong for Claude Code: session hooks redirect edits and create stop checkpoints. Other agent CLIs require manual operation.</title></circle>
+                            <circle class="map-node-strong map-specialist" cx="1505" cy="370" r="9"><title>Strong: owns stint branches, worktrees, setup, cleanup, and resumable manifests.</title></circle>
+                            <circle class="map-node-partial map-specialist" cx="1505" cy="550" r="8"><title>Partial: test --combine merges chosen session branches in a disposable worktree, then removes it. It is not a named continuously refreshed mix.</title></circle>
+                            <circle class="map-node-strong map-specialist" cx="1505" cy="640" r="9"><title>Strong: commit, squash, merge, and GitHub pull-request flow through the gh CLI.</title></circle>
+                        </g>
+
+                        <g class="map-legend" aria-label="Legend">
+                            <circle class="map-node-strong map-specialist" cx="515" cy="718" r="8" />
+                            <text x="530" y="722">native / strong</text>
+                            <circle class="map-node-partial map-specialist" cx="665" cy="718" r="7" />
+                            <text x="680" y="722">partial / caveated</text>
+                            <line class="map-route map-route-holistic" x1="850" y1="718" x2="892" y2="718" />
+                            <text x="905" y="722">connector joins adjacent covered layers only</text>
+                            <text class="map-muted" x="1335" y="722">blank = no native capability</text>
+                        </g>
+                    </svg>
+                </div>
+                <p class="source-note">
+                    The most important empty cells are deliberate: the broad T3 Code, Stax and Stackit surfaces do not replace the
+                    arbitrary fan-in layer, while <code>ggmx</code>/<code>ggmxd</code> does not try to own any cockpit or topology layer.
+                    git-stint reaches the fan-in row only through a disposable test worktree, so it does not replace the persistent mixer.
+                    Precise nodes and connectors were chosen over twelve overlapping hulls because skipped layers are decision-relevant;
+                    <a href="https://github.com/aspiers/svg-annotator">svg-annotator</a> was evaluated as the hull-generation option.
+                </p>
+            </section>
+
+            <section class="panel" id="cockpit-architecture">
+                <h2>Recommended cockpit ownership model</h2>
+                <p>
+                    The design works when each state machine has a narrow boundary. Herdr displays and controls sessions; it should not independently
+                    create Git worktrees. AgentBox owns remote execution state; its status can be projected into Herdr, but duplicated markers are caches.
+                </p>
+                <div class="architecture" role="table" aria-label="Cockpit authority mapping">
+                    <div class="head" role="columnheader">Concern</div>
+                    <div class="head" role="columnheader">Authority</div>
+                    <div class="head" role="columnheader">Boundary</div>
+                    <div role="cell">Branch dependency and upstream</div><div role="cell"><strong>Git Machete</strong> (or git-spice)</div><div role="cell">One allowlisted topology; excludes scratch and mix targets.</div>
+                    <div role="cell">Host worktrees and dev bootstrap</div><div role="cell"><strong>Worktrunk</strong></div><div role="cell">Create/switch/remove, hooks, paths, local agent launch and machine-readable inventory.</div>
+                    <div role="cell">Remote sandbox and agent</div><div role="cell"><strong>AgentBox</strong></div><div role="cell">Box setup/services, queue, scratch branch, lifecycle, state and credential relay.</div>
+                    <div role="cell">Interactive terminal/UI</div><div role="cell"><strong>Herdr</strong> + Collie</div><div role="cell">Default lane: workspace/tab/pane presentation, focus, input and proxied AgentBox status.</div>
+                    <div role="cell">Alternative agent-native cockpit</div><div role="cell"><strong>T3 Code</strong> (separate pilot)</div><div role="cell">If selected, it owns agent sessions, terminals, checkpoints and worktrees for that environment; it is not a passive Herdr skin.</div>
+                    <div role="cell">Arbitrary integration fan-in</div><div role="cell"><strong>ggmx / ggmxd</strong></div><div role="cell">Dedicated local unpublished target; rebuild after topology sync.</div>
+                    <div role="cell">Publication</div><div role="cell"><strong>Normal Git branches + PRs</strong></div><div role="cell">Never publish the mix target or raw <code>agentbox/*</code> scratch branches.</div>
+                </div>
+
+                <h3>Concrete seams already present</h3>
+                <ul class="key-points">
+                    <li>The installed Herdr–Worktrunk integration follows the right ownership pattern: it calls <code>wt switch --no-cd --format=json</code>, resolves the path, then registers it with <code>herdr worktree open</code>. Removal is delegated to guarded <code>wt remove</code> before Herdr closes the view.</li>
+                    <li>Worktrunk hooks and <code>agentbox.yaml</code> can both install dependencies and start services. Use Worktrunk configuration only for host worktrees, AgentBox configuration inside boxes, and have both call shared repository task-runner targets.</li>
+                    <li>For stacked chains, the topology tool restacks/reparents first; Worktrunk only performs lifecycle cleanup afterward. Otherwise <code>wt merge</code> can rebase/remove a parent while children still refer to it.</li>
+                    <li>Serialize restacks, scratch-branch landing, worktree removal and mixdown behind a repository-level orchestration lock. An agent working on a branch that is force-rewritten elsewhere becomes stale even when each individual tool behaves correctly.</li>
+                    <li>T3 Code can list and reuse worktrees found through Git, but its native workflow also creates/removes worktrees and pins running threads to them. There is no documented lifecycle-delegation plug-in equivalent to the Herdr–Worktrunk seam.</li>
+                    <li>git-stint is another lifecycle-owning alternative. If trialled, let it own the repository’s local session worktrees and Claude hooks instead of Worktrunk; do not treat its temporary combined-test worktree as the persistent mixer target.</li>
+                </ul>
+
+                <div class="warning">
+                    <strong>Remote versus local matters.</strong> Local Docker AgentBox can create a linked Git worktree whose working directory exists only inside the container; host tools can see a stale-looking worktree record and must not clean it. The planned remote-only cockpit avoids that collision because cloud boxes use independent clones and scratch refs. AgentBox remains their sole lifecycle owner.
+                </div>
+
+                <div class="warning">
+                    <strong>T3 Code changes the execution boundary.</strong> Its server owns provider processes, terminals, Git and filesystem access on the machine where the server runs. Putting that server on the trusted orchestrator would run agents there, contrary to the remote-box isolation plan. A T3-native experiment should instead place a T3 server inside or alongside a disposable remote development environment and treat its state and lifecycle as part of that environment. This is an architectural experiment, not a documented AgentBox integration.
+                </div>
+
+                <h3>Reference remote workflow</h3>
+                <div class="stack-flow" aria-label="Recommended remote branch workflow">
+                    <div><strong>1 · Canonical branch</strong>Register one source branch in the chosen topology and, if needed, a host Worktrunk checkout.</div>
+                    <div><strong>2 · Remote box</strong>Start AgentBox from that ref and work on an isolated <code>agentbox/&lt;box&gt;</code> scratch branch.</div>
+                    <div><strong>3 · Observe</strong>Herdr attaches and presents the AgentBox-owned agent state without becoming a second authority.</div>
+                    <div><strong>4 · Promote</strong>Land scratch work host-only, review it, then integrate into the canonical branch and restack descendants.</div>
+                    <div><strong>5 · Mix and test</strong>Rebuild the unpublished mix after restacking; seed a disposable box from its tip for combined testing.</div>
+                </div>
+
+                <div class="danger">
+                    <strong>Exclude ephemeral refs from topology.</strong> Omit the mix target and <code>agentbox/*</code> branches from Machete and worktrunk-sync until explicitly promoted. If a legacy mix target must remain visible in Machete, protect it with <code>push=no rebase=no slide-out=no</code>.
+                </div>
+
+                <h3>Alternative T3-native lane</h3>
+                <p>
+                    For a representative disposable repository, let T3 Code—not Worktrunk—create the thread worktrees, start the supported agent CLI,
+                    run checked-in setup/project scripts, show diffs and PRs, and provide web/mobile control. Keep Git Machete or git-spice outside the live
+                    editing loop as the single dependency-topology authority, operating only after T3 threads are quiescent and under the same repository lock.
+                    A dedicated T3 worktree can host the unpublished <code>ggmxd</code> target. This lane tests whether T3 Code can replace the Herdr/Collie plus
+                    Worktrunk interaction layer; it should not be blended with that layer until external-worktree bugs and ownership APIs are resolved.
+                </p>
+            </section>
+
+            <section class="project-detail" id="project-worktrunk">
+                <h2><a href="https://github.com/max-sixty/worktrunk">Worktrunk</a></h2>
+                <p class="verdict"><strong>Verdict:</strong> Best worktree and branch-development chassis. It solves the second requirement exceptionally well and provides the composable hooks/JSON needed by the cockpit, but it is deliberately not a full dependency-topology or arbitrary-mix engine.</p>
+                <div class="facts">
+                    <div class="fact"><strong>GitHub stars</strong>6,606 as of 25 August 2026</div>
+                    <div class="fact"><strong>Maintenance</strong>4,919 default-branch commits in the one-year window; latest 25 August 2026; v0.74.0 on 14 August</div>
+                    <div class="fact"><strong>Licence</strong><a href="https://github.com/max-sixty/worktrunk/blob/main/LICENSE">MIT OR Apache-2.0</a></div>
+                </div>
+                <h3>Domain fit</h3>
+                <p>
+                    Worktrunk maps branches to predictable worktree paths and makes creation, switching, setup and agent launch a single action. <code>wt list</code>
+                    combines dirty status, default-branch difference, upstream ahead/behind, optional PR/CI state, development URL and agent markers; JSON output makes it a strong data source for a cockpit dashboard.
+                </p>
+                <h3>Development experience</h3>
+                <p>
+                    <code>wt switch --create branch -x agent</code> can create a branch/worktree, run approved setup hooks and start a tool with full terminal control.
+                    Ten lifecycle hook points cover create, switch, start, commit, merge and remove. Recipes cover copied ignored caches, deterministic ports, per-worktree databases and pre-merge validation.
+                </p>
+                <h3>Upstream and combining</h3>
+                <p>
+                    It displays tracking divergence and can create a local branch from a remote-only branch, but merge operations are intentionally local and do not fetch or publish.
+                    <code>wt merge</code> can integrate one branch into a target, usually with rebase/squash and cleanup, but this is an imperative landing pipeline—not a persistent dependency tree or declarative multi-peer mix.
+                </p>
+                <h3>Strengths and trade-offs</h3>
+                <ul>
+                    <li><strong>Strength:</strong> hooks, aliases, arbitrary <code>wt-&lt;name&gt;</code> extensions, JSON and generic <code>--execute</code> make it the most composable local layer.</li>
+                    <li><strong>Strength:</strong> agent integrations and per-worktree environment conventions directly support parallel AI development.</li>
+                    <li><strong>Trade-off:</strong> simple <code>--base</code> branching does not maintain a stack forest or restack descendants.</li>
+                    <li><strong>Operational rule:</strong> let the topology manager reconcile children before Worktrunk merges/removes a stacked parent.</li>
+                </ul>
+                <h3>Evidence</h3>
+                <ul class="evidence">
+                    <li><a href="https://worktrunk.dev/switch/">Switch/create/execute reference</a></li>
+                    <li><a href="https://worktrunk.dev/list/">Worktree and branch status, including JSON</a></li>
+                    <li><a href="https://worktrunk.dev/hook/">Lifecycle hooks</a> and <a href="https://worktrunk.dev/extending/">extension model</a></li>
+                    <li><a href="https://worktrunk.dev/claude-code/">Agent integration</a> and <a href="https://worktrunk.dev/tips-patterns/">development recipes</a></li>
+                    <li><a href="https://worktrunk.dev/faq/">FAQ distinguishing Worktrunk from Git Machete</a></li>
+                    <li><a href="https://github.com/max-sixty/worktrunk/releases/tag/v0.74.0">Latest observed stable release</a></li>
+                </ul>
+                <a class="back" href="#comparison-summary">Back to summary</a>
+            </section>
+
+            <section class="project-detail" id="project-t3-code">
+                <h2><a href="https://github.com/pingdotgg/t3code">T3 Code</a></h2>
+                <p class="verdict"><strong>Verdict:</strong> Highly relevant as an agent-native cockpit and the strongest reviewed web/desktop/mobile control-surface candidate. It makes branch/worktree development unusually accessible, but it does not model dependency topology or mix branches, and its native ownership overlaps Worktrunk, Herdr and parts of AgentBox.</p>
+                <div class="facts">
+                    <div class="fact"><strong>GitHub stars</strong>20,416 as of 25 August 2026</div>
+                    <div class="fact"><strong>Maintenance</strong>2,810 default-branch commits since creation on 8 February 2026; latest 25 August; v0.0.33 on 10 August</div>
+                    <div class="fact"><strong>Licence</strong><a href="https://github.com/pingdotgg/t3code/blob/main/LICENSE">MIT</a> for the repository; agent providers remain separate dependencies</div>
+                </div>
+                <h3>Domain fit</h3>
+                <p>
+                    T3 Code describes itself as an “agent harness control surface”. Its server owns agent sessions, workspaces, version control,
+                    terminals and filesystem operations; web, Electron desktop and mobile clients connect over authenticated RPC. Built-in drivers support
+                    Codex, Claude Code, Cursor, Grok Build and OpenCode. Threads carry project, branch and worktree context, and per-turn checkpoints are stored
+                    as hidden Git refs so diffs and reverts can be associated with agent turns.
+                </p>
+                <h3>Branches, worktrees and upstream</h3>
+                <p>
+                    The branch picker lists local, remote, default, current and already-worktreed refs; it can create/switch refs, reuse a detected worktree,
+                    or create a fresh branch/worktree from an explicitly selected base. Worktree-mode bootstrap can resolve the latest fetched remote commit,
+                    and checked-in <code>t3.json</code> scripts can run automatically after creation. T3 Code also clones and publishes repositories, shows
+                    ahead/behind and PR status, and supports PR/MR creation and review for GitHub, GitLab, Bitbucket and Azure DevOps.
+                </p>
+                <p>
+                    This is strong per-branch development and forge integration, but only partial multi-branch management: there is no dependency forest,
+                    parent-first restack, or bulk synchronization of an active branch set. The internal operation named <code>runStackedAction</code> is a
+                    sequential branch/commit/push/PR transaction, not stacked-branch support.
+                </p>
+                <h3>Combining branches</h3>
+                <p>
+                    There is no first-class arbitrary fan-in mix. A checked-in project script could invoke <code>ggmxd</code> and open a preview in a dedicated
+                    integration worktree, which makes T3 Code a good <em>consumer</em> of the mix, but the mix registry, safety checks and unpublished target
+                    remain external responsibilities.
+                </p>
+                <h3>Cockpit composition</h3>
+                <ul>
+                    <li><strong>Potential replacement lane:</strong> T3 Code could replace much of Herdr + Collie for supported agents by adding a structured conversation UI, approvals, diffs, PR review, terminals, web access and native mobile clients.</li>
+                    <li><strong>Worktrunk overlap:</strong> both want to create, initialize, locate and remove worktrees. T3 can reuse existing worktrees discovered through Git, but it has no documented Worktrunk delegation plug-in or lifecycle API.</li>
+                    <li><strong>AgentBox boundary:</strong> T3’s server executes the agent CLI where it runs; it does not natively provision AgentBox boxes, operate the AgentBox queue or use its host relay. Running a T3 server inside a disposable box is plausible but not a documented integration.</li>
+                    <li><strong>Topology:</strong> Git Machete or git-spice can remain the sole dependency authority, but must not rewrite branches checked out by live T3 threads. Quiesce threads and take the repository lock first.</li>
+                </ul>
+                <h3>Maturity and current worktree risks</h3>
+                <p>
+                    The repository is not archived and its activity is exceptionally high, but it is only six months old; the README explicitly says the project
+                    is “very very early” and to expect bugs. Open user reports directly relevant to composition include external worktrees being shown as Local,
+                    an external-worktree path leading commit/push/PR actions toward the main checkout, two threads sharing one worktree while displaying conflicting
+                    branches, and a running thread becoming wedged when another tool removes its worktree. These reports are not independent reproductions, but they
+                    make dual lifecycle ownership inappropriate today.
+                </p>
+                <h3>Licence and dependency boundary</h3>
+                <p>
+                    The monorepo carries a conventional MIT licence, including server and client source. The complete experience still depends on separately installed
+                    agent CLIs and their authentication/subscriptions; T3 Code being FOSS does not make every provider FOSS. An OpenCode-only deployment can keep more
+                    of the agent path open, while Codex, Claude, Cursor and Grok retain their own service and licence boundaries.
+                </p>
+                <h3>Recommendation</h3>
+                <p>
+                    Give T3 Code a first-class disposable-environment pilot, not just a mention. Compare a T3-native lane against the existing Herdr/Worktrunk lane on
+                    mobile control, agent resume, multiple concurrent worktrees, setup scripts, PR review and crash recovery. In that pilot, let T3 own its worktrees;
+                    do not use T3’s commit/push controls on Worktrunk-created worktrees until the external-worktree issues are fixed and verified.
+                </p>
+                <h3>Evidence</h3>
+                <ul class="evidence">
+                    <li><a href="https://github.com/pingdotgg/t3code">Canonical repository and agent-harness overview</a> — checked 25 August 2026</li>
+                    <li><a href="https://github.com/pingdotgg/t3code/blob/main/docs/internals/overview.md">Server, client, orchestration, VCS and checkpoint architecture</a></li>
+                    <li><a href="https://github.com/pingdotgg/t3code/blob/main/docs/user/source-control.md">Source-control and forge integration</a></li>
+                    <li><a href="https://github.com/pingdotgg/t3code/blob/main/docs/user/remote-access.md">Remote web/mobile access modes</a></li>
+                    <li><a href="https://github.com/pingdotgg/t3code/blob/main/apps/web/src/components/BranchToolbarBranchSelector.tsx">Branch and existing-worktree selection source</a></li>
+                    <li><a href="https://github.com/pingdotgg/t3code/blob/main/apps/server/src/vcs/GitVcsDriverCore.ts">Git worktree implementation</a> and <a href="https://github.com/pingdotgg/t3code/blob/main/packages/contracts/src/t3ProjectFile.ts">checked-in project/setup configuration</a></li>
+                    <li><a href="https://github.com/pingdotgg/t3code/issues/1714">External-worktree classification report</a>, <a href="https://github.com/pingdotgg/t3code/issues/2712">external-worktree push report</a>, <a href="https://github.com/pingdotgg/t3code/issues/5496">shared-worktree branch mismatch report</a>, and <a href="https://github.com/pingdotgg/t3code/issues/4723">missing-worktree session recovery report</a></li>
+                    <li><a href="https://github.com/pingdotgg/t3code/releases/tag/v0.0.33">Latest observed stable release</a></li>
+                    <li><a href="https://github.com/pingdotgg/t3code/blob/main/LICENSE">Governing MIT licence text</a></li>
+                </ul>
+                <a class="back" href="#comparison-summary">Back to summary</a>
+            </section>
+
+            <section class="project-detail" id="project-worktrunk-sync">
+                <h2><a href="https://github.com/pablospe/worktrunk-sync">worktrunk-sync</a></h2>
+                <p class="verdict"><strong>Verdict:</strong> The smallest, most natural topology companion for a purely local Worktrunk workflow in which every active branch has a worktree. Its youth, inferred topology and incomplete licence hygiene make it a controlled pilot, not the global cockpit authority.</p>
+                <div class="facts">
+                    <div class="fact"><strong>GitHub stars</strong>16 as of 25 August 2026</div>
+                    <div class="fact"><strong>Maintenance</strong>41 total commits; last default-branch activity and v0.1.2 on 29 April 2026</div>
+                    <div class="fact"><strong>Licence</strong><a href="https://github.com/pablospe/worktrunk-sync/blob/main/Cargo.toml">MIT declared</a>; no full root licence text observed</div>
+                </div>
+                <h3>Domain fit</h3>
+                <p>
+                    It discovers parent/child relationships from merge bases among branches that have worktrees, stores a Machete-compatible tree in
+                    <code>.git/wt/stack</code>, and records fork points so rewritten parents can be handled with <code>git rebase --onto</code> without duplicating commits.
+                    Parent-first topological execution supports one stack or all stacks.
+                </p>
+                <h3>Development and upstream workflow</h3>
+                <p>
+                    It is deliberately a narrow <code>wt-sync</code>/<code>wt sync</code> companion. Flags can fetch, rebase, force-push-with-lease and prune integrated worktrees;
+                    dry-run, verbose planning and resumable conflicts are available. It does not create environments, launch agents, display CI or create PRs.
+                </p>
+                <h3>Combining branches</h3>
+                <p>It updates dependency stacks. Sibling branches remain siblings; it has no aggregate test branch and does not replace <code>ggmxd</code>.</p>
+                <h3>Strengths and trade-offs</h3>
+                <ul>
+                    <li><strong>Strength:</strong> almost zero ceremony for a branch-per-worktree local repo.</li>
+                    <li><strong>Trade-off:</strong> remote AgentBox branches that lack host worktrees are invisible to its participation model.</li>
+                    <li><strong>Trade-off:</strong> format compatibility is not shared state—<code>.git/wt/stack</code> and <code>.git/machete</code> are separate files and can drift.</li>
+                    <li><strong>Licence caution:</strong> Cargo and README declare MIT, but the repository lacks the governing full licence text normally expected for confident redistribution.</li>
+                </ul>
+                <h3>Evidence</h3>
+                <ul class="evidence">
+                    <li><a href="https://github.com/pablospe/worktrunk-sync/blob/main/README.md">Canonical workflow, state files and flags</a></li>
+                    <li><a href="https://github.com/pablospe/worktrunk-sync/blob/main/src/sync.rs">Synchronization implementation</a></li>
+                    <li><a href="https://github.com/pablospe/worktrunk-sync/releases/tag/v0.1.2">Latest observed release</a></li>
+                    <li><a href="https://github.com/pablospe/worktrunk-sync/issues/4">Open push-only feature request</a></li>
+                    <li><a href="https://github.com/pablospe/worktrunk-sync/blob/main/Cargo.toml">Package licence declaration</a></li>
+                </ul>
+                <a class="back" href="#comparison-summary">Back to summary</a>
+            </section>
+
+            <section class="project-detail" id="project-git-machete">
+                <h2><a href="https://github.com/VirtusLab/git-machete">Git Machete</a></h2>
+                <p class="verdict"><strong>Verdict:</strong> Strongest mature branch-relationship and upstream engine for the remote cockpit. Its explicit forest remains meaningful even when active work happens in independent AgentBox clones rather than host worktrees.</p>
+                <div class="facts">
+                    <div class="fact"><strong>GitHub stars</strong>1,135 as of 25 August 2026</div>
+                    <div class="fact"><strong>Maintenance</strong>284 default-branch commits in the window; latest 23 August 2026; v3.44.1 on 7 July</div>
+                    <div class="fact"><strong>Licence</strong><a href="https://github.com/VirtusLab/git-machete/blob/develop/LICENSE">MIT</a></div>
+                </div>
+                <h3>Domain fit</h3>
+                <p>
+                    An editable <code>.git/machete</code> forest declares branch dependencies. <code>discover</code> proposes a layout, <code>status</code> marks edges as in-sync,
+                    out-of-sync or merged, and <code>traverse</code> can synchronize parents and remote tracking branches, resume after conflicts, and create or retarget GitHub PRs and GitLab MRs.
+                </p>
+                <h3>Worktrees and development</h3>
+                <p>
+                    The top-level layout is shared across worktrees. Traversal changes into a branch’s owning worktree when present; for an unmaterialized branch it can use a temporary worktree.
+                    This is genuine worktree awareness, but permanent path provisioning, setup hooks, dev servers and agent launch remain Worktrunk’s job.
+                </p>
+                <h3>Combining branches</h3>
+                <p>
+                    The tip of a linear stack naturally includes ancestor work, and <code>advance</code> can fast-forward a parent to one child. There is no arbitrary sibling-to-aggregate command;
+                    forcing unrelated peers into a stack changes dependency semantics and is not a substitute for a disposable mix.
+                </p>
+                <h3>Cockpit configuration</h3>
+                <ul>
+                    <li>Use one explicit allowlisted topology and keep <code>agentbox/*</code> and mix refs outside it until promotion.</li>
+                    <li>Set <code>machete.traverse.push=false</code> so traversal does not publish by default.</li>
+                    <li>Set <code>machete.traverse.whenBranchNotCheckedOutInAnyWorktree=cd-into-temporary-worktree</code> for central orchestration.</li>
+                    <li>Do not run worktrunk-sync as a second mutating topology authority.</li>
+                </ul>
+                <h3>Evidence</h3>
+                <ul class="evidence">
+                    <li><a href="https://git-machete.readthedocs.io/en/stable/">Official documentation and CLI reference</a></li>
+                    <li><a href="https://github.com/VirtusLab/git-machete/blob/develop/README.md">Canonical quick start and agent-skill instructions</a></li>
+                    <li><a href="https://github.com/VirtusLab/git-machete/blob/develop/docs/source/cli/traverse.rst">Worktree-aware traversal source</a></li>
+                    <li><a href="https://github.com/VirtusLab/git-machete/blob/develop/docs/source/git-config-keys/traverse.whenBranchNotCheckedOutInAnyWorktree.rst">Temporary-worktree configuration</a></li>
+                    <li><a href="https://github.com/VirtusLab/git-machete/releases/tag/v3.44.1">Latest observed stable release</a></li>
+                </ul>
+                <a class="back" href="#comparison-summary">Back to summary</a>
+            </section>
+
+            <section class="project-detail" id="project-ggmx-ggmxd">
+                <h2><a href="https://github.com/aspiers/git-config">ggmx + ggmxd</a></h2>
+                <p class="verdict"><strong>Verdict:</strong> Retain. It is the only reviewed Git-native tool whose primary abstraction is exactly the requested arbitrary, ordered set of active peer branches merged into a disposable local target.</p>
+                <div class="facts">
+                    <div class="fact"><strong>GitHub stars</strong>105 for the containing git-config repository as of 25 August 2026</div>
+                    <div class="fact"><strong>Maintenance</strong>28 default-branch commits in the one-year window; latest 25 August 2026; no tagged release</div>
+                    <div class="fact"><strong>Licence</strong><a href="https://github.com/aspiers/git-config/blob/master/COPYING">GPL-3.0-or-later</a> in source headers</div>
+                </div>
+                <h3>Domain fit</h3>
+                <p>
+                    <code>git mix</code> records an ordered branch set in Git configuration. <code>git mixdown</code> rebuilds the target from its base with
+                    <code>git checkout -B</code>, then merges the remaining branches—octopus by default—and optionally stays on the target. The target is a throw-away integration branch, never a publication branch.
+                </p>
+                <h3>Development and upstream workflow</h3>
+                <p>
+                    It does not manage upstreams, dependency topology, worktrees or environments. That narrowness is an architectural advantage when paired with Worktrunk and Machete: the mixer never pretends peer branches depend on one another.
+                    A dedicated integration worktree or disposable test box provides the development environment around it.
+                </p>
+                <h3>Safety and observability gaps</h3>
+                <ul>
+                    <li>The target is forcibly recreated; add clean-tree and “checked out in another worktree” preflight checks.</li>
+                    <li>Add a dry-run and structured JSON plan/result so the cockpit can show inputs, base, merge order, conflicts and resulting tip.</li>
+                    <li>Use a dedicated target/ref namespace plus a repository orchestration lock.</li>
+                    <li>Surface conflict state explicitly; octopus merges abort when conflicts require human resolution.</li>
+                    <li>Exclude mix targets from topology tools and all push/PR automation.</li>
+                </ul>
+                <h3>Evidence</h3>
+                <ul class="evidence">
+                    <li><a href="https://github.com/aspiers/git-config/blob/master/bin/git-mix">git-mix source</a></li>
+                    <li><a href="https://github.com/aspiers/git-config/blob/master/bin/git-mixdown">git-mixdown source</a></li>
+                    <li><a href="https://github.com/aspiers/git-config">Containing canonical repository</a></li>
+                    <li><a href="https://github.com/aspiers/git-config/blob/master/COPYING">Repository licence text</a></li>
+                </ul>
+                <a class="back" href="#comparison-summary">Back to summary</a>
+            </section>
+
+            <section class="project-detail" id="project-git-spice">
+                <h2><a href="https://github.com/abhinav/git-spice">git-spice</a></h2>
+                <p class="verdict"><strong>Verdict:</strong> Best cleanly composable alternative to Machete when offline-first stack operations and broad forge support are the priority. It fits above Worktrunk without trying to replace Herdr, AgentBox or the mixer.</p>
+                <div class="facts">
+                    <div class="fact"><strong>GitHub stars</strong>750 as of 25 August 2026</div>
+                    <div class="fact"><strong>Maintenance</strong>461 default-branch commits in the window; latest 24 August 2026; v0.31.2 on 21 July</div>
+                    <div class="fact"><strong>Licence</strong><a href="https://github.com/abhinav/git-spice/blob/main/LICENSE">GPL-3.0</a></div>
+                </div>
+                <h3>Domain fit</h3>
+                <p>
+                    git-spice tracks branch stacks in local metadata, creates/navigates branches, restacks a branch, stack or repository, synchronizes trunk and submits/lands stacks.
+                    It works locally and offline, then integrates with GitHub, GitLab, Bitbucket, Gitea, Forgejo and Codeberg-style workflows.
+                </p>
+                <h3>Worktrees and development</h3>
+                <p>
+                    Worktrees are compatible but not a first-class owned lifecycle. The official recipes demonstrate a custom branch-picker alias around <code>git worktree add</code>.
+                    In this cockpit, Worktrunk should remain responsible for paths, hooks and agent launch while git-spice owns lineage and forge actions.
+                </p>
+                <h3>Combining branches</h3>
+                <p>Bottom-up stack landing can consolidate dependent work, but there is no persistent arbitrary peer mixer. Keep <code>ggmxd</code>.</p>
+                <h3>Strengths and trade-offs</h3>
+                <ul>
+                    <li><strong>Strength:</strong> broad forge coverage and local/offline metadata reduce service coupling.</li>
+                    <li><strong>Strength:</strong> narrow responsibility composes cleanly with Worktrunk, Herdr and AgentBox.</li>
+                    <li><strong>Trade-off:</strong> less mature and less explicitly worktree-aware than Git Machete; permanent worktrees need another layer.</li>
+                </ul>
+                <h3>Evidence</h3>
+                <ul class="evidence">
+                    <li><a href="https://abhinav.github.io/git-spice/">Official overview</a></li>
+                    <li><a href="https://abhinav.github.io/git-spice/cli/reference/">CLI reference</a></li>
+                    <li><a href="https://abhinav.github.io/git-spice/resources/recipes/">Worktree and automation recipes</a></li>
+                    <li><a href="https://abhinav.github.io/git-spice/guide/cr/">Code-review/forge workflow</a></li>
+                    <li><a href="https://github.com/abhinav/git-spice/releases/tag/v0.31.2">Latest observed release</a></li>
+                </ul>
+                <a class="back" href="#comparison-summary">Back to summary</a>
+            </section>
+
+            <section class="project-detail" id="project-stax">
+                <h2><a href="https://github.com/cesarferreira/stax">Stax</a></h2>
+                <p class="verdict"><strong>Verdict:</strong> Strongest holistic FOSS cockpit pilot. It combines stacks, real worktrees, parallel agent lanes, TUI/GUI, tmux, status and arbitrary launch commands—but overlaps three existing layers and is only about eight months old.</p>
+                <div class="facts">
+                    <div class="fact"><strong>GitHub stars</strong>123 as of 25 August 2026</div>
+                    <div class="fact"><strong>Maintenance</strong>1,111 default-branch commits in the window; latest 24 August 2026; v0.105.1 on 23 August; repository created December 2025</div>
+                    <div class="fact"><strong>Licence</strong><a href="https://github.com/cesarferreira/stax/blob/main/LICENSE">MIT</a></div>
+                </div>
+                <h3>Domain fit</h3>
+                <p>
+                    Stax manages branch stacks and synchronization while “lanes” give parallel agents real branches and worktrees. It includes TUI and GUI views,
+                    CI/review status, undo/redo, warm worktree slots, tmux reattachment, and launchers or skills for Codex, Claude, Gemini, OpenCode and Pi.
+                    Parallel commands can run in temporary worktrees.
+                </p>
+                <h3>Cockpit composition</h3>
+                <p>
+                    <code>st wt ... --run "command"</code> is the important escape hatch for AgentBox or another launcher. The opinionated lane shortcut prefers tmux and a fixed agent list,
+                    so Herdr composition would likely use general worktree commands or a no-tmux mode. Its UI and lane state overlap Herdr, Worktrunk and AgentBox and must not become competing authorities.
+                </p>
+                <h3>Combining branches</h3>
+                <p>
+                    Merge/cascade operations act on a dependency stack. They do not maintain a named, arbitrary set of independent peers as a continuously rebuilt test target.
+                    Stax therefore challenges the lifecycle/topology stack, not <code>ggmx</code>.
+                </p>
+                <h3>Strengths and trade-offs</h3>
+                <ul>
+                    <li><strong>Strength:</strong> closest single-project match to the cockpit’s agent/worktree/operator experience.</li>
+                    <li><strong>Strength:</strong> machine-readable commands and arbitrary launch hooks preserve some composability.</li>
+                    <li><strong>Trade-off:</strong> intense activity is not a substitute for operational maturity; pilot in disposable repositories.</li>
+                    <li><strong>Security rule:</strong> its “yolo” lane option forwards agent sandbox/approval bypasses; worktree isolation is not security isolation, so keep AgentBox for containment.</li>
+                </ul>
+                <h3>Evidence</h3>
+                <ul class="evidence">
+                    <li><a href="https://github.com/cesarferreira/stax#parallel-ai-lanes">Canonical README and parallel AI lanes</a></li>
+                    <li><a href="https://github.com/cesarferreira/stax/blob/main/docs/workflows/agent-worktrees.md">Agent worktree workflow</a></li>
+                    <li><a href="https://github.com/cesarferreira/stax/releases/tag/v0.105.1">Latest observed release</a></li>
+                    <li><a href="https://github.com/cesarferreira/stax/blob/main/LICENSE">Licence text</a></li>
+                </ul>
+                <a class="back" href="#comparison-summary">Back to summary</a>
+            </section>
+
+            <section class="project-detail" id="project-stackit">
+                <h2><a href="https://github.com/getstackit/stackit">Stackit</a></h2>
+                <p class="verdict"><strong>Verdict:</strong> Second holistic pilot. It has an unusually complete stack/worktree/agent/dashboard feature set, but its age, rapid churn and destructive cleanup boundary demand explicit safety trials before adoption.</p>
+                <div class="facts">
+                    <div class="fact"><strong>GitHub stars</strong>32 as of 25 August 2026</div>
+                    <div class="fact"><strong>Maintenance</strong>2,620 default-branch commits in the window; latest 25 August 2026; v0.26.1 on 17 August; repository created December 2025</div>
+                    <div class="fact"><strong>Licence</strong><a href="https://github.com/getstackit/stackit/blob/main/LICENSE">MIT</a></div>
+                </div>
+                <h3>Domain fit</h3>
+                <p>
+                    Stackit tracks tree-shaped stacks, automatically restacks, submits/merges GitHub PRs and has repository-level undo. Its managed worktrees include hooks,
+                    hidden anchors, ownership and <code>worktree run</code>; JSON state, parallel <code>foreach</code>, generated agent skills and an experimental local web dashboard are unusually cockpit-friendly.
+                </p>
+                <h3>Combining branches</h3>
+                <p><code>merge ship</code> can consolidate an entire dependency stack into one PR. That is useful atomic landing, but it is not an arbitrary sibling mix and should not replace <code>ggmxd</code>.</p>
+                <h3>Safety and overlap</h3>
+                <ul>
+                    <li>Automatic worktree cleanup is enabled by default; remove/detach/prune can delete ignored files such as <code>.env</code> or caches that Git cannot recover. Disable it during evaluation and make recovery explicit.</li>
+                    <li>A July 2026 user report described <code>restack</code> resetting a managed worktree with uncommitted changes; the issue was quickly closed, but it is a reason to validate clean-tree guards against the exact release.</li>
+                    <li>Worktree/agent/dashboard ownership overlaps Worktrunk, AgentBox and Herdr more heavily than a modular topology tool does.</li>
+                    <li>Only a few dozen stars and a very young repository make its high commit volume evidence of velocity, not durability.</li>
+                </ul>
+                <h3>Evidence</h3>
+                <ul class="evidence">
+                    <li><a href="https://github.com/getstackit/stackit/blob/main/README.md">Features and workflows</a></li>
+                    <li><a href="https://github.com/getstackit/stackit/blob/main/docs/worktree.md">Managed worktree design</a></li>
+                    <li><a href="https://getstackit.github.io/stackit/worktrees/management/">Cleanup behavior and ignored-file warning</a></li>
+                    <li><a href="https://github.com/getstackit/stackit/issues/1490">Closed worktree data-loss report</a> and <a href="https://github.com/getstackit/stackit/issues/1656">open sync/reparenting issue</a></li>
+                    <li><a href="https://github.com/getstackit/stackit/releases/tag/v0.26.1">Latest observed release</a></li>
+                </ul>
+                <a class="back" href="#comparison-summary">Back to summary</a>
+            </section>
+
+            <section class="project-detail" id="project-jujutsu">
+                <h2><a href="https://github.com/jj-vcs/jj">Jujutsu</a></h2>
+                <p class="verdict"><strong>Verdict:</strong> Best strategic alternative and closest principled replacement for mixer semantics. It can unify workspaces, DAG rewriting, undo, parallel execution and synthetic merge changes—but only by adopting a different VCS mental model and compatibility envelope.</p>
+                <div class="facts">
+                    <div class="fact"><strong>GitHub stars</strong>31,185 as of 25 August 2026</div>
+                    <div class="fact"><strong>Maintenance</strong>1,928 default-branch commits in the window; latest 25 August 2026; v0.44.0 on 6 August</div>
+                    <div class="fact"><strong>Licence</strong><a href="https://github.com/jj-vcs/jj/blob/main/LICENSE">Apache-2.0</a></div>
+                </div>
+                <h3>Domain fit</h3>
+                <p>
+                    Jujutsu is a VCS rather than a Git workflow wrapper. Native workspaces provide multiple working copies backed by one repository; bookmarks map to Git branches and can track remotes;
+                    rewritten descendants automatically rebase; conflicts are first-class objects; repository operations are undoable. <code>jj run</code> can execute revisions in isolated working copies and in parallel.
+                </p>
+                <h3>Combining branches</h3>
+                <p>
+                    <code>jj new A B C</code> creates a multi-parent merge working-copy change, giving the strongest reviewed foundation for a live combined-test change.
+                    It is not identical to a declarative mix registry/daemon: when a bookmark advances by adding a child rather than rewriting its current head, the merge change may need explicit update.
+                </p>
+                <h3>Adoption boundary</h3>
+                <p>
+                    Colocated Git repositories preserve substantial interoperability, but Jujutsu workspaces replace Git worktrees rather than compose with Worktrunk.
+                    Current compatibility documentation calls out missing Git hooks, <code>.gitattributes</code>, submodules, partial clones, Git LFS and <code>git worktree</code> support.
+                    GitHub flow also uses explicit fetch/rebase/bookmark operations rather than a direct pull analogue.
+                </p>
+                <h3>Recommendation</h3>
+                <p>Run a separate representative-repository experiment. Do not insert Jujutsu halfway into the production cockpit and expect Git Machete/Worktrunk semantics to remain authoritative.</p>
+                <h3>Evidence</h3>
+                <ul class="evidence">
+                    <li><a href="https://docs.jj-vcs.dev/latest/working-copy/#workspaces">Native workspaces</a></li>
+                    <li><a href="https://docs.jj-vcs.dev/latest/bookmarks/">Bookmarks and remote tracking</a></li>
+                    <li><a href="https://docs.jj-vcs.dev/latest/conflicts/">Conflicts and multi-parent merge changes</a></li>
+                    <li><a href="https://docs.jj-vcs.dev/latest/cli-reference/#jj-run">Parallel isolated execution</a></li>
+                    <li><a href="https://docs.jj-vcs.dev/latest/git-compatibility/">Git compatibility limits</a> and <a href="https://jj-vcs.github.io/jj/latest/github/">GitHub workflow</a></li>
+                    <li><a href="https://github.com/jj-vcs/jj/releases/tag/v0.44.0">Latest observed release</a></li>
+                </ul>
+                <a class="back" href="#comparison-summary">Back to summary</a>
+            </section>
+
+            <section class="project-detail" id="project-git-town">
+                <h2><a href="https://github.com/git-town/git-town">Git Town</a></h2>
+                <p class="verdict"><strong>Verdict:</strong> Excellent branch hierarchy, synchronization, PR lifecycle and undo in ordinary Git workflows, but currently unsuitable for the intended multi-worktree AI cockpit because material worktree issues remain open.</p>
+                <div class="facts">
+                    <div class="fact"><strong>GitHub stars</strong>3,365 as of 25 August 2026</div>
+                    <div class="fact"><strong>Maintenance</strong>620 default-branch commits in the window; latest 26 July 2026; v24.0.0 on 23 July</div>
+                    <div class="fact"><strong>Licence</strong><a href="https://github.com/git-town/git-town/blob/main/LICENSE">MIT</a></div>
+                </div>
+                <h3>Domain fit</h3>
+                <p>
+                    Git Town models branch types and parent relationships, offers <code>sync --all</code>/<code>--stack</code>, navigation with <code>walk</code>, PR proposal/shipping and repository-level undo.
+                    Dry runs and explicit synchronization scope make it otherwise attractive as a Machete alternative.
+                </p>
+                <h3>Worktree blocker</h3>
+                <p>
+                    Current issues report sync failing inside a worktree, stale local main when it is checked out elsewhere, and unclear multi-AI-agent worktree use.
+                    A v24-era guard reduced one dangerous ship/undo trigger, but the broader worktree reports remain unresolved; that is directly adverse to the core requirement here.
+                </p>
+                <h3>Combining branches</h3>
+                <p><code>combine</code> folds the current branch into its adjacent parent and removes it. This is destructive linear consolidation, not a reusable test mix of active peers.</p>
+                <h3>Evidence</h3>
+                <ul class="evidence">
+                    <li><a href="https://www.git-town.com/stacked-changes">Stack hierarchy</a>, <a href="https://www.git-town.com/commands/sync.html">sync</a> and <a href="https://www.git-town.com/commands/walk.html">walk</a></li>
+                    <li><a href="https://github.com/git-town/git-town/issues/6260">Open sync-in-worktree issue</a></li>
+                    <li><a href="https://github.com/git-town/git-town/issues/6084">Open stale-main-across-worktrees issue</a></li>
+                    <li><a href="https://github.com/git-town/git-town/issues/6229">Open multiple-AI-agent/worktree question</a></li>
+                    <li><a href="https://github.com/git-town/git-town/issues/6220">Reported failed ship/undo deletion attempt</a> and <a href="https://github.com/git-town/git-town/pull/6253">mitigating merged guard</a></li>
+                    <li><a href="https://github.com/git-town/git-town/releases/tag/v24.0.0">Latest observed release</a></li>
+                </ul>
+                <a class="back" href="#comparison-summary">Back to summary</a>
+            </section>
+
+            <section class="project-detail" id="project-git-branchless">
+                <h2><a href="https://github.com/arxanas/git-branchless">git-branchless</a></h2>
+                <p class="verdict"><strong>Verdict:</strong> Powerful commit-graph specialist for smartlog, bulk restacking, speculative merge prediction and undo. It can complement Worktrunk, but its explicit alpha status and unresolved cross-worktree cases rule it out as the cockpit authority.</p>
+                <div class="facts">
+                    <div class="fact"><strong>GitHub stars</strong>4,115 as of 25 August 2026</div>
+                    <div class="fact"><strong>Maintenance</strong>107 default-branch commits in the window; latest meaningful change 15 July 2026; v0.11.1 on 21 May</div>
+                    <div class="fact"><strong>Licence</strong><a href="https://github.com/arxanas/git-branchless/blob/master/LICENSE-MIT">MIT OR Apache-2.0</a></div>
+                </div>
+                <h3>Domain fit</h3>
+                <p>
+                    git-branchless visualizes branched and anonymous commit trees with smartlog, synchronizes/restacks local stacks without repeated checkouts,
+                    performs in-memory DAG moves and records repository-level undo. Speculative merges can predict conflicts before work is landed.
+                </p>
+                <h3>Worktrees and combining</h3>
+                <p>
+                    It can coexist with worktrees but does not own their lifecycle, environments or agent processes. Speculative merge is valuable preflight for a combined test,
+                    not a persistent runnable aggregate. Open reports cover changes staged in other worktrees, moves across worktrees and non-standard worktree layout initialization.
+                </p>
+                <h3>Strengths and trade-offs</h3>
+                <ul>
+                    <li><strong>Strength:</strong> unusually strong commit-DAG manipulation, preview and undo.</li>
+                    <li><strong>Trade-off:</strong> explicitly alpha, with no first-class forge PR or worktree-development cockpit.</li>
+                    <li><strong>Fit:</strong> optional expert graph engine alongside Worktrunk, not the default branch registry.</li>
+                </ul>
+                <h3>Evidence</h3>
+                <ul class="evidence">
+                    <li><a href="https://github.com/arxanas/git-branchless">Canonical README and alpha status</a></li>
+                    <li><a href="https://github.com/arxanas/git-branchless/issues/1524">Open cross-worktree staging issue</a></li>
+                    <li><a href="https://github.com/arxanas/git-branchless/issues/215">Open move-across-worktrees issue</a></li>
+                    <li><a href="https://github.com/arxanas/git-branchless/issues/771">Open non-standard worktree-layout issue</a></li>
+                    <li><a href="https://github.com/arxanas/git-branchless/pull/1095">Merged shared-worktree metadata fix</a></li>
+                    <li><a href="https://github.com/arxanas/git-branchless/releases/tag/v0.11.1">Latest observed release</a></li>
+                </ul>
+                <a class="back" href="#comparison-summary">Back to summary</a>
+            </section>
+
+            <section class="project-detail" id="project-git-stint">
+                <h2><a href="https://github.com/rchaz/git-stint">git-stint</a></h2>
+                <p class="verdict"><strong>Verdict:</strong> A promising local, Claude-Code-centric alternative to Worktrunk rather than a companion to it. It couples each agent session to a real branch and worktree, adds automatic WIP checkpoints and cleanup, and can test a disposable combination of selected session branches. It has no dependency-stack model, remote cockpit or persistent mix target, so it neither replaces Git Machete nor makes <code>ggmxd</code> redundant.</p>
+                <div class="facts">
+                    <div class="fact"><strong>GitHub stars</strong>35 as of 25 August 2026</div>
+                    <div class="fact"><strong>Maintenance</strong>79 default-branch commits since creation on 27 February 2026; latest main commit 20 June was dependency automation; npm v0.6.1 on 28 March; no GitHub release</div>
+                    <div class="fact"><strong>Licence</strong><a href="https://github.com/rchaz/git-stint/blob/main/LICENSE">MIT</a></div>
+                </div>
+                <h3>Domain fit</h3>
+                <p>
+                    <code>git stint start NAME</code> creates a <code>stint/NAME</code> branch, a <code>.stint/NAME</code> worktree and a session manifest under
+                    <code>.git/sessions/</code>. Commands cover status, diff, checkpoints, commits, squashing, merging, GitHub pull requests, resume, cleanup,
+                    undo and stale-session pruning. Claude Code hooks redirect write tools into the stint worktree and create a WIP checkpoint when the agent stops.
+                    The branches remain ordinary Git branches, but the native autonomous adapter is Claude-specific; Codex, OpenCode and Pi would use the CLI manually unless adapters are added.
+                </p>
+                <h3>Combining branches</h3>
+                <p>
+                    <code>git stint test --combine A B</code> creates a temporary detached worktree and branch from the default branch, merges the selected stint branches,
+                    runs the configured test command, then removes both temporary objects. This is the closest direct partial match to the mixer requirement among the Git worktree managers:
+                    it is useful for one-shot combined validation, but there is no named membership registry, daemon, reusable tip or continuously refreshed branch to seed another environment.
+                </p>
+                <h3>Composition, ownership and trust boundary</h3>
+                <ul>
+                    <li><strong>Worktree authority:</strong> git-stint and Worktrunk both create, configure, list and remove worktrees. Choose one for a repository; dual ownership would make cleanup and session state ambiguous.</li>
+                    <li><strong>Topology:</strong> stint sessions are peers. There is no parent/child dependency forest or descendant restacking, so Git Machete or git-spice remains a separate quiescent-phase authority if stacks are needed.</li>
+                    <li><strong>Cockpit:</strong> manifests plus <code>list --json</code>, status and checkpoints provide useful local observability, but not Herdr/T3-style presentation, mobile control, remote execution or a broad structured control API.</li>
+                    <li><strong>Isolation:</strong> configured shared files and directories are symlinked back to the main checkout. That is convenient for caches, but it deliberately shares mutable state and can expose credentials such as <code>.env</code> files across sessions. <code>post_create</code> also executes configured shell code. Treat both as trusted repository configuration, not sandboxing.</li>
+                    <li><strong>Conflict signal:</strong> <code>conflicts</code> reports overlapping changed paths across sessions. It is an early coordination warning, not proof of a textual or semantic merge conflict.</li>
+                    <li><strong>Maturity:</strong> the code is small and has no runtime dependencies, but the project is less than six months old. Three open pull requests were Dependabot updates; the latest main activity was also dependency automation, so present maintenance is uncertain despite the initial burst.</li>
+                </ul>
+                <h3>Recommendation</h3>
+                <p>
+                    Pilot v0.6.1 in a disposable Claude Code repository as an alternative local lane. Compare its automatic redirection, stop checkpoints, crash recovery and cleanup with Worktrunk’s broader hooks and agent integration.
+                    Keep secrets out of shared links, inspect <code>post_create</code>, and verify that <code>test --combine</code> removes its temporary worktree after success, failure and interruption. Retain <code>ggmxd</code> for any durable mix consumed by other agents or boxes.
+                </p>
+                <h3>Evidence</h3>
+                <ul class="evidence">
+                    <li><a href="https://github.com/rchaz/git-stint#readme">Canonical README, lifecycle and command reference</a></li>
+                    <li><a href="https://github.com/rchaz/git-stint/blob/main/src/test-session.ts">Disposable combined-test implementation</a></li>
+                    <li><a href="https://github.com/rchaz/git-stint/blob/main/src/install-hooks.ts">Claude Code hook installation</a> and <a href="https://github.com/rchaz/git-stint/blob/main/src/session.ts">session/worktree lifecycle</a></li>
+                    <li><a href="https://github.com/rchaz/git-stint/blob/main/src/conflicts.ts">Path-overlap conflict signal</a> and <a href="https://github.com/rchaz/git-stint/blob/main/src/config.ts">shared-state and setup configuration</a></li>
+                    <li><a href="https://github.com/rchaz/git-stint/blob/main/CHANGELOG.md">Changelog</a> and <a href="https://www.npmjs.com/package/git-stint/v/0.6.1">npm v0.6.1</a></li>
+                </ul>
+                <a class="back" href="#comparison-summary">Back to summary</a>
+            </section>
+
+            <section class="methodology" id="methodology">
+                <h2>Methodology, scope and exclusions</h2>
+                <p>
+                    Research began by confirming the local AgentsView MCP was callable and searching prior task/session content for worktrunk-sync, Git Machete, branch mixing, T3 Code and the cockpit plan.
+                    That recovered an earlier six-project report plus a prior successful local T3 Code build/pairing session and prevented duplication. Current primary sources and GitHub metadata were then refreshed,
+                    and the current cockpit design, installed Herdr–Worktrunk integration, Worktrunk/AgentBox operating guidance, current T3 Code implementation/docs and the actual
+                    <code>git-mix</code>/<code>git-mixdown</code> scripts were inspected locally. Worktrunk, worktrunk-sync, Git Machete, the mixer, T3 Code and git-stint were user-supplied priorities;
+                    the remaining candidates were discovered as representative FOSS alternatives.
+                </p>
+                <h3>Popularity and maintenance</h3>
+                <p>
+                    Stars are repository-level GitHub counts observed on 25 August 2026, not quality scores. Commit counts are exact default-branch history totals for 25 August 2025 through 25 August 2026 and include merges and bots.
+                    Release dates exclude drafts/prereleases where the project exposed stable releases. Very high activity in a six-to-eight-month-old project is treated as velocity, not mature operational evidence.
+                </p>
+                <h3>FOSS boundary</h3>
+                <ul>
+                    <li><strong>GitButler</strong> was excluded from the FOSS shortlist because its FSL-1.1-MIT “Fair Source” licence has a non-compete period and is not OSI-compatible today, even though it later converts to MIT. <a href="https://blog.gitbutler.com/gitbutler-is-now-fair-source">Project announcement</a>.</li>
+                    <li><strong>Graphite</strong> was excluded because the defining current CLI/service workflow is not available as a clean self-contained FOSS solution and PR operations require a Graphite account/token. <a href="https://graphite.com/docs/install-the-cli">Installation/account boundary</a>.</li>
+                    <li><strong>GitHub stacked PRs / gh-stack</strong> are useful adjuncts, but the defining remote service is proprietary GitHub, so they are not an end-to-end FOSS solution. <a href="https://docs.github.com/en/pull-requests/get-started/about-stacked-prs">GitHub stacked PR documentation</a>.</li>
+                    <li><strong>StGit</strong> remains a good GPL-2.0 patch-series specialist, and <strong>Sapling</strong> a credible GPLv2 VCS/stack replacement; neither is as strong a fit as the detailed shortlist for shared multi-workspace control plus arbitrary fan-in.</li>
+                    <li><strong>worktrunk-sync</strong> remains in the table because its source and package metadata clearly declare MIT intent, but the missing full licence file is stated as a material hygiene defect rather than silently treating it as cleanly licensed.</li>
+                    <li><strong>T3 Code</strong> itself is MIT-licensed FOSS, but most supported agent providers and their hosted model services retain separate licences, accounts and subscription boundaries. The report rates the T3 Code control surface, not those providers as a combined FOSS stack.</li>
+                </ul>
+                <h3>Interpretive limits</h3>
+                <p>
+                    Documented features were distinguished from inferences and workarounds. Issue reports are evidence of current risk, not independent reproduction of every defect.
+                    The cockpit recommendation is architecture-specific: a local all-worktree setup and a remote independent-clone AgentBox setup lead to different topology choices.
+                </p>
+            </section>
+
+            <section class="recommendation" id="recommendation">
+                <h2>Needs-based recommendation and pilot plan</h2>
+                <ol>
+                    <li><strong>Production architecture:</strong> keep Worktrunk as the host worktree/development layer, Git Machete as the remote-cockpit topology authority, AgentBox as the remote execution authority, Herdr as the UI/control surface, and <code>ggmx</code>/<code>ggmxd</code> as the isolated fan-in layer.</li>
+                    <li><strong>Local pilot:</strong> trial worktrunk-sync in a disposable clone where every branch has a Worktrunk worktree. Begin with <code>--dry-run</code>; do not enable push or prune until topology inference and conflict recovery are trusted. Ask upstream to add a complete licence file.</li>
+                    <li><strong>Modular alternative pilot:</strong> trial git-spice above Worktrunk if multi-forge submission and offline stack operations matter more than Machete’s explicit worktree-aware traversal.</li>
+                    <li><strong>Agent-native cockpit pilot:</strong> run T3 Code in a disposable remote environment as an alternative to the Herdr/Collie + Worktrunk interaction layer. Let T3 own that environment’s threads and worktrees; measure mobile control, recovery and PR flow, and do not use its publication controls on externally managed worktrees while the current reports remain open.</li>
+                    <li><strong>Local Claude-session alternative:</strong> trial git-stint in a disposable repository instead of Worktrunk. Assess automatic edit redirection, checkpoints, crash recovery, cleanup, shared-state boundaries and <code>test --combine</code>; keep <code>ggmxd</code> for durable mixes.</li>
+                    <li><strong>Holistic challenger:</strong> evaluate Stax first and Stackit second in disposable repositories. Measure whether their combined UI/agent/worktree state can replace—not duplicate—Worktrunk and Herdr. For Stackit, disable automatic cleanup and verify ignored-file recovery.</li>
+                    <li><strong>Strategic track:</strong> evaluate Jujutsu separately on a representative repo containing hooks, LFS/submodules if relevant, multiple workspaces, remote collaboration and a multi-parent combined-test change.</li>
+                    <li><strong>Mixer hardening:</strong> add dry-run, JSON, worktree/cleanliness preflight, explicit conflict output, a dedicated ref namespace and repository lock to <code>ggmxd</code>. Keep mix targets unpushable and outside all stack topology.</li>
+                </ol>
+
+                <h3>Acceptance tests for the cockpit pilot</h3>
+                <ul>
+                    <li>Create three independent branches, materialize any local worktrees, and start local and remote agents without path, port or branch collisions.</li>
+                    <li>Rewrite a parent branch and prove only the chosen topology authority restacks descendants; active boxes must be detected, paused or explicitly resynchronized.</li>
+                    <li>Rebuild one combined-test target from two unrelated siblings and one stacked tip, run tests in a disposable box, then prove no publication command can push that target.</li>
+                    <li>Crash during a conflict and demonstrate inspectable, resumable state without deleting dirty or ignored files.</li>
+                    <li>In the T3-native lane, create and resume three agent threads across separate worktrees from desktop and mobile, then remove one worktree while idle and prove the thread remains recoverable. Separately verify that an externally created worktree is either recognized correctly or blocked from T3 commit/push controls.</li>
+                    <li>In the git-stint lane, crash one of two Claude sessions, recover its last checkpoint, run <code>test --combine</code>, and prove its temporary branch and worktree are removed after both a passing and failing test. Confirm that no shared secret or mutable file crosses session boundaries unexpectedly.</li>
+                    <li>Render a unified read-only cockpit view by joining Worktrunk JSON, topology status, AgentBox lifecycle and Herdr presentation through explicit branch/worktree/box identifiers.</li>
+                </ul>
+            </section>
+        </main>
+
+        <footer>
+            Standalone report · No remote scripts, fonts or stylesheets · Evidence links point to canonical documentation, repositories, releases and issue records.
+        </footer>
+    </body>
+</html>

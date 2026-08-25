@@ -1,0 +1,543 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>FOSS managers for many active, interdependent Git branches</title>
+        <style>
+            :root {
+                color-scheme: light dark;
+                --bg: #f3f6fb;
+                --panel: #ffffff;
+                --panel-2: #edf3ff;
+                --text: #172033;
+                --muted: #5d697a;
+                --border: #d5deea;
+                --accent: #3157c8;
+                --accent-2: #087f8c;
+                --good: #147a4d;
+                --caution: #946200;
+                --poor: #bd2c2c;
+                --alternative: #6e44aa;
+                --shadow: 0 10px 28px rgb(26 42 68 / 9%);
+            }
+            @media (prefers-color-scheme: dark) {
+                :root {
+                    --bg: #0f1622;
+                    --panel: #182231;
+                    --panel-2: #202d41;
+                    --text: #edf3fa;
+                    --muted: #aeb9c8;
+                    --border: #35445a;
+                    --accent: #91abff;
+                    --accent-2: #65ced7;
+                    --good: #67d8a8;
+                    --caution: #f0c35a;
+                    --poor: #ff8b82;
+                    --alternative: #c4a7ff;
+                    --shadow: 0 10px 28px rgb(0 0 0 / 26%);
+                }
+            }
+            * { box-sizing: border-box; }
+            html { scroll-behavior: smooth; }
+            body {
+                background: var(--bg);
+                color: var(--text);
+                font: 16px/1.57 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+                margin: 0;
+                overflow-x: hidden;
+            }
+            a { color: var(--accent); }
+            a:hover { text-decoration-thickness: 2px; }
+            a:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+            code {
+                background: color-mix(in srgb, var(--panel), var(--accent) 10%);
+                border: 1px solid color-mix(in srgb, var(--border), var(--accent) 20%);
+                border-radius: 5px;
+                font-size: 0.94em;
+                padding: 0.06rem 0.28rem;
+            }
+            header, main, footer { margin: 0 auto; max-width: 1400px; padding: 1.5rem; }
+            header { padding-top: 3.2rem; }
+            h1 {
+                font-size: clamp(2.15rem, 5.3vw, 3.8rem);
+                letter-spacing: -0.045em;
+                line-height: 1.02;
+                margin: 0 0 1rem;
+                max-width: 20ch;
+            }
+            h2 { line-height: 1.2; margin-top: 0; }
+            h3 { line-height: 1.3; margin-bottom: 0.35rem; }
+            p, li { max-width: 94ch; }
+            .lede { font-size: 1.17rem; max-width: 86ch; }
+            .meta, .muted, .source-note { color: var(--muted); }
+            .source-note { font-size: 0.91rem; }
+            .eyebrow {
+                color: var(--accent-2);
+                font-size: 0.78rem;
+                font-weight: 800;
+                letter-spacing: 0.13em;
+                margin-bottom: 0.7rem;
+                text-transform: uppercase;
+            }
+            .panel, .project-detail, .methodology, .recommendation {
+                background: var(--panel);
+                border: 1px solid var(--border);
+                border-radius: 16px;
+                box-shadow: var(--shadow);
+                margin: 1.5rem 0;
+                padding: clamp(1.15rem, 3vw, 2rem);
+                scroll-margin-top: 1rem;
+            }
+            .hero-result {
+                background: linear-gradient(135deg, var(--panel-2), var(--panel));
+                border-left: 6px solid var(--accent-2);
+            }
+            .hero-result strong { color: var(--accent-2); }
+            .cards {
+                display: grid;
+                gap: 1rem;
+                grid-template-columns: repeat(auto-fit, minmax(245px, 1fr));
+                margin-top: 1.2rem;
+            }
+            .card {
+                background: color-mix(in srgb, var(--panel), var(--accent) 3%);
+                border: 1px solid var(--border);
+                border-radius: 12px;
+                padding: 1rem;
+            }
+            .card h3 { margin-top: 0; }
+            .card p:last-child { margin-bottom: 0; }
+            .table-wrap {
+                background: var(--panel);
+                border: 1px solid var(--border);
+                border-radius: 14px;
+                box-shadow: var(--shadow);
+                margin: 1.5rem 0 2rem;
+                overflow-x: auto;
+            }
+            table { border-collapse: collapse; min-width: 1040px; width: 100%; }
+            caption { font-weight: 780; padding: 1rem; text-align: left; }
+            th, td {
+                border-top: 1px solid var(--border);
+                padding: 0.76rem 0.86rem;
+                text-align: left;
+                vertical-align: top;
+            }
+            th { background: color-mix(in srgb, var(--panel), var(--accent) 6%); }
+            #comparison-summary td:nth-child(3),
+            #comparison-summary th:nth-child(3) {
+                font-variant-numeric: tabular-nums;
+                text-align: right;
+            }
+            .compact td, .compact th { font-size: 0.92rem; padding: 0.64rem 0.72rem; }
+            .badge {
+                border: 1px solid currentColor;
+                border-radius: 999px;
+                display: inline-block;
+                font-size: 0.82rem;
+                font-weight: 760;
+                line-height: 1.3;
+                padding: 0.14rem 0.52rem;
+            }
+            .good { color: var(--good); }
+            .caution { color: var(--caution); }
+            .poor { color: var(--poor); }
+            .alternative { color: var(--alternative); }
+            .yes { color: var(--good); font-weight: 750; }
+            .partial { color: var(--caution); font-weight: 750; }
+            .no { color: var(--poor); font-weight: 750; }
+            .alt { color: var(--alternative); font-weight: 750; }
+            .facts {
+                display: grid;
+                gap: 0.8rem;
+                grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+                margin: 1rem 0;
+            }
+            .fact { border-left: 4px solid var(--border); padding: 0.25rem 0.8rem; }
+            .fact strong { display: block; }
+            .verdict { background: var(--panel-2); border-radius: 10px; padding: 0.8rem 1rem; }
+            .evidence li, .key-points li { margin-bottom: 0.38rem; }
+            .warning { border-left: 5px solid var(--caution); margin: 1rem 0; padding: 0.2rem 0 0.2rem 1rem; }
+            .danger { border-left: 5px solid var(--poor); margin: 1rem 0; padding: 0.2rem 0 0.2rem 1rem; }
+            .cycle {
+                display: grid;
+                gap: 0.8rem;
+                grid-template-columns: repeat(5, minmax(155px, 1fr));
+                margin: 1.2rem 0;
+            }
+            .cycle > div {
+                background: var(--panel-2);
+                border: 1px solid var(--border);
+                border-radius: 11px;
+                min-height: 126px;
+                padding: 0.85rem;
+                position: relative;
+            }
+            .cycle > div:not(:last-child)::after {
+                color: var(--accent-2);
+                content: "→";
+                font-size: 1.4rem;
+                font-weight: 800;
+                position: absolute;
+                right: -0.68rem;
+                top: 42%;
+                z-index: 1;
+            }
+            .cycle strong { display: block; margin-bottom: 0.35rem; }
+            .back { display: inline-block; margin-top: 1rem; }
+            footer { color: var(--muted); padding-bottom: 3rem; }
+            @media (max-width: 920px) {
+                .cycle { grid-template-columns: 1fr; }
+                .cycle > div:not(:last-child)::after { content: "↓"; left: 49%; right: auto; top: calc(100% - 0.45rem); }
+            }
+            @media print {
+                body { background: #fff; color: #111; }
+                .panel, .project-detail, .methodology, .recommendation, .table-wrap { box-shadow: none; break-inside: avoid; }
+                a { color: #1744a0; }
+            }
+        </style>
+    </head>
+    <body>
+        <header>
+            <p class="eyebrow">Focused FOSS comparison</p>
+            <h1>Managing a fleet of active, interdependent Git branches</h1>
+            <p class="lede">
+                A deeper comparison of tools that know about a set of related branches or changes and can maintain that set:
+                discovering or recording dependencies, rebasing in dependency order, landing reviewed work, pruning integrated state,
+                and recovering when a fleet-wide operation goes wrong.
+            </p>
+            <p class="meta">Evidence observed 25 August 2026 UTC · 11 detailed candidates · activity window 25 August 2025–25 August 2026</p>
+        </header>
+
+        <main>
+            <div class="warning" id="author-specific-scope">
+                <strong>⚠️ Architecture-specific recommendation.</strong> Capability evidence is general, but the final architecture is evaluated
+                against the target Worktrunk, Herdr, AgentBox and branch-mixer workflow. Other readers should substitute their own
+                worktree, forge, sandbox and control-plane constraints.
+            </div>
+
+            <section class="panel hero-result" id="result">
+                <p class="eyebrow">Bottom line</p>
+                <h2>Pick the branch authority by operating model, not by feature count</h2>
+                <p>
+                    <strong>Git Machete remains the best modular topology authority</strong> for a Worktrunk-based cockpit: its explicit,
+                    reviewable forest deliberately follows branches into their owning worktrees. Independent clones need an explicit
+                    topology-distribution or regeneration step because <code>.git/machete</code> is clone-local state.
+                    <strong>Git Town is the best routine branch-fleet operator</strong> when dry-run, safe pruning, persisted run state and undo
+                    matter more than bulk stacked-PR landing. <strong>git-spice is the best publication engine</strong>, but it cannot deliver
+                    repository-wide restacking when active branches are all pinned in separate worktrees: it skips the checked-out branch
+                    and its entire upstack.
+                </p>
+                <p>
+                    For a single integrated replacement, <strong>Stax is the best current pilot</strong>. Stackit has the most ambitious remote
+                    metadata and automation design, but an open topology-corruption issue keeps it in the lab. Jujutsu is the strongest
+                    strategic model replacement; it should be evaluated as the repository owner, not inserted as another Git helper.
+                </p>
+                <p>
+                    <code>ggmx</code>/<code>ggmxd</code> remain outside this contest. They build a disposable fan-in target from otherwise
+                    independent tips; they neither record branch dependency intent nor restack, land or prune the source branches. That makes
+                    them complementary to every qualifying tool here, not an overlapping branch manager.
+                </p>
+                <div class="cards">
+                    <div class="card"><h3>Best modular authority</h3><p><strong>Git Machete</strong><br />Explicit topology, mature whole-layout traversal, genuine linked-worktree awareness.</p></div>
+                    <div class="card"><h3>Best daily fleet manager</h3><p><strong>Git Town</strong><br />Whole-repository sync, policies, dry-run, runlog, undo and guarded cleanup.</p></div>
+                    <div class="card"><h3>Best stack publication</h3><p><strong>git-spice</strong><br />Multi-forge JSON workflow and automated bottom-up landing, constrained by checked-out branches.</p></div>
+                    <div class="card"><h3>Best integrated pilot</h3><p><strong>Stax</strong><br />Topology, worktrees, agents, UI, bulk refresh, stack landing and transactional recovery.</p></div>
+                </div>
+            </section>
+
+            <section class="panel" id="definition">
+                <h2>What counts as a branch-fleet manager?</h2>
+                <div class="cycle" aria-label="Lifecycle of an active branch fleet">
+                    <div><strong>1 · Know the set</strong>Record or infer which active lines of work exist and how they depend on one another.</div>
+                    <div><strong>2 · Reconcile upstream</strong>Fetch or update trunk, then restack parents before descendants without duplicating commits.</div>
+                    <div><strong>3 · Recover</strong>Preview risky changes, persist interrupted state, continue or abort conflicts, and restore refs after mistakes.</div>
+                    <div><strong>4 · Publish or land</strong>Push with lease safety, retarget reviews, and merge dependency stacks in a valid order.</div>
+                    <div><strong>5 · Retire state</strong>Detect integrated or remote-gone work, reparent survivors, and prune branches or worktrees without losing unique files.</div>
+                </div>
+                <p>
+                    A worktree launcher is useful but does not qualify unless it also owns branch relationships. A stacked-PR client qualifies
+                    only if it maintains local lineage, not merely remote review metadata. VCS alternatives are included in a clearly marked
+                    category because they solve the same fleet problem with changes/bookmarks instead of conventional Git branches.
+                </p>
+            </section>
+
+            <section class="panel" id="rating-legend">
+                <h2>Rating legend</h2>
+                <p>
+                    <span class="badge good">Strong fit</span> directly meets the many-active-branches requirement;
+                    <span class="badge caution">Conditional fit</span> is useful with an important operating constraint;
+                    <span class="badge poor">Poor production fit</span> has a current safety, maturity or FOSS-boundary problem; and
+                    <span class="badge alternative">Model replacement</span> solves the problem by replacing normal Git branch/worktree semantics.
+                </p>
+                <p class="source-note">Stars are popularity context, not quality scores. “Commits” means default-branch commits in the common one-year window and includes bots and merges.</p>
+            </section>
+
+            <div class="table-wrap">
+                <table id="comparison-summary">
+                    <caption>Summary — click a project for the evidence and operational detail</caption>
+                    <thead><tr><th>Project</th><th>Domain fit</th><th>GitHub stars</th><th>Maintenance</th><th>Licence</th><th>Recommendation</th></tr></thead>
+                    <tbody>
+                        <tr><td><a href="#project-git-machete">Git Machete</a></td><td><span class="badge good">Strong</span></td><td>1,135</td><td>284 commits; v3.44.1 · 7 Jul 2026</td><td>MIT</td><td>Default modular topology authority; wait for the worktree-discovery fix release if relying on discovery.</td></tr>
+                        <tr><td><a href="#project-git-town">Git Town</a></td><td><span class="badge good">Strong</span></td><td>3,365</td><td>620 commits; v24.0.0 · 23 Jul 2026</td><td>MIT</td><td>Best fleet-wide daily synchronization, cleanup and recovery; landing is still one branch at a time.</td></tr>
+                        <tr><td><a href="#project-git-spice">git-spice</a></td><td><span class="badge good">Strong</span></td><td>750</td><td>461 commits; v0.31.2 · 21 Jul 2026</td><td>GPL-3.0-or-later</td><td>Best multi-forge stacked-review and landing workflow; unsuitable for mass restack if every branch has a worktree.</td></tr>
+                        <tr><td><a href="#project-stax">Stax</a></td><td><span class="badge good">Strong</span></td><td>123</td><td>1,111 commits; v0.105.1 · 23 Aug 2026</td><td>MIT</td><td>Best integrated replacement pilot; let it own the worktree fleet instead of co-owning it with Worktrunk.</td></tr>
+                        <tr><td><a href="#project-stackit">Stackit</a></td><td><span class="badge caution">Conditional</span></td><td>32</td><td>2,620 commits; v0.26.1 · 17 Aug 2026</td><td>MIT</td><td>Architecture leader and lab candidate; withhold production adoption while topology issue #1656 remains open.</td></tr>
+                        <tr><td><a href="#project-git-stack">git-stack</a></td><td><span class="badge caution">Conditional</span></td><td>649</td><td>88 commits, all automation/dependency churn; 0.10.20 · 5 Aug 2025</td><td>MIT OR Apache-2.0</td><td>Interesting safe inferred-graph engine; functional development is quiet and conflict handling falls back to raw Git.</td></tr>
+                        <tr><td><a href="#project-worktrunk-sync">worktrunk-sync</a></td><td><span class="badge caution">Conditional</span></td><td>16</td><td>41 commits; v0.1.2 · 29 Apr 2026</td><td>MIT declared; licence file missing</td><td>Focused Worktrunk pilot only; partial-success exit behavior makes destructive automation unsafe.</td></tr>
+                        <tr><td><a href="#project-gh-stack">GitHub gh-stack</a></td><td><span class="badge caution">Conditional</span></td><td>1,363</td><td>92 commits; v0.1.0 · 29 Jul 2026</td><td>MIT client; proprietary GitHub service</td><td>Important linear-stack benchmark and landing component, not an end-to-end FOSS or worktree-fleet answer.</td></tr>
+                        <tr><td><a href="#project-git-branchless">git-branchless</a></td><td><span class="badge caution">Conditional</span></td><td>4,115</td><td>107 commits; v0.11.1 · 21 May 2026</td><td>MIT OR Apache-2.0</td><td>Powerful repository graph, bulk sync and undo specialist; still alpha and has no dependable landing queue.</td></tr>
+                        <tr><td><a href="#project-jujutsu">Jujutsu</a></td><td><span class="badge alternative">Replacement</span></td><td>31,185</td><td>1,928 commits; v0.44.0 · 6 Aug 2026</td><td>Apache-2.0</td><td>Best strategic change-DAG and recovery model; trial separately as repository owner.</td></tr>
+                        <tr><td><a href="#project-sapling">Sapling</a></td><td><span class="badge alternative">Replacement</span></td><td>6,992</td><td>8,523 monorepo commits; release · 11 Aug 2026</td><td>GPL-2.0 client; some components differ</td><td>Strong smartlog and GitHub submission, but no all-stacks sync, parallel workspace model or stack landing.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="table-wrap">
+                <table class="compact" id="comparison-facet-topology">
+                    <caption>Facet 1 — topology, discovery and fleet-wide synchronization</caption>
+                    <thead><tr><th>Project</th><th>Dependency source of truth</th><th>Shape and managed set</th><th>Adoption / discovery</th><th>Bulk update semantics</th></tr></thead>
+                    <tbody>
+                        <tr><td>Git Machete</td><td>Explicit, indented <code>.git/machete</code> forest</td><td>Multiple trees of selected local branches, with remote-counterpart status</td><td><span class="yes">Best</span> — reviewable, recency-filtered <code>discover</code> proposal plus backup</td><td><code>traverse --whole</code>, layout order, parents first; fetch, rebase/merge, push and PR retarget options</td></tr>
+                        <tr><td>Git Town</td><td>Explicit parent links in Git config plus branch types</td><td>Multiple lineages and branch-policy classes</td><td><span class="partial">Partial</span> — infer from PR or prompt per unknown parent</td><td><code>sync --all</code> updates every local branch parent-first; configurable rebase, merge or compress</td></tr>
+                        <tr><td>git-spice</td><td>Versioned JSON objects under <code>refs/spice/data</code></td><td>Trees and scoped upstack/downstack/repository views</td><td><span class="partial">Partial</span> — track a branch or import one chain</td><td><code>repo restack</code> all tracked branches; <code>repo sync --restack</code> also reconciles trunk and merged reviews</td></tr>
+                        <tr><td>Stax</td><td>Per-branch JSON blobs under <code>refs/branch-metadata/*</code></td><td>Forked trees and multiple independent stacks</td><td><span class="partial">Partial</span> — best-effort forge reconstruction; health repair tools</td><td><code>refresh --all-stacks</code>; current-stack, all-worktree and all-stack restack scopes</td></tr>
+                        <tr><td>Stackit</td><td>Local and remotely synchronized metadata refs</td><td>Trees by default; optional linear discipline; stack IDs</td><td><span class="yes">Strong remote state</span> but opinionated ownership</td><td>All stacks or selected roots, independent groups in parallel; temporary-worktree preflight</td></tr>
+                        <tr><td>git-stack</td><td>Inferred from commit ancestry and protected-branch config</td><td>Commit/branch DAG; no explicit intended-parent manifest</td><td><span class="yes">Zero-ceremony</span> inference</td><td><code>git sync</code> updates protected bases then development branches; <code>git stack --rebase</code> scopes the graph</td></tr>
+                        <tr><td>worktrunk-sync</td><td>First-run merge-base inference, then saved stack and fork points</td><td>Only branches with worktrees; default branch also needs one</td><td><span class="partial">Automatic but ambiguous</span> — warns on ties without confirmation</td><td>One stack or <code>--all</code> worktree branches, breadth-first parents before children; rebase only</td></tr>
+                        <tr><td>gh-stack</td><td>Ordered local JSON list plus GitHub Stack object</td><td>One linear stack; GitHub review graph</td><td><span class="partial">Guided initialization/linking</span></td><td><code>rebase</code> cascades bottom-up; <code>sync</code> reconciles local, remote, PR and stack state</td></tr>
+                        <tr><td>git-branchless</td><td>Inferred commit DAG and event log</td><td>All visible draft stacks relative to one configured main</td><td><span class="yes">Automatic</span> from ancestry</td><td><code>git sync --pull</code> moves all draft roots; <code>git restack</code> repairs abandoned descendants</td></tr>
+                        <tr><td>Jujutsu</td><td>Native change DAG; bookmarks are labels</td><td>Arbitrary change graph, not conventional branches</td><td><span class="alt">Native model</span></td><td>One transaction can rebase multiple branches/subtrees; no single policy command to update every outstanding line</td></tr>
+                        <tr><td>Sapling</td><td>Native draft commit DAG; bookmarks label points</td><td>Current stack or selected revision sets</td><td><span class="alt">Native model</span></td><td><code>pull --rebase</code> and <code>restack</code> operate on current work; all-stacks orchestration needs a script</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="table-wrap">
+                <table class="compact" id="comparison-facet-lifecycle">
+                    <caption>Facet 2 — conflicts, landing, pruning and recovery</caption>
+                    <thead><tr><th>Project</th><th>Conflict / interruption</th><th>Merge or land</th><th>Prune / delete</th><th>Undo and preflight</th></tr></thead>
+                    <tbody>
+                        <tr><td>Git Machete</td><td>Stateless: finish/abort native Git operation, rerun traversal</td><td><code>advance</code> one green child; no bulk forge queue</td><td>Slide merged nodes; explicit delete commands</td><td><span class="no">No general undo or true dry-run</span></td></tr>
+                        <tr><td>Git Town</td><td>Persisted command state; continue, skip and abort paths</td><td><code>ship</code> one branch; stack is shipped oldest-first manually</td><td>Remote-gone and empty branches guarded against unique-work loss</td><td><span class="yes">Broad dry-run, runlog and repository-level undo</span></td></tr>
+                        <tr><td>git-spice</td><td>Persistent interrupted rebase; continue or abort</td><td><span class="yes">Experimental bottom-up branch/downstack/stack merge via forge API</span></td><td><code>repo sync</code> deletes merged reviews and protects unsubmitted work</td><td>JSON state; some dry-runs; no completed-operation undo</td></tr>
+                        <tr><td>Stax</td><td>Continue, abort, rerere and optional AI resolver</td><td>Local cascade; GitHub/GitLab stack landing and queues</td><td>Transactional sync/sweep; manual middle-branch delete can orphan descendants</td><td><span class="yes">Dry-run/JSON, snapshots, receipts, undo and redo</span></td></tr>
+                        <tr><td>Stackit</td><td>Interactive continuation; atomic noninteractive holdback</td><td>Drain or one-PR consolidation, including multiple independent stacks</td><td>Reparents survivors, but current issue #1656 shows a partial-delete topology fault</td><td><span class="yes">Temporary-worktree preflight plus ref/metadata undo</span>; not dirty-file recovery</td></tr>
+                        <tr><td>git-stack</td><td><span class="no">Gives up to native Git rebase</span>; no tool-level continuation</td><td>None; recommends conservative PR sequencing</td><td>Sync prunes tracking refs and can remove integrated branches</td><td>Defers ref updates, dry-run, implicit branch-stash-format backup</td></tr>
+                        <tr><td>worktrunk-sync</td><td>Native rebase continue/abort, then rerun; fork-point checkpoint</td><td>None</td><td>Can remove worktree, local and remote branch; dirty needs force</td><td>Textual dry-run; no undo; some failed push/prune steps still yield success</td></tr>
+                        <tr><td>gh-stack</td><td>Snapshot-backed rebase abort restores all stack branches</td><td><span class="yes">Atomic GitHub stack merge</span>, but proprietary service</td><td>Optional sync pruning</td><td>Modify preview/undo; submit and push can partially succeed</td></tr>
+                        <tr><td>git-branchless</td><td>In-memory conflict abort; optional on-disk Git rebase</td><td>No queue; GitHub submit backend calls itself likely buggy</td><td>Deduplicates upstream changes; hide can remove branches and descendants</td><td><span class="yes">Repository event log and graph-level undo</span></td></tr>
+                        <tr><td>Jujutsu</td><td>Conflicts are first-class commit state; resolve later</td><td>Safe bookmark push; external forge tooling required</td><td>Abandon revisions, rebase descendants; operation/object GC separately</td><td><span class="yes">Best recovery: operation log, undo, redo and restore</span></td></tr>
+                        <tr><td>Sapling</td><td>Continue, abort or quit conventional rebase</td><td>Submit one PR per commit; no native stack landing</td><td>Hide and cleanup obsolete stacks; permanent object deletion requires reclone</td><td><span class="yes">Undo, redo and journal</span>; remote bookmark edits excluded</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="table-wrap">
+                <table class="compact" id="comparison-facet-cockpit">
+                    <caption>Facet 3 — worktree ownership, automation and forge boundary</caption>
+                    <thead><tr><th>Project</th><th>Worktree behavior</th><th>Automation surface</th><th>Forge boundary</th><th>Cockpit role</th></tr></thead>
+                    <tbody>
+                        <tr><td>Git Machete</td><td><span class="yes">Follows an owning worktree or creates a temporary one</span></td><td>Noninteractive traversal, hooks, text output; no JSON</td><td>GitHub and GitLab</td><td>Modular topology authority above Worktrunk</td></tr>
+                        <tr><td>Git Town</td><td><span class="yes">Aware and extensively tested</span>; no lifecycle ownership</td><td>Dry-run, noninteractive, runlog, <code>walk</code>; no JSON</td><td>GitHub, GitLab, Bitbucket, Gitea, Forgejo</td><td>Policy-driven repository fleet operator</td></tr>
+                        <tr><td>git-spice</td><td><span class="no">Skips another-worktree branch and its upstack during restack</span></td><td>JSON Lines topology/review state, aliases and selected dry-runs</td><td>GitHub, GitLab, Bitbucket, Gitea, Forgejo, Codeberg</td><td>Review and landing authority where worktrees do not pin every branch</td></tr>
+                        <tr><td>Stax</td><td><span class="yes">Owns branch-aware worktrees, lanes and cleanup</span></td><td>Rich JSON, TUI, local authenticated web UI, parallel runner, agents</td><td>Broad forge support; GitHub/GitLab stack landing</td><td>Integrated replacement for Worktrunk plus topology UI</td></tr>
+                        <tr><td>Stackit</td><td><span class="yes">Owns a worktree per stack via hidden anchor</span></td><td>Deep JSON state, HTTP API, parallel operations, agent helpers</td><td>GitHub-only PR operations</td><td>Ambitious integrated replacement / architecture reference</td></tr>
+                        <tr><td>git-stack</td><td><span class="partial">Loads in a worktree but does not manage fleet paths</span></td><td>Dry-run and shell-oriented output</td><td>Plain Git only</td><td>Small local inferred-DAG engine</td></tr>
+                        <tr><td>worktrunk-sync</td><td><span class="yes">Worktrees define the managed fleet</span></td><td>Exact textual plan; no JSON, journal or hooks</td><td>Plain Git remotes</td><td>Narrow Worktrunk companion</td></tr>
+                        <tr><td>gh-stack</td><td><span class="no">Local commands assume checkouts; link mode is remote-only</span></td><td>Interactive modify/sync; noninteractive divergence can exit success without changes</td><td>GitHub proprietary stack APIs</td><td>Linear GitHub benchmark or Stax landing component</td></tr>
+                        <tr><td>git-branchless</td><td><span class="partial">Recognizes linked worktrees; does not own them</span></td><td>Stable raw OID query output and revsets; not JSON-first</td><td>Branch, GitHub and Phabricator submit providers</td><td>Optional graph/undo specialist above Worktrunk</td></tr>
+                        <tr><td>Jujutsu</td><td><span class="alt">Native workspaces replace Git worktrees</span></td><td>Revsets, templates and JSON serialization</td><td>Safe Git push; PR tooling external</td><td>Separate repository/VCS architecture</td></tr>
+                        <tr><td>Sapling</td><td><span class="no">No parallel workspace/worktree facility</span></td><td>Revsets, templates, several JSON commands, browser smartlog</td><td>GitHub stack submission; review via GitHub/ReviewStack</td><td>Separate VCS and stack-review architecture</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <section class="project-detail" id="project-git-machete">
+                <h2><a href="https://github.com/VirtusLab/git-machete">Git Machete</a></h2>
+                <p class="verdict"><strong>Verdict:</strong> The clearest modular topology authority. Its explicit, human-readable forest and mature whole-layout traversal fit a cockpit in which Worktrunk owns persistent worktrees. Independent agent clones need deliberate topology distribution or their own reviewed discovery.</p>
+                <div class="facts"><div class="fact"><strong>Popularity</strong>1,135 stars</div><div class="fact"><strong>Maintenance</strong>284 commits; meaningful worktree fix 5 August 2026; v3.44.1 on 7 July</div><div class="fact"><strong>Licence</strong><a href="https://github.com/VirtusLab/git-machete/blob/develop/LICENSE">MIT</a></div></div>
+                <h3>Topology and mass maintenance</h3>
+                <p>An indented <code>.git/machete</code> file is the authoritative forest. That explicit intent distinguishes “these branches happen to share ancestry” from “this review depends on that review.” <code>discover</code> uses reflog heuristics to propose a recency-filtered layout—roughly ten branches by default unless the cutoff is overridden—preserves the old file, and leaves the proposal open to review. The file lives under <code>.git</code>, so it is not transferred by clone. <code>traverse --whole</code> then processes the declared layout parents-first and can fetch, rebase or merge, reconcile tracking counterparts, push, slide merged nodes out, and create or retarget GitHub PRs and GitLab MRs.</p>
+                <h3>Worktrees, landing and recovery</h3>
+                <p>Traversal changes into the existing worktree that owns a branch, or can create a temporary worktree for a branch checked out nowhere. That is the strongest clean composition with Worktrunk in this field. The trade-off is recovery: traversal is stateless. Resolve or abort the native Git rebase/merge and rerun from the current branch. There is no general transaction rollback or true dry-run. <code>advance</code> can fast-forward one green child into its parent, push the parent and remove the child from the layout, but it is not an automated whole-stack forge landing queue.</p>
+                <div class="warning"><strong>Current-release caveat:</strong> a worktree-dependent <code>discover</code> discrepancy was fixed quickly on <code>develop</code>, but the fix was not in v3.44.1 at the observation date. Use an explicitly reviewed layout or wait for the fix release.</div>
+                <h3>Evidence</h3><ul class="evidence"><li><a href="https://github.com/VirtusLab/git-machete/blob/develop/docs/source/cli/file.rst">Layout file</a>, <a href="https://github.com/VirtusLab/git-machete/blob/develop/docs/source/cli/discover.rst">discovery</a> and <a href="https://github.com/VirtusLab/git-machete/blob/develop/docs/source/cli/traverse.rst">whole-layout traversal</a></li><li><a href="https://github.com/VirtusLab/git-machete/blob/develop/docs/source/cli/advance.rst">Advance semantics</a></li><li><a href="https://github.com/VirtusLab/git-machete/issues/1754">Worktree discovery issue</a> and <a href="https://github.com/VirtusLab/git-machete/pull/1755">merged fix</a></li><li><a href="https://github.com/VirtusLab/git-machete/releases/tag/v3.44.1">Latest observed stable release</a></li></ul>
+                <a class="back" href="#comparison-summary">Back to summary</a>
+            </section>
+
+            <section class="project-detail" id="project-git-town">
+                <h2><a href="https://github.com/git-town/git-town">Git Town</a></h2>
+                <p class="verdict"><strong>Verdict:</strong> The strongest routine manager for a heterogeneous fleet of branches. It combines hierarchy, branch-type policy, whole-repository synchronization, guarded cleanup, broad dry-run support, persisted command state and repository-level undo.</p>
+                <div class="facts"><div class="fact"><strong>Popularity</strong>3,365 stars</div><div class="fact"><strong>Maintenance</strong>620 commits; active product work in July 2026; v24.0.0 on 23 July</div><div class="fact"><strong>Licence</strong><a href="https://github.com/git-town/git-town/blob/main/LICENSE">MIT</a></div></div>
+                <h3>Topology and policy-driven sync</h3>
+                <p>Parent links live in Git configuration as <code>git-town-branch.&lt;branch&gt;.parent</code>, while branch types distinguish feature, prototype, contribution and perennial lines of work. <code>sync --all</code> applies those policies to every local branch in lineage order; <code>--stack</code> narrows the scope. Rebase, merge and compress strategies can differ by workflow. Unknown parents can be inferred from an open PR or supplied interactively, although there is no Machete-style proposed whole-forest discovery.</p>
+                <h3>Safety, worktrees and landing</h3>
+                <p>Current features exercise synchronization and conflict recovery from linked worktrees, and the tool does not try to provision those worktrees itself. Commands can persist a plan, continue, skip or undo; the immutable runlog records local and remote branch SHAs before and after operations. Dry-run is broad, and <code>walk</code> can execute an arbitrary command across a stack or all branches. Cleanup is conservative: remote-gone branches are deleted only after proving they contain no unshipped work, and <code>--prune</code> removes empty branches.</p>
+                <p>The main gap is stack landing. <code>ship</code> acts on one branch, normally a direct child of main. A stack is shipped oldest-first with repeated commands; there is no <code>ship --stack</code>. Also treat unqualified <code>delete</code> on the current branch carefully because its documented scope includes uncommitted changes.</p>
+                <h3>Evidence</h3><ul class="evidence"><li><a href="https://www.git-town.com/preferences/parent.html">Parent configuration</a>, <a href="https://www.git-town.com/commands/sync.html">fleet sync</a> and <a href="https://www.git-town.com/commands/ship.html">ship</a></li><li><a href="https://www.git-town.com/commands/runlog.html">Runlog</a>, <a href="https://www.git-town.com/commands/walk.html">walk</a> and <a href="https://www.git-town.com/commands/delete.html">delete semantics</a></li><li><a href="https://github.com/git-town/git-town/blob/main/features/sync/current_branch/feature_branch/rebase_sync_strategy/worktree/conflict_in_linked_worktree.feature">Linked-worktree conflict scenario</a></li><li><a href="https://github.com/git-town/git-town/releases/tag/v24.0.0">Latest observed stable release</a></li></ul>
+                <a class="back" href="#comparison-summary">Back to summary</a>
+            </section>
+
+            <section class="project-detail" id="project-git-spice">
+                <h2><a href="https://github.com/abhinav/git-spice">git-spice</a></h2>
+                <p class="verdict"><strong>Verdict:</strong> The most capable FOSS stacked-review and bottom-up landing engine, with broad forge support and good structured output. Its repository-wide restack promise breaks down in a branch-per-worktree fleet.</p>
+                <div class="facts"><div class="fact"><strong>Popularity</strong>750 stars</div><div class="fact"><strong>Maintenance</strong>461 commits; meaningful GitHub stack-gateway work 24 August 2026; v0.31.2 on 21 July</div><div class="fact"><strong>Licence</strong><a href="https://github.com/abhinav/git-spice/blob/main/LICENSE">GPL-3.0-or-later</a></div></div>
+                <h3>Topology, sync and publication</h3>
+                <p>Versioned JSON objects under <code>refs/spice/data</code> record each branch’s base name and base hash. <code>repo restack</code> rebases every tracked branch in dependency order, with stack/upstack/downstack scopes for smaller operations. <code>repo sync --restack</code> updates trunk, deletes merged review branches, retargets surviving reviews, and optionally restacks them. GitHub, GitLab, Bitbucket, Gitea, Forgejo and Codeberg are supported, including separate upstream and push remotes.</p>
+                <p>Experimental <code>branch merge</code>, <code>downstack merge</code> and <code>stack merge</code> land through forge APIs, wait for readiness, then restack and resubmit survivors. Multiple independent starting branches are accepted. No other modular Git-native candidate combines this breadth of forge support with automated bottom-up landing.</p>
+                <p>Fork mode has an important publication limit: submission creates review requests only for branches based directly on trunk. Dependent branches are pushed to the fork but receive no review request until their bases land and they are restacked onto trunk. Separate upstream/push remotes therefore do not preserve the normal stacked-review experience.</p>
+                <h3>The decisive worktree limitation</h3>
+                <p>git-spice reports linked-worktree paths but does not run a planned rebase in the branch’s owning worktree. If a branch is checked out in another worktree, restack skips that branch and every descendant above it. That is a sensible protection against moving a checked-out ref, but it defeats whole-repository restacking when Worktrunk keeps every active branch materialized. Use git-spice where branches are usually not pinned to separate worktrees, or design an explicit quiesce/dematerialize step before fleet mutation.</p>
+                <p>Interrupted rebases have persistent continue/abort state. JSON Lines output exposes topology, worktree, review and push state; dry-run coverage is command-specific and there is no general completed-operation undo.</p>
+                <h3>Evidence</h3><ul class="evidence"><li><a href="https://abhinav.github.io/git-spice/guide/internals/">Metadata internals</a>, <a href="https://abhinav.github.io/git-spice/cli/reference/">CLI reference</a> and <a href="https://abhinav.github.io/git-spice/cli/json/">JSON schema</a></li><li><a href="https://abhinav.github.io/git-spice/guide/branch/#handling-rebase-interruptions">Conflict recovery</a> and <a href="https://github.com/abhinav/git-spice/blob/main/doc/src/guide/cr.md#fork-workflows">fork publication limit</a></li><li><a href="https://github.com/abhinav/git-spice/blob/main/CHANGELOG.md#v0160---2025-08-02">Worktree skip behavior</a> and <a href="https://github.com/abhinav/git-spice/blob/main/CHANGELOG.md#v0300---2026-06-29">stack merge introduction</a></li><li><a href="https://github.com/abhinav/git-spice/releases/tag/v0.31.2">Latest observed stable release</a></li></ul>
+                <a class="back" href="#comparison-summary">Back to summary</a>
+            </section>
+
+            <section class="project-detail" id="project-stax">
+                <h2><a href="https://github.com/cesarferreira/stax">Stax</a></h2>
+                <p class="verdict"><strong>Verdict:</strong> The best immediate all-in-one pilot. It owns topology, branch-aware worktrees, parallel agent lanes, bulk refresh, stack landing, cleanup, recovery, TUI and web interaction—but should replace Worktrunk’s ownership rather than compete with it.</p>
+                <div class="facts"><div class="fact"><strong>Popularity</strong>123 stars; repository created December 2025</div><div class="fact"><strong>Maintenance</strong>1,111 commits and 164 releases; v0.105.1 on 23 August 2026</div><div class="fact"><strong>Licence</strong><a href="https://github.com/cesarferreira/stax/blob/main/LICENSE">MIT</a></div></div>
+                <h3>Branch-fleet depth</h3>
+                <p>Per-branch JSON blobs under <code>refs/branch-metadata/*</code> record parents, revisions, remote and review state. The model supports forked trees and multiple independent stacks. <code>validate</code> detects cycles, orphans and stale metadata; <code>fix --dry-run</code> can repair it. <code>refresh --all-stacks</code> updates trunk once, then restacks and submits every stack. Current-stack, selected-upstack and managed-worktree restack scopes are also available, while <code>run --parallel</code> executes checks in temporary worktrees.</p>
+                <p>Local cascaded merge, one-tip stack landing, GitHub merge queues and GitLab merge trains are supported. With GitHub native stacks, Stax can delegate atomic landing to gh-stack. <code>sync</code> and the read-only-by-default <code>sweep</code> conservatively identify merged, empty or upstream-gone branches, reparent children and transact the ref changes. Manual middle-branch <code>branch delete</code> is a sharp edge: it deliberately leaves descendants pointing at the deleted parent, so use sync/detach or explicit reparenting.</p>
+                <h3>Recovery and cockpit ownership</h3>
+                <p>Branch snapshots and operation receipts support undo and redo. Continue, abort and rerere cover interrupted conflicts. The transaction restores refs, metadata and deleted branches, but not a removed worktree directory or forge-side PR-base edits. Worktree cleanup skips dirty/conflicted/active lanes unless forced; warm-slot reuse can run <code>git clean -fd</code>, so ordinary untracked files are outside the undo boundary.</p>
+                <p>Bare <code>st</code> opens a topology-and-review TUI. Current <code>main</code> also has a token-protected localhost web workspace, newer than the latest release. Agent workflows cover Codex, Claude, Gemini, OpenCode and Pi. This is an integrated cockpit owner, not a harmless extra CLI above Worktrunk.</p>
+                <h3>Evidence</h3><ul class="evidence"><li><a href="https://github.com/cesarferreira/stax/blob/main/docs/concepts/multiple-stacks.md">Multiple stacks</a>, <a href="https://github.com/cesarferreira/stax/blob/main/docs/commands/core.md">core operations</a> and <a href="https://github.com/cesarferreira/stax/blob/main/docs/commands/stack-health.md">topology health</a></li><li><a href="https://github.com/cesarferreira/stax/blob/main/docs/workflows/merge-and-cascade.md">Merge and cascade</a>, <a href="https://github.com/cesarferreira/stax/blob/main/docs/commands/sweep.md">sweep</a> and <a href="https://github.com/cesarferreira/stax/blob/main/docs/safety/undo-redo.md">undo/redo</a></li><li><a href="https://github.com/cesarferreira/stax/blob/main/docs/worktrees/index.md">Worktrees</a>, <a href="https://github.com/cesarferreira/stax/blob/main/docs/interface/tui.md">TUI</a> and <a href="https://github.com/cesarferreira/stax/blob/main/docs/interface/web.md">current web workspace</a></li><li><a href="https://github.com/cesarferreira/stax/releases/tag/v0.105.1">Latest observed stable release</a></li></ul>
+                <a class="back" href="#comparison-summary">Back to summary</a>
+            </section>
+
+            <section class="project-detail" id="project-stackit">
+                <h2><a href="https://github.com/getstackit/stackit">Stackit</a></h2>
+                <p class="verdict"><strong>Verdict:</strong> The architecture leader for remotely synchronized metadata, parallel multi-stack maintenance, structured automation and multi-stack consolidation. Keep it in a disposable lab until its current partial-cleanup topology bug is fixed and destructive paths are verified.</p>
+                <div class="facts"><div class="fact"><strong>Popularity</strong>32 stars; repository created December 2025</div><div class="fact"><strong>Maintenance</strong>2,620 commits and 75 releases; v0.26.1 on 17 August 2026</div><div class="fact"><strong>Licence</strong><a href="https://github.com/getstackit/stackit/blob/main/LICENSE">MIT</a></div></div>
+                <h3>Remote topology and mass operations</h3>
+                <p>Stackit stores remotely synchronized branch and stack metadata under dedicated Git ref namespaces, with separate local-only and fetched remote state. Parents, revisions, review links, stack IDs and merged-downstack history travel without a proprietary metadata server. Trees are normal; an optional linear mode forbids forks below non-trunk branches.</p>
+                <p><code>restack --all-stacks --parallel</code> groups independent stacks and preflights them in temporary worktrees. A conflict or dirty checked-out branch holds back that entire dependency group while unrelated groups proceed. In JSON mode, expected conflicts are structured results and can exit zero, so automation must inspect <code>status</code>, <code>conflicts</code>, <code>blocked</code> and <code>held</code>. Merge drain lands bottom-up; merge ship builds a consolidation branch and can combine multiple independent stacks into one tested PR.</p>
+                <h3>Worktree and safety boundary</h3>
+                <p>A managed worktree owns a whole stack through a hidden anchor branch. Stackit checks actual linked checkouts before moving refs and can hold back dirty owners. It is therefore another worktree ownership plane, not a clean co-owner beside Worktrunk. Snapshots protect branch SHAs and metadata refs, not uncommitted files. Auto-clean is enabled by default, and ignored warm-start files copied via <code>.worktreeinclude</code> can be permanently deleted by remove, detach or prune.</p>
+                <div class="danger"><strong>Production blocker:</strong> open issue <a href="https://github.com/getstackit/stackit/issues/1656">#1656</a> reports sync reparenting a child before discovering that its checked-out parent cannot be deleted, leaving invalid topology in linear mode. This is exactly the kind of partial fleet mutation the control plane must prevent.</div>
+                <h3>Evidence</h3><ul class="evidence"><li><a href="https://github.com/getstackit/stackit/blob/main/docs/metadata.md">Metadata namespaces</a>, <a href="https://github.com/getstackit/stackit/blob/main/internal/actions/restack.go">restack implementation</a> and <a href="https://github.com/getstackit/stackit#automation--ci">automation contract</a></li><li><a href="https://github.com/getstackit/stackit/blob/main/docs/shipping.md">Multi-stack shipping</a>, <a href="https://github.com/getstackit/stackit/blob/main/docs/worktree.md">worktree ownership</a> and <a href="https://github.com/getstackit/stackit/blob/main/internal/engine/undo.go">undo snapshots</a></li><li><a href="https://github.com/getstackit/stackit/issues/1490">Resolved dirty-worktree data-loss report</a> and <a href="https://github.com/getstackit/stackit/issues/1656">open topology issue</a></li><li><a href="https://github.com/getstackit/stackit/releases/tag/v0.26.1">Latest observed stable release</a></li></ul>
+                <a class="back" href="#comparison-summary">Back to summary</a>
+            </section>
+
+            <section class="project-detail" id="project-git-stack">
+                <h2><a href="https://github.com/gitext-rs/git-stack">git-stack</a></h2>
+                <p class="verdict"><strong>Verdict:</strong> A compact and thoughtfully safe inferred-graph engine for synchronizing local branch stacks. Its functional development has gone quiet, it lacks forge landing, and conflict recovery drops the user into raw Git.</p>
+                <div class="facts"><div class="fact"><strong>Popularity</strong>649 stars</div><div class="fact"><strong>Maintenance</strong>88 commits in the window, all dependency/CI automation; latest package version 0.10.20 on 5 August 2025</div><div class="fact"><strong>Licence</strong><a href="https://github.com/gitext-rs/git-stack/blob/main/LICENSE-MIT">MIT</a> OR <a href="https://github.com/gitext-rs/git-stack/blob/main/LICENSE-APACHE">Apache-2.0</a></div></div>
+                <h3>Inferred fleet and safety model</h3>
+                <p>git-stack derives stack structure from the commit graph and protected-branch configuration rather than recording intended parent links. <code>git sync</code> updates protected bases, rebases development branches in dependency order, fetches the push remote, prunes deleted tracking refs and can remove branches already integrated upstream. <code>git stack --rebase</code> and graph scopes cover the current tree, descendants or all stacks; amend/reword operations automatically carry descendants forward.</p>
+                <p>Its mutation design is conservative: permanent ref changes are deferred until the planned operation completes, a dry-run is available, and branches are implicitly backed up in the format used by <code>git-branch-stash</code>. The major gap is interactive failure handling. When a rebase conflicts, git-stack gives up and instructs the user to use native <code>git rebase</code>; there is no integrated continue/abort journal. There is also no PR creation, retargeting or landing engine. The README recommends a conservative one-PR-at-a-time review workflow.</p>
+                <p>The project still receives automated dependency maintenance, but the latest functional package work sits just outside the common one-year window and GitHub Releases lag the package changelog. Treat it as maintained infrastructure with quiet product development, not an actively expanding control plane.</p>
+                <h3>Evidence</h3><ul class="evidence"><li><a href="https://github.com/gitext-rs/git-stack#readme">Canonical workflow and safety overview</a></li><li><a href="https://github.com/gitext-rs/git-stack/blob/main/docs/reference.md">Command reference</a> and <a href="https://github.com/gitext-rs/git-stack/blob/main/CHANGELOG.md">package changelog</a></li><li><a href="https://github.com/gitext-rs/git-stack/blob/main/LICENSE-MIT">MIT text</a> and <a href="https://github.com/gitext-rs/git-stack/blob/main/LICENSE-APACHE">Apache-2.0 text</a></li></ul>
+                <a class="back" href="#comparison-summary">Back to summary</a>
+            </section>
+
+            <section class="project-detail" id="project-worktrunk-sync">
+                <h2><a href="https://github.com/pablospe/worktrunk-sync">worktrunk-sync</a></h2>
+                <p class="verdict"><strong>Verdict:</strong> The smallest native companion to a branch-per-Worktrunk-worktree workflow. Its durable fork points and parent-first rebase plan are promising; tiny adoption, weak licence hygiene and unsafe partial-success signaling keep it a controlled pilot.</p>
+                <div class="facts"><div class="fact"><strong>Popularity</strong>16 stars</div><div class="fact"><strong>Maintenance</strong>41 lifetime commits; v0.1.2 and latest activity 29 April 2026</div><div class="fact"><strong>Licence</strong><a href="https://github.com/pablospe/worktrunk-sync/blob/main/Cargo.toml">MIT declared</a>; governing licence file absent</div></div>
+                <h3>Worktree-derived topology</h3>
+                <p>The first run compares merge bases among non-detached branches that have worktrees. It stores the resulting topology in <code>.git/wt/stack</code> and fork points in <code>.git/wt/stack-forkpoints</code>; that saved state then becomes authoritative. This matters because a parent rewrite destroys some of the ancestry evidence used by initial inference. Ties are warned about but not presented for confirmation, and branches without worktrees are invisible. The default branch must also have a worktree.</p>
+                <p><code>wt sync</code> operates on one stack or every worktree branch with <code>--all</code>, always rebasing parents before children. Options add fetch, lease-protected push and pruning of integrated worktrees/branches. Conflicts stop at the first failing rebase; use native <code>git rebase --continue</code> or <code>--abort</code>, then rerun. Completed fork points act as checkpoints, but there is no tool-level undo or command journal.</p>
+                <div class="danger"><strong>Automation blocker:</strong> prune can remove the worktree, local branch, upstream remote branch and Worktrunk staged-trash content. Some push, prune and remote-delete failures are printed without making the overall command fail. Do not enable unattended destructive automation until exit semantics are fixed and verified.</div>
+                <h3>Evidence</h3><ul class="evidence"><li><a href="https://github.com/pablospe/worktrunk-sync#how-it-works">Topology, state and workflow</a></li><li><a href="https://github.com/pablospe/worktrunk-sync/blob/main/src/sync.rs">Synchronization and prune implementation</a></li><li><a href="https://github.com/pablospe/worktrunk-sync/releases/tag/v0.1.2">Latest observed release</a></li><li><a href="https://github.com/pablospe/worktrunk-sync/issues/4">Unanswered external push-only request</a></li></ul>
+                <a class="back" href="#comparison-summary">Back to summary</a>
+            </section>
+
+            <section class="project-detail" id="project-gh-stack">
+                <h2><a href="https://github.com/github/gh-stack">GitHub gh-stack</a></h2>
+                <p class="verdict"><strong>Verdict:</strong> An important GitHub-native linear-stack baseline with unusually good interactive reordering and atomic remote landing. The defining Stack service is proprietary, local commands do not manage a linked-worktree fleet, and publication can partially succeed.</p>
+                <div class="facts"><div class="fact"><strong>Popularity</strong>1,363 stars; repository created February 2026</div><div class="fact"><strong>Maintenance</strong>92 lifetime commits; active through 24 August; v0.1.0 on 29 July 2026</div><div class="fact"><strong>Licence</strong><a href="https://github.com/github/gh-stack/blob/main/LICENSE">MIT client</a>; GitHub stack APIs remain proprietary</div></div>
+                <h3>Linear stack workflow</h3>
+                <p>Local JSON metadata records an ordered list of branches while GitHub stores the corresponding remote Stack object. <code>gh stack rebase</code> fetches and cascades bottom-up; merged PRs are rebased onto the landed commit, and users can scope upstack or downstack. <code>modify</code> previews dropping, folding, inserting, renaming and reordering before applying a snapshot-backed rewrite. <code>sync</code> reconciles local branches, remote refs, PRs and Stack state and can optionally prune.</p>
+                <p>Rebase has strong all-branch abort semantics: a snapshot restores the full stack after conflict or cancellation. Synchronization intentionally refuses to leave a partially rebased stack. Publication is weaker: push and submit operate branch-by-branch, so a lease rejection or API failure can leave earlier branches already updated. Noninteractive divergence can also exit successfully without changing anything, which automation must detect from output/state rather than status alone.</p>
+                <h3>Boundary and worktrees</h3>
+                <p><code>gh stack merge</code> gives atomic server-side landing, but only through GitHub’s proprietary Stacked PRs service. The client can <code>link</code> remotely managed branches from Jujutsu, Sapling, Git Town or separate worktrees, but that mode is an API bridge with no local navigation or branch-fleet lifecycle. Normal local commands assume branches can be checked out and are not a Worktrunk-aware mass-restack solution.</p>
+                <h3>Evidence</h3><ul class="evidence"><li><a href="https://github.com/github/gh-stack#readme">Canonical overview</a> and <a href="https://github.github.com/gh-stack/reference/cli/">CLI reference</a></li><li><a href="https://github.com/github/gh-stack/releases/tag/v0.1.0">Latest observed stable release</a></li><li><a href="https://docs.github.com/en/pull-requests/get-started/about-stacked-prs">GitHub Stacked PR service documentation</a></li><li><a href="https://github.com/github/gh-stack/blob/main/LICENSE">Client licence</a></li></ul>
+                <a class="back" href="#comparison-summary">Back to summary</a>
+            </section>
+
+            <section class="project-detail" id="project-git-branchless">
+                <h2><a href="https://github.com/arxanas/git-branchless">git-branchless</a></h2>
+                <p class="verdict"><strong>Verdict:</strong> The strongest Git-native commit-DAG maintenance and undo specialist. It can synchronize every draft stack onto one main branch and repair descendants after rewrites, but it remains alpha and does not provide a dependable stack-landing control plane.</p>
+                <div class="facts"><div class="fact"><strong>Popularity</strong>4,115 stars</div><div class="fact"><strong>Maintenance</strong>107 commits; meaningful work 15 July 2026; v0.11.1 on 21 May</div><div class="fact"><strong>Licence</strong><a href="https://github.com/arxanas/git-branchless/blob/master/LICENSE-MIT">MIT</a> OR <a href="https://github.com/arxanas/git-branchless/blob/master/LICENSE-APACHE">Apache-2.0</a></div></div>
+                <h3>Repository-wide inferred graph</h3>
+                <p>Smartlog shows visible draft stacks in one commit DAG. <code>git sync --pull</code> fetches remotes, updates the configured main branch, discovers draft roots and moves all stacks onto it; revsets can restrict the set. <code>git restack</code> finds children abandoned by amend/rebase operations and moves their subtrees to the rewritten commits. The model is ancestry-derived rather than a manifest of intended review dependencies, and every stack ultimately targets one configured main.</p>
+                <p>Upstream-equivalent changes are deduplicated. <code>git hide</code> can retire selected commits or entire descendant sets and delete their branch pointers; the event log and <code>git undo</code> restore the previous graph and refs. In-memory conflicts abort cleanly, with an optional retry through on-disk native Git rebase. Merge-shaped DAGs remain an edge case.</p>
+                <h3>Cockpit composition</h3>
+                <p>Linked worktrees are recognized and tested for display and movement, but git-branchless does not create, clean or retire them. Its stable raw OID query form and revsets support scripting without a JSON-first state contract. <code>git submit</code> has branch, GitHub and Phabricator providers, but the GitHub option describes itself as likely buggy and there is no landing queue. Use it as an expert graph/undo engine, with real trials around branches checked out in other Worktrunk worktrees.</p>
+                <h3>Evidence</h3><ul class="evidence"><li><a href="https://github.com/arxanas/git-branchless#readme">Smartlog, status and alpha warning</a></li><li><a href="https://github.com/arxanas/git-branchless/blob/master/git-branchless/src/commands/sync.rs">Bulk sync</a>, <a href="https://github.com/arxanas/git-branchless/blob/master/git-branchless/src/commands/restack.rs">restack</a> and <a href="https://github.com/arxanas/git-branchless/blob/master/git-branchless/src/commands/hide.rs">hide</a></li><li><a href="https://github.com/arxanas/git-branchless/blob/master/git-branchless/tests/test_undo.rs">Undo evidence</a> and <a href="https://github.com/arxanas/git-branchless/blob/master/git-branchless/tests/test_smartlog_worktree.rs">worktree regression suite</a></li><li><a href="https://github.com/arxanas/git-branchless/releases/tag/v0.11.1">Latest observed stable release</a></li></ul>
+                <a class="back" href="#comparison-summary">Back to summary</a>
+            </section>
+
+            <section class="project-detail" id="project-jujutsu">
+                <h2><a href="https://github.com/jj-vcs/jj">Jujutsu</a></h2>
+                <p class="verdict"><strong>Verdict:</strong> The strongest strategic answer to dependency-DAG maintenance, bulk rewriting, persistent conflicts and recovery. It replaces Git’s branch/worktree mental model rather than serving as a branch-manager layer.</p>
+                <div class="facts"><div class="fact"><strong>Popularity</strong>31,185 stars</div><div class="fact"><strong>Maintenance</strong>1,928 commits; active 25 August 2026; v0.44.0 on 6 August</div><div class="fact"><strong>Licence</strong><a href="https://github.com/jj-vcs/jj/blob/main/LICENSE">Apache-2.0</a></div></div>
+                <h3>Native change fleet</h3>
+                <p>The change DAG itself is the dependency model, and bookmarks are movable labels rather than checked-out branch identities. One <code>jj rebase</code> transaction can move multiple branches, selected revision subtrees or arbitrary sources while preserving dependency edges. Descendants automatically follow rewritten changes. Conflicts are first-class commit state, so a large rewrite completes with conflicted changes recorded in the graph; resolve them later instead of driving a continue/abort loop.</p>
+                <p><code>jj abandon</code> removes revisions and rebases descendants. The operation log, undo, redo and operation restore cover complete repository state and make recovery the best in this comparison. Native workspaces share one repository, while revsets, templates and JSON serialization provide a powerful automation surface.</p>
+                <h3>Why it is not the default cockpit layer</h3>
+                <p>There is no single policy command to fetch and rebase every outstanding line: the official GitHub flow fetches, then names the branches or revisions to rebase. Publication is bookmark-based safe Git push; PR creation, dependency status and landing remain external. More importantly, Jujutsu workspaces replace Git worktrees. Additional workspaces in a colocated repository are not yet recognizable as Git worktrees, limiting composition with Worktrunk and Git-dependent agent tooling. Evaluate one representative repository end-to-end instead of mixing authorities.</p>
+                <h3>Evidence</h3><ul class="evidence"><li><a href="https://docs.jj-vcs.dev/latest/cli-reference/#jj-rebase">Bulk rebase</a>, <a href="https://docs.jj-vcs.dev/latest/conflicts/">first-class conflicts</a> and <a href="https://docs.jj-vcs.dev/latest/operation-log/">operation log and recovery</a></li><li><a href="https://docs.jj-vcs.dev/latest/cli-reference/#jj-workspace">Workspaces</a>, <a href="https://docs.jj-vcs.dev/latest/templates/">templates and JSON</a> and <a href="https://docs.jj-vcs.dev/latest/github/">GitHub flow</a></li><li><a href="https://github.com/jj-vcs/jj/issues/8052">Colocated workspace tracker</a></li><li><a href="https://github.com/jj-vcs/jj/releases/tag/v0.44.0">Latest observed stable release</a></li></ul>
+                <a class="back" href="#comparison-summary">Back to summary</a>
+            </section>
+
+            <section class="project-detail" id="project-sapling">
+                <h2><a href="https://github.com/facebook/sapling">Sapling</a></h2>
+                <p class="verdict"><strong>Verdict:</strong> A polished change-stack replacement with smartlog, strong local recovery, GitHub stack submission and structured output. It lacks repository-wide all-stack synchronization, parallel workspaces and native stacked-PR landing.</p>
+                <div class="facts"><div class="fact"><strong>Popularity</strong>6,992 stars</div><div class="fact"><strong>Maintenance</strong>8,523 monorepo commits; active 25 August 2026; release 11 August</div><div class="fact"><strong>Licence</strong><a href="https://github.com/facebook/sapling/blob/main/LICENSE">GPL-2.0 client</a>; website, Interactive Smartlog and some libraries differ</div></div>
+                <h3>Stack workflow</h3>
+                <p>Smartlog presents the draft DAG and bookmarks label points in it. <code>sl rebase</code> can move a commit, a source plus descendants, a whole branch-relative set, or multiple revision/destination pairs. <code>sl restack</code> repairs orphaned descendants after amend/absorb-style rewrites. These operations target the current stack or selected revisions; there is no native all-outstanding-stacks synchronization policy.</p>
+                <p>Conventional rebase state supports continue, abort and quit. <code>sl hide --cleanup</code> retires obsolete stacks and unnecessary remote bookmarks while leaving hidden commits recoverable. Undo, redo and journal provide strong local recovery, although they do not reverse remote bookmark changes. <code>sl pr submit --stack</code> creates or updates one GitHub PR per commit; smartlog and the browser UI can show review state.</p>
+                <h3>Missing fleet pieces</h3>
+                <p>Sapling has no documented parallel worktree/workspace facility, and the explicit parallel-agent request remains open. Stack submission does not land the stack; an open issue documents the manual land, pull, rebase and resubmit loop. GitHub PRs overlap from main and are best reviewed through ReviewStack rather than native GitHub stacked-PR semantics. This is a coherent alternate VCS/review workflow, not a modular branch authority for the existing Worktrunk cockpit.</p>
+                <h3>Evidence</h3><ul class="evidence"><li><a href="https://sapling-scm.com/docs/commands/rebase/">Rebase</a>, <a href="https://sapling-scm.com/docs/commands/restack/">restack</a>, <a href="https://sapling-scm.com/docs/commands/hide/">cleanup</a> and <a href="https://sapling-scm.com/docs/commands/undo/">undo/redo</a></li><li><a href="https://sapling-scm.com/docs/git/sapling-stack/">GitHub stack submission</a> and <a href="https://sapling-scm.com/docs/commands/web/">Interactive Smartlog</a></li><li><a href="https://github.com/facebook/sapling/issues/1289">Parallel-agent worktree request</a> and <a href="https://github.com/facebook/sapling/issues/1351">stacked-PR landing issue</a></li><li><a href="https://github.com/facebook/sapling/releases/tag/0.2.20260811-150444%2B8fb02b32">Latest observed release</a></li></ul>
+                <a class="back" href="#comparison-summary">Back to summary</a>
+            </section>
+
+            <section class="methodology" id="methodology">
+                <h2>Methodology, scope and near misses</h2>
+                <p>Research first queried the local AgentsView session index and reused the earlier Git Machete, worktrunk-sync, cockpit-layer and branch-mixer evidence instead of recreating it. Independent passes then refreshed current canonical documentation, source, release and repository metadata for mature modular tools, young integrated managers, and change-DAG alternatives. Activity was measured on each canonical default branch over the same dates; volatile capability claims were checked against current primary sources rather than search snippets.</p>
+                <h3>Why several relevant projects are not scored peers</h3>
+                <ul>
+                    <li><strong>Worktrunk</strong>, <strong>git-stint</strong> and <strong>T3 Code</strong> make branch worktrees or agent sessions easy to create and use, but do not own a dependency graph or perform parent-first fleet maintenance. They are workspace/cockpit layers.</li>
+                    <li><strong>ggmx/ggmxd</strong> maintain a named fan-in target from arbitrary peer tips. That is integration composition, not dependency topology, and remains a separate layer after the topology authority finishes rewriting sources.</li>
+                    <li><strong>StGit</strong> is a mature GPL-2.0 patch-series manager with linked-worktree support, undo and repair, but each mutating command operates on one branch’s patch stack. It cannot discover and maintain a repository full of dependent branches.</li>
+                    <li><strong>spr</strong> is centered on a commit stack carried on one local branch and GitHub review publication, rather than many active branch identities.</li>
+                    <li><strong>ez-stack</strong> is the most relevant watch candidate: an MIT agent-oriented stack/worktree manager with sync, merge, receipts and leases. At 23 stars and only six months old, independent operational evidence is too thin for the primary recommendation.</li>
+                    <li><strong>GitButler</strong> remains Fair Source rather than currently OSI-compatible FOSS. <strong>Graphite</strong> requires a proprietary account/service for its defining workflow. They fall outside the requested FOSS boundary.</li>
+                </ul>
+                <h3>Interpretive limits</h3>
+                <p>Repository issue reports identify plausible current risk; they are not claims that every defect was independently reproduced. Commit volume in Stax, Stackit and Sapling includes concentrated maintainer, bot or monorepo activity and is not a maturity score. GitHub gh-stack’s local client is FOSS, but its atomic landing capability depends on a proprietary service, so the report does not call the complete solution FOSS.</p>
+            </section>
+
+            <section class="recommendation" id="recommendation">
+                <h2>Recommended architecture and test plan</h2>
+                <ol>
+                    <li><strong>Default modular lane:</strong> keep Worktrunk as worktree lifecycle owner and Git Machete as the sole explicit topology authority. Use a reviewed <code>.git/machete</code> forest, explicitly distribute or regenerate it for independent clones, disable default push during traversal, and let traversal follow existing Worktrunk paths or use temporary worktrees.</li>
+                    <li><strong>Safety-first challenger:</strong> pilot Git Town against the same representative repository. Exercise <code>sync --all</code>, dry-run, runlog, undo, linked-worktree conflicts, remote-gone branches, empty-branch pruning and repeated oldest-first shipping.</li>
+                    <li><strong>Publication challenger:</strong> pilot git-spice in a clone where only the current branch has a worktree. Measure repo-wide restack, JSON integration, bottom-up stack merge and recovery. Test fork mode separately and confirm that only trunk-based branches receive review requests. Prove the checked-out-branch/upstack skip before considering it for a Worktrunk fleet.</li>
+                    <li><strong>Integrated lane:</strong> pilot Stax instead of Worktrunk, not on top of it. Test all-stack refresh, worktree lanes, sweep, manual middle-branch deletion, warm-slot untracked-file behavior, undo/redo and forge-side effects that undo cannot reverse.</li>
+                    <li><strong>Laboratory lane:</strong> use Stackit as an automation and metadata reference only until issue #1656 is fixed. Disable auto-clean, seed dirty and ignored files, force partial failure, and verify JSON callers inspect structured conflict status rather than exit code alone.</li>
+                    <li><strong>Strategic lane:</strong> trial Jujutsu on a complete representative repository and toolchain. Treat native workspaces, bookmarks, hooks, forge reviews and Worktrunk replacement as one adoption decision.</li>
+                    <li><strong>Keep fan-in isolated:</strong> run <code>ggmxd</code> only after the branch authority is idle and source refs are stable. Keep the mix target unpublished and out of every stack topology.</li>
+                </ol>
+                <h3>Acceptance tests</h3>
+                <ul>
+                    <li>Model two independent stacks, one forked stack, one long-lived release branch and one unrelated fan-in mix; prove the manager distinguishes dependency from mere ancestry.</li>
+                    <li>Rewrite both a root and a middle parent, then run one fleet operation. Verify parent-first ordering, review retargeting and no duplicated commits.</li>
+                    <li>Keep one affected branch dirty in another worktree, one remote branch deleted and one review already merged. Record what is blocked, skipped, changed and pruned.</li>
+                    <li>Interrupt a rebase mid-stack, recover, then undo a completed but incorrect fleet operation. Audit branch refs, worktree files, metadata refs and forge state separately.</li>
+                    <li>Land one linear stack and prune it; verify unique local commits, ordinary untracked files, ignored secrets and remote refs are either preserved or deliberately handled.</li>
+                    <li>Require machine-readable plans to distinguish clean success, partial success, expected conflict, skipped work and destructive work—not merely process exit zero.</li>
+                </ul>
+            </section>
+        </main>
+
+        <footer>Standalone report · No remote scripts, fonts or stylesheets · Evidence links point to canonical repositories, documentation, source, releases and issue records.</footer>
+    </body>
+</html>

@@ -74,6 +74,16 @@ So any Cursor GUI user should see this. The docs note in
 accurate for the **CLI** — where the JSONL is primary — but not for the GUI,
 where it is the only store.
 
+This also looks like an ecosystem-wide blind spot rather than an agentsview
+oversight. [`ctx`](https://github.com/ctxrs/ctx), an unrelated Rust
+session-search tool with its own provider architecture, has the same gap: at
+`8c6d670` (2026-08-25) its `ctx-history-provider-claude-cursor` crate reads
+`agent-transcripts` only, and the strings `cursorDiskKV`, `composerData` and
+`bubbleId` appear nowhere in the repository. Two independent implementations
+both followed the CLI/documented path, which is consistent with the GUI store
+simply being undocumented rather than either project having missed something
+obvious.
+
 ## Suggested direction
 
 A separate provider looks like the right shape; the existing Cursor parser
@@ -94,6 +104,12 @@ should not need to change.
   `bubbleId` → messages onto `ParseResult`/`ParsedMessage`, plus session
   metadata (name, model, timestamps, and workspace/cwd from the `gitWorktree`
   block in `composerData`).
+
+For whatever it is worth as an outside data point, `ctx` factors its
+SQLite-backed agents (opencode, zed, deepagents, forgecode) into a dedicated
+`ctx-history-providers-sqlite-logical` crate — the same shape as routing this
+through `multiSessionContainerSourceSet` rather than extending the existing
+file-based Cursor provider.
 
 Known risks worth flagging: the blob schema is undocumented and
 version-dependent — Cursor 3.16.29 shrank/wiped some users' `cursorDiskKV` on

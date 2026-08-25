@@ -33,7 +33,7 @@
     "npm:@sherif-fanous/pi-catppuccin",
     "npm:@tmustier/pi-session-recap",
     "npm:@brain0pia/pi-extension-times",
-    "git:github.com/apmantza/pi-lens",
+    "git:github.com/apmantza/pi-lens@d03e257847478b0ea173ddd1a9204e90f70c771b",
     {
       "source": "npm:@lukemelnik/pi-monitor",
       "extensions": []

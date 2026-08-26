@@ -334,5 +334,6 @@
   "voiceEnabled": true,
   "feedbackSurveyState": {
     "lastShownTime": 1754076415986
-  }
+  },
+  "autoMemoryEnabled": false
 }

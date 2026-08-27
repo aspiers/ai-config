@@ -230,21 +230,27 @@ bd-enroll-solo --check
 ```
 
 It validates the opt-in, Dolt server mode, the maintainer role, the export
-policy, the policy declaration, both repository-local skill installations and
-their exclusions, and — in the local profile — that no Beads artifact is
-visible to Git. Exit 0 means valid and prints the profile; exit 1 lists every
-problem found on stderr.
+policy, the policy declaration, and that a valid `beads` skill is available
+from at least one supported project or global location. Any project-local
+skill installation that exists is also checked for safe tracking and exclusion.
+In the local profile, it verifies that no Beads artifact is visible to Git.
+Exit 0 means valid and prints the profile; exit 1 lists every problem found on
+stderr.
 
 Do not substitute a hand-run sequence of `bd doctor`, `bd config get`, and
 `git config` commands. The check exists so validation is identical every time.
 
 Repair depends on what it reports:
 
-- **Missing or malformed repository-local skill links or exclusions** — preview
-  the narrowly scoped repair with `bd-enroll-solo --repair-skills --dry-run`,
-  then run `bd-enroll-solo --repair-skills --yes`. This mode does not
-  reinitialize Beads or rewrite policy; it only installs the missing symlinks
-  and their worktree-local exclusions, then runs the complete check.
+- **No valid project or global `beads` skill** — install the skill globally,
+  or preview the narrowly scoped repository-local repair with
+  `bd-enroll-solo --repair-skills --dry-run`, then run
+  `bd-enroll-solo --repair-skills --yes`. This mode does not reinitialize
+  Beads or rewrite policy; it only installs the repository-local symlinks and
+  their worktree-local exclusions, then runs the complete check.
+- **Malformed or unsafe repository-local skill links** — remove the broken
+  optional links when a global skill is available, or use the same scoped
+  `--repair-skills` flow to replace and exclude them safely.
 - **Ignore-rule problems** — let the installed Beads version own its rules
   with `bd doctor --dry-run`, then `bd doctor --fix --yes` once the proposed
   repairs are confirmed appropriate. If the dry run proposes data repair,

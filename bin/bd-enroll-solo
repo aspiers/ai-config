@@ -50,10 +50,11 @@ LOCAL_EXCLUDES=(
     '.beads-solo'
 )
 
-# Repository-local entry points for the upstream Beads skill. These are
-# deliberately excluded even in the tracked profile: newly installed entries
-# are absolute symlinks into this machine's Beads checkout and must never be
-# published by the enrolled repository.
+# Repository-local entry points for the upstream Beads skill. When present,
+# these are deliberately excluded even in the tracked profile: newly installed
+# entries are absolute symlinks into this machine's Beads checkout and must
+# never be published by the enrolled repository. Validation also accepts a
+# global installation, so repositories need not duplicate these links.
 BEADS_SKILL_LINKS=(
     '.agents/skills/beads'
     '.claude/skills/beads'
@@ -818,14 +819,36 @@ run_check() {
     [[ "$(bd config get export.git-add 2>/dev/null)" == *false* ]] ||
         errors+=("export.git-add is not false; the JSONL export may be staged")
 
-    local link privacy_problem
+    local link privacy_problem skill_path
+    local skill_found=false
     for link in "${BEADS_SKILL_LINKS[@]}"; do
+        if [[ ! -e "$ROOT/$link" && ! -L "$ROOT/$link" ]]; then
+            continue
+        fi
         if ! is_beads_skill "$ROOT/$link"; then
-            errors+=("$link is missing or is not a valid Beads skill")
-        elif privacy_problem=$(skill_link_privacy_problem "$link"); then
-            errors+=("$privacy_problem")
+            errors+=("$link exists but is not a valid Beads skill")
+        else
+            skill_found=true
+            if privacy_problem=$(skill_link_privacy_problem "$link"); then
+                errors+=("$privacy_problem")
+            fi
         fi
     done
+
+    if [[ -n "${HOME:-}" ]]; then
+        for skill_path in \
+            "$HOME/.agents/skills/beads" \
+            "$HOME/.claude/skills/beads"; do
+            if is_beads_skill "$skill_path"; then
+                skill_found=true
+                break
+            fi
+        done
+    fi
+
+    if [[ "$skill_found" != true ]]; then
+        errors+=("no valid Beads skill found in project or global skill locations")
+    fi
 
     if [[ "$profile" == local ]]; then
         # The defining invariant: no Beads artifact may be visible to Git.

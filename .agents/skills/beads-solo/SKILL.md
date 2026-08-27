@@ -31,8 +31,9 @@ bd-enroll-solo --check
 
 `bd-enroll-solo --check` is the **complete** validation for this skill. It
 verifies the opt-in, Dolt server mode, the maintainer role, the export policy,
-the policy declaration, and — in local mode — that no Beads artifact is visible
-to Git.
+the policy declaration, availability of the `beads` skill from a supported
+project or global location, and — in local mode — that no Beads artifact is
+visible to Git.
 
 Do not re-derive any of that with separate `git ls-files`, `grep`, `cmp`, or
 `bd config get` commands. Those checks are the script's job precisely so they

@@ -465,13 +465,33 @@ class TestCheckMode(BdEnrollSoloTestCase):
         )
 
     @unittest.skipUnless(bd_available(), "bd not installed")
-    def test_detects_missing_skill_link(self):
+    def test_accepts_global_skill_without_repository_links(self):
         self.enroll_or_skip()
-        Path(BEADS_SKILL_LINKS[1]).unlink()
+        for link in BEADS_SKILL_LINKS:
+            Path(link).unlink()
+
+        global_skill = Path(self.test_dir, "home", ".agents", "skills", "beads")
+        global_skill.parent.mkdir(parents=True)
+        global_skill.symlink_to(self.skill_source)
+        self.command_env["HOME"] = str(Path(self.test_dir, "home"))
+
+        result = self.check()
+        self.assertEqual(
+            result.returncode, 0, f"check failed:\n{result.stdout}\n{result.stderr}"
+        )
+
+    @unittest.skipUnless(bd_available(), "bd not installed")
+    def test_rejects_enrollment_without_any_available_skill(self):
+        self.enroll_or_skip()
+        for link in BEADS_SKILL_LINKS:
+            Path(link).unlink()
+        empty_home = Path(self.test_dir, "empty-home")
+        empty_home.mkdir()
+        self.command_env["HOME"] = str(empty_home)
 
         result = self.check()
         self.assertEqual(result.returncode, 1)
-        self.assertIn(f"{BEADS_SKILL_LINKS[1]} is missing", result.stderr)
+        self.assertIn("no valid Beads skill found", result.stderr)
 
     @unittest.skipUnless(bd_available(), "bd not installed")
     def test_detects_missing_skill_link_exclusion(self):

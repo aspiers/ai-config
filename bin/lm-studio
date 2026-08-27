@@ -1,0 +1,44 @@
+#!/bin/bash
+#
+# Launch the LM Studio GUI, stopping the headless llmster daemon first.
+#
+# LM Studio and llmster are mutually exclusive, and the arbitration only runs
+# one way:
+#
+#   - `lms daemon up` while the GUI runs  -> yields politely, starts nothing
+#   - GUI launched while llmster runs     -> REFUSES, with an error dialog
+#
+# The refusal is not a port clash (llmster's control port is its own); the app
+# does a deliberate instance check and bails:
+#
+#   [CoreServicesManager] Detected running llmster instance
+#
+# So bring the daemon down before starting the GUI.  `lms daemon down` is a
+# no-op when nothing is running, and declines rather than killing the backend
+# when the GUI itself is hosting it.
+
+set -euo pipefail
+
+lms=~/.lmstudio/bin/lms
+
+# Not on $PATH for desktop-file launches, and absent if only the GUI is
+# installed -- neither case should stop the GUI from starting.
+if [ -x "$lms" ]; then
+    "$lms" daemon down >/dev/null 2>&1 || true
+fi
+
+# Globbed rather than version-pinned: hardcoding the version means this rots
+# the next time the AppImage is upgraded.
+shopt -s nullglob
+appimages=( ~/software/AI/LM-Studio-*-x64.AppImage )
+
+if [ ${#appimages[@]} -eq 0 ]; then
+    echo "$0: no LM-Studio-*-x64.AppImage found in ~/software/AI/" >&2
+    exit 1
+fi
+
+# Newest by mtime, so an upgrade that leaves the old image in place still
+# launches the new one.
+newest=$( ls -t "${appimages[@]}" | head -1 )
+
+exec "$newest" --no-sandbox "$@"

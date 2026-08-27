@@ -1,0 +1,28 @@
+[Desktop Entry]
+Type=Application
+Name=LM Studio
+GenericName=Local LLM Server
+Comment=Use the chat UI or local server to experiment and develop with local LLMs.
+
+# bin/lm-studio rather than the AppRun form shipped inside the AppImage
+# (that entry assumes an extracted install; its bare "AppRun" is not on $PATH
+# here), and rather than an inline shell command: Exec forbids the shell
+# metacharacters that stopping the daemon and globbing the version need.
+#
+# The wrapper stops the headless llmster daemon first, because the GUI
+# refuses to start while llmster holds the backend.  See bin/lm-studio.
+Exec=lm-studio %U
+
+Icon=lm-studio
+Terminal=false
+StartupNotify=true
+
+# Matches the WM_CLASS the app actually sets, so window managers associate
+# its windows with this entry (and layouts can match on it).
+StartupWMClass=LM-Studio
+
+# One main category only: listing both Development and Utility makes the app
+# appear twice in some menus.
+Categories=Development;
+Keywords=developer;llm;ai;
+MimeType=x-scheme-handler/lmstudio;

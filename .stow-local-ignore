@@ -61,19 +61,34 @@ COPYING
 \.autosync
 \.autocommit
 \.mypy_cache
+\.ruff_cache
+\.pi-lens
+# pi-shortcuts (@siesing/pi-shortcuts) writes this cache relative to
+# process.cwd(), so it lands in whatever directory pi was run from,
+# including stow packages.  Its contents are keyed only on the pi
+# version/platform/schema, so per-directory copies are redundant and
+# regenerate on demand.  Upstream bug, unreported as of 2026-08-13:
+# https://github.com/siesing/pi-shortcuts (index.ts getCachePath)
+\.pi-shortcuts-cache
 \.env
 \.env\..*
 \.cursor
+^/AGENT.md
 ^/AGENTS.md
 ^/CLAUDE.md
 ^/GEMINI.md
+^/\.claude/settings.local.json
 ^/\.prettier.*
 ^/\.editorconfig
-node_modules
+^/node_modules
 ^/root-etc-stow-pkg
 ^/\.agents/skills/allow-commands
 ^/\.agents/skills/beads
 ^/tests
-^/tmp
+tmp
+nohup\.out
 ^/\.beads
-^/\.claude/settings.local.json
+^/\.beads.*\.lock
+\.perles
+^/\.agents/skills/beads/
+^/\.beads-solo

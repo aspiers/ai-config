@@ -86,26 +86,38 @@ description: What the skill does. Use when the relevant trigger occurs.
 
 ### Writing the description
 
-Because the description is matched against a situation the model has not yet
-investigated, write it in the vocabulary of that situation — the task the user
-is attempting, the words they would use, the artifacts in front of them.
+Only `name` and `description` are pre-loaded into the system prompt at
+startup; the body is read only once the skill is selected. The description is
+therefore what the model chooses from, potentially among a hundred skills,
+before it knows anything else about this one.
 
-- **Name the trigger, not the machinery.** Internal tools, libraries, and
-  invented terms belong in the body. They rarely appear in the prompt that
-  should fire the skill, and they crowd out the words that would.
+Include **both halves**: what the skill does, and when to use it. The standard
+shape is `<what it does>. Use when <specific triggers>.` A capability with no
+trigger clause cannot route; a trigger clause alone loses the terms that make
+the match specific.
+
+- **Write in third person.** The description is injected into the system
+  prompt, where first- or second-person phrasing ("I can help you…", "your
+  fork") causes discovery problems.
+- **Be specific and include key terms**, including file extensions, tool
+  names, and the words a user would actually type. Vague summaries such as
+  "helps with documents" do not route.
+- **Prefer concrete occasions to abstract summaries.** "When a build fails
+  after a dependency bump" routes; "manage dependency health" does not.
 - **Do not gate on facts discovered after loading.** A qualifier the model can
   only evaluate by reading the skill, running a command, or inspecting the
   repository will suppress the skill in precisely the ambiguous cases it
-  exists to resolve. Move the check into the body and let the description fire
-  on the broader situation.
-- **Prefer concrete occasions to abstract summaries.** "When a build fails
-  after a dependency bump" routes; "manage dependency health" does not.
-- **Cover the plausible phrasings** a user or model would actually produce,
-  including the moment before the problem is named precisely.
+  exists to resolve. State the broad situation in the description and put the
+  check in the body.
+- **Distinguish neighbouring skills.** Where two skills cover adjacent
+  ground, say in each which situation belongs to the other.
+- Descriptions are capped at 1,024 characters.
 
-A useful test: given only the description, could the model tell whether the
-skill applies to the next request — without opening it? If deciding requires
-information the description withholds, the description is wrong.
+Remember that `name` is pre-loaded alongside the description and also feeds
+selection, so a descriptive name carries part of the routing weight.
+
+A useful test: given only the name and description, could the model tell
+whether the skill applies to the next request — without opening it?
 
 ## Authoring workflow
 
@@ -122,8 +134,8 @@ information the description withholds, the description is wrong.
 ## Review questions
 
 - Would a capable model know this without the skill?
-- Does the description route on the user's situation rather than the skill's
-  internals, and without gating on anything only discoverable after loading?
+- Does the description state both what the skill does and when to use it, in
+  third person, without gating on anything only discoverable after loading?
 - Does each absolute rule protect a real invariant?
 - Could a parameterized interface replace prose or examples?
 - Is conditional detail loaded only when its condition occurs?

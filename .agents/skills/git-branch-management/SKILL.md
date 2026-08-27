@@ -1,6 +1,6 @@
 ---
 name: git-branch-management
-description: Decide how to structure git branches, and where to develop them, when a change may be submitted to a project someone else maintains. Use when starting work in a fork, clone, or third-party checkout; when choosing what a new branch should be based on; when a branch is growing a second unrelated concern; when deciding whether to stack branches or keep them independent; when preparing a change for a pull request; or when a local build needs several in-progress branches combined.
+description: Structures git branches for upstream submission: keeps unrelated changes on separate branches, isolates each in its own worktrunk worktree, records dependencies with git-machete, and recombines them into a temporary mixdown branch for local testing. Use when starting work in a fork, clone, or third-party checkout; when choosing what a new branch should be based on; when a branch is growing a second unrelated concern; when deciding whether to stack branches or keep them independent; when preparing a change for a pull request or patch submission; or when a local build needs several in-progress branches combined.
 ---
 
 # Git Branch Management

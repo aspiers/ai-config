@@ -13,26 +13,30 @@ then recombine locally for testing and normal use.
 These principles exist to satisfy a maintainer you do not control. **Check who
 owns the upstream before applying any of them.**
 
-Inspect the remotes and compare them against the user's own accounts and
-hosts:
+Inspect the remotes:
 
 ```bash
 git remote -v
 ```
 
-When the upstream belongs to someone else — a third-party project, or a fork
-whose `origin` points at another owner — the rest of this skill applies.
+The usual convention names `origin` for the upstream and `github` for the
+user's own fork of an upstream owned by someone else. Where it holds, a
+`github` remote alongside `origin` suggests an upstream the user does not own.
 
-When the user owns the upstream, it does not. There is no external reviewer
-to satisfy, so clean separation stops paying for itself: combining concerns on
-one branch, or pushing straight to the trunk, is legitimate and often
-preferable. Follow the user's preference for that repository rather than
-imposing separation. Do not spend effort splitting branches that nobody else
-will review.
+A repository the user owns outright may have no `origin` at all — its only
+remote can be `github`, pointing at their own account. So the absence of a
+fork remote is not by itself a signal either way.
 
-A fork can be ambiguous: `origin` may be the upstream project while another
-remote is the user's own fork, or the reverse. Resolve the ambiguity from the
-remotes rather than assuming, and ask if it stays unclear.
+It is a convention rather than a rule, so read it as a hint about which URLs
+to check, not as the answer. Ownership comes from the URLs themselves —
+compare them against the user's own accounts and hosts. Ask if it stays
+unclear.
+
+Where the user owns the upstream there is no external reviewer to satisfy, so
+clean separation stops paying for itself: combining concerns on one branch, or
+pushing straight to the trunk, is legitimate and often preferable. Follow the
+user's preference for that repository rather than imposing separation. Do not
+spend effort splitting branches that nobody else will review.
 
 ## Why separation matters
 

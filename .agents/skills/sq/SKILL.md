@@ -1,20 +1,20 @@
 ---
-name: tldr-summarise
+name: sq
 description: >-
-  Summarises the current session for a human who has not read it, or cannot
-  remember it, and needs to get back up to speed fast. Use when the user asks
-  for a TL;DR, a catch-up, a recap, or to be reminded where things got to,
-  especially when they have been away or working in other sessions.
+  Summarises the current session's status so a human can see where things
+  stand and what happens next. Use when the user invokes `/sq`, asks for the
+  status quo, session status, a catch-up, recap, or reminder where things got
+  to, regardless of how much previous output there was.
 ---
 
-# TL;DR Summarise
+# Session status quo
 
-Write a summary that swaps the reader's context back in.
+Write a status summary that makes the session's current state clear at a
+glance.
 
-Assume the reader is the human, that they have **not** read the preceding
-output, and that they have been multi-tasking across unrelated sessions since
-they last looked. Nothing earlier in the conversation is in their head. Their
-memory of this work is cold, and the summary is what warms it.
+It must work whether the reader followed the session closely, skimmed it, or
+is returning cold after unrelated work. The `/sq` command reports where things
+stand now, regardless of how much text came before it.
 
 ## Length and shape
 
@@ -91,8 +91,9 @@ candidates one bullet each, saying what turns on the choice, then stop.
 
 **BLOCKED ON** must name who the blocker waits on, not just what it is.
 "Blocked" alongside a **NEEDED FROM YOU** of "nothing" reads as a
-contradiction unless the line says why it is not the reader — waiting on elapsed time, on a
-scheduled run, on events that arrive during normal use, on another person. A
+contradiction unless the line says why it is not the reader — waiting on
+elapsed time, on a scheduled run, on events that arrive during normal use, on
+another person. A
 reader who cannot tell whether a blocker is theirs has to go and find out,
 which is the work this summary exists to save.
 
@@ -168,7 +169,7 @@ summary exists to avoid.
 Give every reference a short human-readable label **and** keep its ID, since
 the ID is what commands and searches take as an argument:
 
-- `ai-1df (add a TL;DR summary skill)`
+- `proj-123 (add a session status skill)`
 - `PR #4271 (fix race in worktree cleanup)`
 
 This overlaps with the `/ids` command, which enforces the same rule for the

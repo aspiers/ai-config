@@ -1,6 +1,6 @@
 ---
 name: git-branch-management
-description: Decide how to structure local branches for work destined for upstream projects you do not own — when to keep changes on separate independent branches in worktrunk-managed worktrees, how to record dependencies with git-machete, and when to recombine branches into a temporary mixdown for testing and daily use. Use when starting a new change in a fork or third-party checkout, when a branch is accumulating unrelated work, when choosing a base for a new branch, or when deciding between stacking and mixing.
+description: Decide how to structure git branches, and where to develop them, when a change may be submitted to a project someone else maintains. Use when starting work in a fork, clone, or third-party checkout; when choosing what a new branch should be based on; when a branch is growing a second unrelated concern; when deciding whether to stack branches or keep them independent; when preparing a change for a pull request; or when a local build needs several in-progress branches combined.
 ---
 
 # Git Branch Management

@@ -78,10 +78,34 @@ description: What the skill does. Use when the relevant trigger occurs.
 
 - `name` must match the parent directory and follow the Agent Skills
   specification.
-- `description` is always-loaded routing context: include capabilities and
-  triggers, but not the workflow.
+- `description` exists solely to route: it is the only part of the skill
+  loaded before the skill is chosen, so its one job is letting the model
+  recognise a matching situation. See below.
 - Use `.agents/skills/` for cross-platform skills unless project guidance says
   otherwise.
+
+### Writing the description
+
+Because the description is matched against a situation the model has not yet
+investigated, write it in the vocabulary of that situation — the task the user
+is attempting, the words they would use, the artifacts in front of them.
+
+- **Name the trigger, not the machinery.** Internal tools, libraries, and
+  invented terms belong in the body. They rarely appear in the prompt that
+  should fire the skill, and they crowd out the words that would.
+- **Do not gate on facts discovered after loading.** A qualifier the model can
+  only evaluate by reading the skill, running a command, or inspecting the
+  repository will suppress the skill in precisely the ambiguous cases it
+  exists to resolve. Move the check into the body and let the description fire
+  on the broader situation.
+- **Prefer concrete occasions to abstract summaries.** "When a build fails
+  after a dependency bump" routes; "manage dependency health" does not.
+- **Cover the plausible phrasings** a user or model would actually produce,
+  including the moment before the problem is named precisely.
+
+A useful test: given only the description, could the model tell whether the
+skill applies to the next request — without opening it? If deciding requires
+information the description withholds, the description is wrong.
 
 ## Authoring workflow
 
@@ -98,6 +122,8 @@ description: What the skill does. Use when the relevant trigger occurs.
 ## Review questions
 
 - Would a capable model know this without the skill?
+- Does the description route on the user's situation rather than the skill's
+  internals, and without gating on anything only discoverable after loading?
 - Does each absolute rule protect a real invariant?
 - Could a parameterized interface replace prose or examples?
 - Is conditional detail loaded only when its condition occurs?

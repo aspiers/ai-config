@@ -1,6 +1,12 @@
 ---
 name: task-generation
-description: Generate a detailed task list from a PRP. Use after a PRP is created and ready for implementation planning.
+description: >-
+  Turns an existing Product Requirements Prompt at .ai/[feature]/prp.md into a
+  step-by-step task list of parent tasks and sub-tasks, saved to
+  .ai/[feature]/tasks.md and committed. Use when a PRP is ready to be broken
+  down into implementable work, or when planning how a feature will be built
+  before any implementation starts. To write the PRP itself first, use prp-
+  generation.
 ---
 
 # Task Generation

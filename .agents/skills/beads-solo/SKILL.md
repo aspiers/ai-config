@@ -1,11 +1,12 @@
 ---
 name: beads-solo
 description: >-
-  Enforce Beads policy for an opt-in repository maintained initially by one
-  owner. Use when a repository has a beads-solo enrollment or when the user
-  asks to enroll, repair, or operate a solo-maintainer Beads workspace. Grants
-  issue-management and commit authority while requiring explicit permission
-  for Git pushes and Dolt sync or push operations.
+  Enforces Beads policy for a repository maintained initially by one owner,
+  granting issue-management and commit authority while requiring explicit
+  permission for Git pushes and Dolt sync or push operations. Use when the
+  user asks to enroll, repair, or operate a solo-maintainer Beads workspace,
+  and when working with Beads in a repository that may carry a beads-solo
+  enrollment.
 ---
 
 # Beads Solo

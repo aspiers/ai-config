@@ -1,6 +1,10 @@
 ---
 name: xlsx-to-csv
-description: Convert XLSX spreadsheets (single or multi-sheet) to CSV files you can read and grep. Use whenever you need to process an .xlsx report from Xero, Cryptio, bank exports, or any tool that delivers spreadsheet output.
+description: >-
+  Converts XLSX spreadsheets, including multi-sheet workbooks, into CSV files
+  that can be read and grepped directly. Use whenever an .xlsx report needs
+  processing — exports from Xero, Cryptio, bank statements, or any tool that
+  delivers spreadsheet output.
 ---
 
 # XLSX to CSV

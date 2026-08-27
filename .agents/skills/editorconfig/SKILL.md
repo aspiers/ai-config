@@ -1,6 +1,10 @@
 ---
 name: editorconfig
-description: Generate a .editorconfig file for a repository
+description: >-
+  Generates a minimal .editorconfig with sensible defaults for a repository.
+  Use when starting work in a new repository, when a project has no
+  .editorconfig, or when the user asks to add or standardise editor and
+  formatting settings.
 ---
 
 # Generate .editorconfig

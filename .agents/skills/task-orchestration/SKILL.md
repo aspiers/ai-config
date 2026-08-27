@@ -1,6 +1,13 @@
 ---
 name: task-orchestration
-description: Orchestrate the complete development workflow for implementing sub-tasks from a task list. Use for end-to-end feature implementation with quality controls.
+description: >-
+  Runs the full implement-and-commit loop over a task list — selects the next
+  incomplete sub-task, implements it, runs linters and tests, marks it done,
+  commits, and repeats until the list is finished. Use when asked to work
+  through a feature's task list at .ai/[feature]/tasks.md unattended, or to
+  keep going until every sub-task is complete. For a single sub-task with no
+  commit, use task-implementation; to stop for approval between each one, use
+  iterative-development.
 ---
 
 # Task Orchestration

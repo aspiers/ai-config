@@ -1,6 +1,11 @@
 ---
 name: allow-agent-commands
-description: Add or change allowed commands in AI agent permission configs (OpenCode, Claude Code)
+description: >-
+  Adds or changes allowed commands in AI agent permission configs for OpenCode
+  and Claude Code. Use when a command needs adding to an agent's allow list,
+  when permission settings for existing commands need changing, when setting
+  up a new AI tool that requires command permissions, or when the user asks to
+  stop being prompted for a particular command.
 ---
 
 # Adding/Changing Allowed Commands

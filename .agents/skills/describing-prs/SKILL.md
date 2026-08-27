@@ -1,6 +1,10 @@
 ---
 name: describing-prs
-description: Generate a PR description for the current branch. Writes Markdown to .git/magit/posts/new-pullreq for use with magit-forge.
+description: >-
+  Generates a pull request description for the current branch and writes it as
+  Markdown to .git/magit/posts/new-pullreq for magit-forge. Use when the user
+  asks for a PR description, PR summary, or write-up of what a branch changes,
+  or is preparing to open a pull request.
 allowed-tools: Bash(~/.agents/skills/describing-prs/scripts/find-merge-base.py:*)
 ---
 

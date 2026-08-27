@@ -1,6 +1,11 @@
 ---
 name: task-implementation
-description: Implement a single sub-task from a task list. Use when working on feature development with existing task lists.
+description: >-
+  Implements one numbered sub-task from a task list at .ai/[feature]/tasks.md,
+  running linters and tests, without staging, committing, or marking the task
+  complete. Use when asked to carry out a specific sub-task by number, or as
+  the inner step of a larger loop that handles commits separately. For the
+  full loop including commits, use task-orchestration.
 ---
 
 # Task Implementation

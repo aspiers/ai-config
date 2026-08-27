@@ -1,6 +1,10 @@
 ---
 name: safe-rm
-description: Safely delete files / directories without asking for permission
+description: >-
+  Deletes files and directories through a wrapper that avoids the usual per-
+  command permission prompt. Use whenever files or directories need removing —
+  clearing build artifacts or temporary files, or dropping obsolete files and
+  directories during a refactor.
 ---
 
 # Safe File Deletion

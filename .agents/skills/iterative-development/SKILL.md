@@ -1,6 +1,11 @@
 ---
 name: iterative-development
-description: Implement sub-tasks iteratively with user approval between each one. Use when working through a task list with user collaboration.
+description: >-
+  Implements sub-tasks from a task list at .ai/[feature]/tasks.md strictly one
+  at a time, stopping after each to ask the user before starting the next, and
+  keeping the task list and Relevant Files section current. Use when the user
+  wants to review or approve each sub-task before work continues, rather than
+  letting the agent run the list unattended with task-orchestration.
 ---
 
 # Iterative Development

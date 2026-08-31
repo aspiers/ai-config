@@ -177,7 +177,9 @@ instead, using whichever mechanism that agent actually supports:
 | Codex | global instructions | `~/.codex/AGENTS.md` |
 
 Only Claude Code has a real output-style feature, including a `/style` picker
-for switching between the bundled styles. For the others the style is a
+for switching between the bundled styles. Installing the files does not
+activate one: this repository's global Claude Code settings select
+`Attention-kind` through `outputStyle`. For the other agents the style is a
 system-prompt fragment applied at startup, so switching means re-running the
 installer with `ATTENTION_SPAN_STYLE` set and restarting the agent.
 

@@ -325,6 +325,7 @@
   },
   "skipWorkflowUsageWarning": true,
   "theme": "auto",
+  "outputStyle": "Attention-kind",
   "verbose": true,
   "preferredNotifChannel": "terminal_bell",
   "autoCompactEnabled": true,

@@ -43,14 +43,14 @@
     "npm:@spences10/pi-skill-importer",
     "git:github.com/aspiers/pi-ask-user@working",
     "npm:@mzwing/pi-permission-auto-review",
-    "git:github.com/aspiers/pi-herdr-tab-sync@fix/immediate-name-sync",
     "npm:pi-model-aware-compaction@0.1.5",
     "../../.GIT/3rd-party/pi-packages/packages/pi-permission-system",
     "npm:@gotgenes/pi-subagents@19.2.1",
     "npm:@gotgenes/pi-subagents-worktrees@0.2.3",
     "git:github.com/aspiers/pi-shortcuts@configurable-shortcut",
     "npm:@jmfederico/pi-web@1.202608.1",
-    "git:github.com/aspiers/pi-tmux-window-name@feat/configurable-title-lengths"
+    "git:github.com/aspiers/pi-tmux-window-name@feat/configurable-title-lengths",
+    "git:github.com/aspiers/pi-herdr-tab-sync@fix/reset-stale-tab-label"
   ],
   "hideThinkingBlock": false,
   "powerline": {

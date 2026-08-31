@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+agent_dir=${PI_CODING_AGENT_DIR:-"$HOME/.pi/agent"}
+pi_web_root="$agent_dir/npm/node_modules/@jmfederico/pi-web"
+
+# Pi package reconciliation omits host-provided SDK peers. Native PI WEB
+# services run outside Pi's module loader, so expose the active Pi SDK to them.
+[[ -f "$pi_web_root/package.json" ]] || exit 0
+
+if [[ -n ${PI_WEB_PI_SDK_ROOT:-} ]]; then
+  pi_root=$PI_WEB_PI_SDK_ROOT
+elif [[ -s ${NVM_DIR:-"$HOME/.nvm"}/nvm.sh ]]; then
+  nvm_dir=${NVM_DIR:-"$HOME/.nvm"}
+  npm_root=$(NVM_DIR="$nvm_dir" bash -c 'set -e; . "$NVM_DIR/nvm.sh"; nvm use --silent default >/dev/null; npm root -g')
+  pi_root="$npm_root/@earendil-works/pi-coding-agent"
+else
+  pi_root="$(npm root -g)/@earendil-works/pi-coding-agent"
+fi
+managed_scope="$agent_dir/npm/node_modules/@earendil-works"
+
+links=(
+  "pi-coding-agent:$pi_root"
+  "pi-agent-core:$pi_root/node_modules/@earendil-works/pi-agent-core"
+  "pi-ai:$pi_root/node_modules/@earendil-works/pi-ai"
+)
+
+mkdir -p "$managed_scope"
+lock_file="$agent_dir/npm/.pi-web-sdk-links.lock"
+exec 9>"$lock_file"
+flock 9
+
+for mapping in "${links[@]}"; do
+  name=${mapping%%:*}
+  target=${mapping#*:}
+  link="$managed_scope/$name"
+
+  [[ -f "$target/package.json" ]] || {
+    printf 'PI WEB SDK peer target is missing: %s\n' "$target" >&2
+    exit 1
+  }
+
+  if [[ -L "$link" ]]; then
+    [[ $(readlink -f -- "$link") == $(readlink -f -- "$target") ]] && continue
+    rm -- "$link"
+  elif [[ -e "$link" ]]; then
+    printf 'Refusing to replace non-symlink PI WEB SDK peer: %s\n' "$link" >&2
+    exit 1
+  fi
+
+  if ! ln -s -- "$target" "$link"; then
+    if [[ -L "$link" ]] && [[ $(readlink -f -- "$link") == $(readlink -f -- "$target") ]]; then
+      continue
+    fi
+    printf 'Could not create PI WEB SDK peer without replacing another path: %s\n' "$link" >&2
+    exit 1
+  fi
+
+  printf 'Linked PI WEB SDK peer: %s -> %s\n' "$link" "$target"
+done

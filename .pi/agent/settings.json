@@ -19,7 +19,6 @@
     "npm:@latentminds/pi-quotas",
     "npm:@aliou/pi-processes",
     "npm:@zenobius/pi-worktrees",
-    "npm:pi-tmux-window-name",
     {
       "source": "https://github.com/aspiers/pi-status@fix/pi-status-title-renames",
       "extensions": [
@@ -50,7 +49,8 @@
     "npm:@gotgenes/pi-subagents@19.2.1",
     "npm:@gotgenes/pi-subagents-worktrees@0.2.3",
     "git:github.com/aspiers/pi-shortcuts@configurable-shortcut",
-    "npm:@jmfederico/pi-web@1.202608.1"
+    "npm:@jmfederico/pi-web@1.202608.1",
+    "git:github.com/aspiers/pi-tmux-window-name@feat/configurable-title-lengths"
   ],
   "hideThinkingBlock": false,
   "powerline": {

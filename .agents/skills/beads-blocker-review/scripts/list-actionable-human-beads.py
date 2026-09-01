@@ -33,6 +33,11 @@ def read_issues(arguments: Sequence[str]) -> list[dict[str, Any]]:
     except (JSONDecodeError,):
         raise RuntimeError(f"{' '.join(command)} returned invalid JSON") from None
 
+    # An empty queue is a normal state, but bd is inconsistent about how it says
+    # so: `bd human list` emits a bare `null` while `bd ready` emits `[]`.
+    if issues is None:
+        return []
+
     if not isinstance(issues, list) or not all(
         isinstance(issue, dict) and isinstance(issue.get("id"), str)
         for issue in issues

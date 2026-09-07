@@ -61,9 +61,11 @@ cheaper to notice now than to rebase twice.
 
 ## 2. Put the structural choices to the user
 
-Rebasing a large set is not reversible in practice, so the decisions that
-shape it belong to the user, asked together and up front via
-**AskUserQuestion** rather than discovered mid-rebase:
+Rebasing a large set is recoverable: reflogs retain the old branch tips, and
+the backup refs created below make restoration straightforward. Restoring many
+branches and repeating conflict resolution is still tedious and error-prone,
+so the decisions that shape the operation belong to the user, asked together
+and up front via **AskUserQuestion** rather than discovered mid-rebase:
 
 - how to re-parent a mixdown-tainted branch (onto its real prerequisite, or
   flattened onto upstream);

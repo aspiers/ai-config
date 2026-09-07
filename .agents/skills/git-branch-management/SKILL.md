@@ -151,13 +151,24 @@ To build, run, or use the combined result, merge the independent branches
 into a throw-away integration branch with a mixdown. The
 `git-branch-mixer` skill owns the `ggmx` and `ggmxd` mechanics.
 
-Mixdown targets are local scratch branches. Never push one or open a PR from
-one — publish the independent source branches instead. This boundary keeps
-the upstream-clean structure intact while still giving you a single working
-build.
+Source-branch scope and mixdown integration scope are independent. Keep each
+source branch narrowly scoped for submission. The `working` mixdown must
+include all configured source branches and always represent their latest
+best-of-breed combination for day-to-day use and testing.
 
-Re-run the mixdown after rebasing or amending any source branch; the target
-is disposable and always rebuilt from its sources.
+Never develop or commit new source work on `working`. Make and commit every
+source change on its narrowly scoped source branch in that branch's worktree.
+
+Immediately after any configured source branch changes, including a new
+commit, amend, or rebase, regenerate `working` from all configured source
+branches. Do not leave `working` stale or update it from only the branch that
+changed. The target is disposable and always rebuilt from the full configured
+set.
+
+`working` is a local scratch branch. Never push it or open a PR from it;
+publish the independent source branches instead. This boundary keeps the
+upstream-clean structure intact while still giving you a single working
+build.
 
 ## When a branch accumulates unrelated work
 

@@ -1,6 +1,7 @@
 approvals_reviewer = "auto_review"
 model = "gpt-5.6-sol"
 model_reasoning_effort = "high"
+service_tier = "default"
 
 [features]
 hooks = true

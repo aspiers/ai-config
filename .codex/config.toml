@@ -27,23 +27,22 @@ command = "agentsview"
 args = ["mcp"]
 
 [mcp_servers.node_repl]
-args = []
 command = "/opt/codex-desktop/resources/node_repl"
-startup_timeout_sec = 120
+startup_timeout_sec = 120.0
 
 [mcp_servers.node_repl.env]
+BROWSER_USE_AVAILABLE_BACKENDS = "chrome,iab"
+BROWSER_USE_CODEX_APP_BUILD_FLAVOR = "prod"
+BROWSER_USE_CODEX_APP_VERSION = "26.730.61639"
+CODEX_CLI_PATH = "/home/adam/.codex/packages/standalone/releases/0.153.2-x86_64-unknown-linux-musl/bin/codex"
+CODEX_HOME = "/home/adam/.codex"
+NODE_REPL_INSTRUCTIONS_USE_CASE_BROWSER = "Control the in-app browser in conjunction with the Browser Plugin."
+NODE_REPL_INSTRUCTIONS_USE_CASE_CHROME = "Control the Chrome browser in conjunction with the Chrome Plugin. Prefer this method of controlling Chrome over alternatives (such as Computer Use) unless the user explicitly mentions an alternative."
 NODE_REPL_NATIVE_PIPE_CONNECT_TIMEOUT_MS = "1000"
 NODE_REPL_NODE_MODULE_DIRS = ""
 NODE_REPL_NODE_PATH = "/opt/codex-desktop/resources/node-runtime/bin/node"
-NODE_REPL_TRUSTED_CODE_PATHS = "/home/adam/.codex"
-CODEX_HOME = "/home/adam/.codex"
 NODE_REPL_TRUSTED_BROWSER_CLIENT_SHA256S = "091a81603ff202a16ed56557709bf42d97caf8f0dd2e07ae9e26d7c014d71035"
-BROWSER_USE_AVAILABLE_BACKENDS = "chrome,iab"
-NODE_REPL_INSTRUCTIONS_USE_CASE_BROWSER = "Control the in-app browser in conjunction with the Browser Plugin."
-NODE_REPL_INSTRUCTIONS_USE_CASE_CHROME = "Control the Chrome browser in conjunction with the Chrome Plugin. Prefer this method of controlling Chrome over alternatives (such as Computer Use) unless the user explicitly mentions an alternative."
-BROWSER_USE_CODEX_APP_BUILD_FLAVOR = "prod"
-BROWSER_USE_CODEX_APP_VERSION = "26.730.61639"
-CODEX_CLI_PATH = "/home/adam/.codex/packages/standalone/releases/0.149.0-x86_64-unknown-linux-musl/bin/codex"
+NODE_REPL_TRUSTED_CODE_PATHS = "/home/adam/.codex"
 
 [projects."/home/adam/.GIT/3rd-party/ePDS"]
 trust_level = "trusted"
@@ -72,6 +71,7 @@ terminal_title = ["thread-title"]
 
 [tui.model_availability_nux]
 "gpt-5.6-sol" = 4
+gpt-6-astra = 1
 
 [marketplaces.agentbox]
 last_updated = "2026-08-11T18:10:40Z"
@@ -84,7 +84,6 @@ source_type = "local"
 source = "/home/adam/.codex/.tmp/bundled-marketplaces/openai-bundled"
 
 [marketplaces.openai-primary-runtime]
-last_updated = "2026-08-19T22:43:19Z"
 source_type = "local"
 source = "/home/adam/.cache/codex-runtimes/codex-primary-runtime/plugins/openai-primary-runtime"
 
@@ -124,10 +123,14 @@ enabled = true
 [plugins."computer-use@openai-bundled"]
 enabled = true
 
+[plugins."chrome@openai-bundled"]
+enabled = true
+
 [desktop]
 conversationDetailMode = "STEPS_COMMANDS"
 ambient-suggestions-enabled = true
 followUpQueueMode = "queue"
+keepRemoteControlAwakeWhilePluggedIn = true
 
 [desktop.open-in-target-preferences]
 global = "systemDefault"

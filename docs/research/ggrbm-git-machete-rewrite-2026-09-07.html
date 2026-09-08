@@ -318,9 +318,9 @@
       </blockquote>
       <blockquote>
         <p>
-          <strong>Status:</strong> This document proposes an upstream design.
-          It does not describe an implemented git-machete feature, accepted
-          command names, or a committed delivery schedule.
+          <strong>Status:</strong> This document proposes an upstream design. It
+          does not describe an implemented git-machete feature, accepted command
+          names, or a committed delivery schedule.
         </p>
       </blockquote>
 
@@ -337,8 +337,8 @@
       <p>
         This should not turn plain <code>git machete traverse</code> into a
         different command. Without a planning option, its user-visible behavior
-        should remain unchanged. The new lifecycle is explicit: create or edit
-        a plan, refresh it, inspect it, and apply that exact plan.
+        should remain unchanged. The new lifecycle is explicit: create or edit a
+        plan, refresh it, inspect it, and apply that exact plan.
       </p>
       <p>
         Git-machete already owns the difficult parts: branch layout, fork-point
@@ -350,7 +350,9 @@
         capable planned mode.
       </p>
 
-      <h2 id="what-is-wrong-with-ggrbm">What is wrong with <code>ggrbm</code></h2>
+      <h2 id="what-is-wrong-with-ggrbm">
+        What is wrong with <code>ggrbm</code>
+      </h2>
       <p>
         The current
         <a href="https://github.com/aspiers/git-config/blob/master/bin/ggrbm"
@@ -416,13 +418,13 @@
       <ul>
         <li>
           A failed <code>git rebase</code> that leaves neither
-          <code>rebase-apply</code> nor <code>rebase-merge</code> can be reported
-          as finished, after which processing continues.
+          <code>rebase-apply</code> nor <code>rebase-merge</code> can be
+          reported as finished, after which processing continues.
         </li>
         <li>
           The initial in-progress check examines only
-          <code>$root/.git/rebase-apply</code>. That misses the merge backend and
-          does not handle linked-worktree Git paths correctly.
+          <code>$root/.git/rebase-apply</code>. That misses the merge backend
+          and does not handle linked-worktree Git paths correctly.
         </li>
         <li>
           The custom file cannot reject a stale ref, child-before-parent entry,
@@ -438,11 +440,13 @@
         interface. Arbitrary Git commands do not belong in a traverse plan, and
         mixdown remains a separate workflow. Core git-machete and the default
         compatibility shim should contain no <code>ggdcm</code> or whitespace
-        policy. Repositories can enforce such policy through their existing
-        Git and git-machete hooks.
+        policy. Repositories can enforce such policy through their existing Git
+        and git-machete hooks.
       </p>
 
-      <h2 id="plain-traverse-stays-plain">Plain <code>traverse</code> stays plain</h2>
+      <h2 id="plain-traverse-stays-plain">
+        Plain <code>traverse</code> stays plain
+      </h2>
       <p>
         Today's <code>git machete traverse</code> walks the layout, updates
         branches, understands worktrees, and offers interactive or
@@ -454,18 +458,18 @@
       <p>
         Planned traversal adds a contract around the same domain model. It does
         not make rebase the only legitimate update. It supports rebase and
-        merge, including Git's interactive and non-interactive rebase forms.
-        An unattended apply rejects interactive rebase steps because they
-        require live human input.
+        merge, including Git's interactive and non-interactive rebase forms. An
+        unattended apply rejects interactive rebase steps because they require
+        live human input.
       </p>
       <p>
         Keep every current traversal scope choice. With no option, traversal
         starts from the current branch. <code>--start-from</code> continues to
         accept <code>here</code>, <code>root</code>, <code>first-root</code>, or
         a branch name. Preserve <code>--stop-after</code>, <code>--whole</code>,
-        and <code>-W</code>, where <code>-W</code> means a pre-plan fetch followed
-        by whole-layout planning. If upstream adds a subtree selector, it is
-        additive. It must not replace or narrow those choices.
+        and <code>-W</code>, where <code>-W</code> means a pre-plan fetch
+        followed by whole-layout planning. If upstream adds a subtree selector,
+        it is additive. It must not replace or narrow those choices.
       </p>
 
       <h2 id="upstream-research">Upstream research</h2>
@@ -476,8 +480,8 @@
           >issue #1210</a
         >
         requests machine-readable JSON status. A maintainer invited a pull
-        request and recognized that integrations need stable plumbing instead
-        of access to private Python objects. The event stream proposed here can
+        request and recognized that integrations need stable plumbing instead of
+        access to private Python objects. The event stream proposed here can
         build on that work without treating status JSON as a saved plan.
       </p>
       <p>
@@ -510,7 +514,9 @@
         The following syntax explains the lifecycle. Exact command and option
         names are for upstream discussion, not a claim about the current CLI:
       </p>
-      <pre class="text"><code>git machete traverse plan [--start-from WHERE | --whole | -W] \
+      <pre
+        class="text"
+      ><code>git machete traverse plan [--start-from WHERE | --whole | -W] \
   [--stop-after BRANCH] [--subtree BRANCH] [--fetch] \
   [--output PLAN.yaml]
 
@@ -539,8 +545,10 @@ git machete traverse backup prune RUN-ID</code></pre>
       <h2 id="plan-model">Plan model and integrity</h2>
       <p>
         Plan state defaults under the Git common directory, for example
-        <code>$(git rev-parse --git-common-dir)/machete/traverse/&lt;run-id&gt;/</code>.
-        Every linked worktree can therefore see the same plan, journal, and
+        <code
+          >$(git rev-parse
+          --git-common-dir)/machete/traverse/&lt;run-id&gt;/</code
+        >. Every linked worktree can therefore see the same plan, journal, and
         backup inventory. Git-machete generates the run ID as a computed,
         non-editable identifier. Creating a run fails atomically if either its
         state directory or backup-ref namespace already exists.
@@ -583,16 +591,17 @@ computed:
         hosting-provider authentication.
       </p>
       <p>
-        The general policy for an action is <code>yes</code>, <code>no</code>, or
-        <code>ask</code>. Interactive planning may replace <code>ask</code> with
-        a saved choice. Interactive apply may instead leave it intact and ask at
-        the planned branch; the hash then covers a deliberate delegation to one
-        of the precomputed choices, not a final yes or no. The runtime answer is
-        appended to the journal without rewriting the plan. Unattended apply
-        rejects every unresolved <code>ask</code>. <code>--yes</code> skips
-        confirmation only for an already resolved plan with the expected hash.
-        It never chooses update methods, remotes, resets, force-pushes,
-        qualifier overrides, fork points, or any other missing decision.
+        The general policy for an action is <code>yes</code>, <code>no</code>,
+        or <code>ask</code>. Interactive planning may replace
+        <code>ask</code> with a saved choice. Interactive apply may instead
+        leave it intact and ask at the planned branch; the hash then covers a
+        deliberate delegation to one of the precomputed choices, not a final yes
+        or no. The runtime answer is appended to the journal without rewriting
+        the plan. Unattended apply rejects every unresolved <code>ask</code>.
+        <code>--yes</code> skips confirmation only for an already resolved plan
+        with the expected hash. It never chooses update methods, remotes,
+        resets, force-pushes, qualifier overrides, fork points, or any other
+        missing decision.
       </p>
 
       <h2 id="planned-actions">Actions a plan can contain</h2>
@@ -653,8 +662,9 @@ computed:
         <li>
           <strong>Force-push.</strong> Resolve it separately for each branch and
           display the exact protection:
-          <code>--force-with-lease=refs/heads/&lt;destination&gt;:&lt;expected-sha&gt;</code>.
-          Interactive plan or apply may ask when the choice is unspecified.
+          <code
+            >--force-with-lease=refs/heads/&lt;destination&gt;:&lt;expected-sha&gt;</code
+          >. Interactive plan or apply may ask when the choice is unspecified.
           Unattended apply requires the choice and lease SHA to be resolved.
         </li>
         <li>
@@ -702,7 +712,9 @@ computed:
         <code>!branch</code> and <code>!merge</code> escape hatch.
       </p>
 
-      <h2 id="ambiguity-and-qualifiers">Ambiguity, fork points, and qualifiers</h2>
+      <h2 id="ambiguity-and-qualifiers">
+        Ambiguity, fork points, and qualifiers
+      </h2>
       <p>
         Fork-point inference is useful but heuristic. The
         <a href="https://git-machete.readthedocs.io/en/stable/#fork-point"
@@ -717,20 +729,21 @@ computed:
         It should state that the inferred fork point predates the current parent
         tip, print the fork-point SHA, parent and child SHAs, and list every
         commit to replay. Planning then requires explicit approval of that range
-        or a corrected fork point. It must not guess from graph color or continue
-        unattended.
+        or a corrected fork point. It must not guess from graph color or
+        continue unattended.
       </p>
       <p>
-        Branch qualifiers such as <code>rebase=no</code>,
-        <code>push=no</code>, and <code>slide-out=no</code> block the
-        corresponding action by default. A plan
-        may override a qualifier only for a named branch through an explicit
-        choice. The rendered plan, YAML choice section, event stream, and
-        journal must record the override prominently. A global
+        Branch qualifiers such as <code>rebase=no</code>, <code>push=no</code>,
+        and <code>slide-out=no</code> block the corresponding action by default.
+        A plan may override a qualifier only for a named branch through an
+        explicit choice. The rendered plan, YAML choice section, event stream,
+        and journal must record the override prominently. A global
         <code>--yes</code> cannot override qualifiers.
       </p>
 
-      <h2 id="worktrees-hooks-and-return">Worktrees, hooks, and checkout return</h2>
+      <h2 id="worktrees-hooks-and-return">
+        Worktrees, hooks, and checkout return
+      </h2>
       <p>
         Planning reads <code>git worktree list --porcelain</code>. If a selected
         branch is already checked out, the plan targets that worktree. A branch
@@ -795,29 +808,31 @@ computed:
         expected hash. No implicit fetch occurs during this process.
       </p>
 
-      <h2 id="backups-conflicts-and-recovery">Backups, conflicts, and recovery</h2>
+      <h2 id="backups-conflicts-and-recovery">
+        Backups, conflicts, and recovery
+      </h2>
       <p>
         Every plan-enabled apply creates backup refs before its first mutation
-        under <code>refs/machete/backups/&lt;run-id&gt;/...</code>. The plan records
-        the complete backup set. Apply creates the namespace with no-clobber ref
-        transactions and fails if any target backup ref already exists. Back up
-        each local branch that the plan can move, including branches subject to
-        reset, rebase, merge, or fast-forward. Plans that contain only remote or
-        API actions still create anchor refs in the run namespace. Only an
-        explicit backup-prune operation removes these refs. Completion, abort,
-        and rollback do not prune them.
+        under <code>refs/machete/backups/&lt;run-id&gt;/...</code>. The plan
+        records the complete backup set. Apply creates the namespace with
+        no-clobber ref transactions and fails if any target backup ref already
+        exists. Back up each local branch that the plan can move, including
+        branches subject to reset, rebase, merge, or fast-forward. Plans that
+        contain only remote or API actions still create anchor refs in the run
+        namespace. Only an explicit backup-prune operation removes these refs.
+        Completion, abort, and rollback do not prune them.
       </p>
       <p>
         Planned runs use a durable write-ahead journal. Before an action, append
         and flush an intent record containing its expected inputs. After the
-        mutation, inspect actual state and atomically append and flush its result.
-        On restart, an intent without a result is reconciled against refs, Git
-        operation state, layout, remote state, or provider state before any
-        retry. The journal also records conflicts, hook failures, generated
-        commits, stashes, worktree moves, pushes, and API results. Plain
-        immediate <code>traverse</code> remains stateless and keeps its current
-        conflict behavior. The persistent journal belongs only to plan/apply
-        mode.
+        mutation, inspect actual state and atomically append and flush its
+        result. On restart, an intent without a result is reconciled against
+        refs, Git operation state, layout, remote state, or provider state
+        before any retry. The journal also records conflicts, hook failures,
+        generated commits, stashes, worktree moves, pushes, and API results.
+        Plain immediate <code>traverse</code> remains stateless and keeps its
+        current conflict behavior. The persistent journal belongs only to
+        plan/apply mode.
       </p>
       <p>
         <code>traverse continue</code> is explicit. It verifies the recorded Git
@@ -836,14 +851,15 @@ computed:
       </p>
       <p>
         Rollback must use guarded ref updates. By default, each current ref must
-        still equal the post-action SHA in the journal, each affected checked-out
-        worktree must be clean, and the current layout must match the journaled
-        post-action hash. It also restores or reports every journaled stash,
-        checkout move, and temporary worktree; failure to restore one leaves the
-        rollback incomplete rather than silently declaring success. If newer
-        local work exists, rollback stops. An explicit per-branch override may
-        replace that newer state only after creating a further backup and showing
-        the exact refs and layout bytes to restore.
+        still equal the post-action SHA in the journal, each affected
+        checked-out worktree must be clean, and the current layout must match
+        the journaled post-action hash. It also restores or reports every
+        journaled stash, checkout move, and temporary worktree; failure to
+        restore one leaves the rollback incomplete rather than silently
+        declaring success. If newer local work exists, rollback stops. An
+        explicit per-branch override may replace that newer state only after
+        creating a further backup and showing the exact refs and layout bytes to
+        restore.
       </p>
       <p>
         Local rollback cannot pretend to undo a push or hosting-provider API
@@ -907,8 +923,8 @@ computed:
         </li>
         <li>
           Convert the remaining <code>.git/topic-branches</code> relationships
-          to <code>.git/machete</code>, verify every edge and qualifier, and test
-          generated plans without applying them.
+          to <code>.git/machete</code>, verify every edge and qualifier, and
+          test generated plans without applying them.
         </li>
         <li>
           Run attended apply cycles, then unattended cycles with expected plan
@@ -951,9 +967,7 @@ computed:
           merge detection in every existing mode, with <code>simple</code> as
           default and no slide-out before approval;
         </li>
-        <li>
-          slide-out reparenting children without deleting the Git branch;
-        </li>
+        <li>slide-out reparenting children without deleting the Git branch;</li>
         <li>
           a branch behind its remote, a diverged reset with unique commit lists,
           a normal push whose source depends on a generated update result, a
@@ -995,9 +1009,7 @@ computed:
           guarded full local rollback with layout snapshots, persistent backups,
           explicit prune, and refusal to overwrite newer local work by default;
         </li>
-        <li>
-          compensating remote restoration with fresh lease checks;
-        </li>
+        <li>compensating remote restoration with fresh lease checks;</li>
         <li>
           all-local-then-push-then-hosting default order, provider failure or
           unknown result followed by state reconciliation, and absence of

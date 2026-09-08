@@ -2,9 +2,8 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <base href="file:///home/adam/.GIT/adamspiers.org/ai-config/" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Proposal: enhance git-machete to replace ggrbm</title>
+    <title>Proposal: a plan-enabled git machete traverse</title>
     <style>
       :root {
         color-scheme: dark;
@@ -305,622 +304,718 @@
   </head>
   <body>
     <article id="preview-root">
-      <h1 id="enhancing-git-machete-to-replace-ggrbm">
-        Enhancing git-machete to replace <code>ggrbm</code>
+      <h1 id="plan-enabled-git-machete-traverse">
+        Proposal: a plan-enabled <code>git machete traverse</code>
       </h1>
       <p><strong>Proposal dated 7 September 2026</strong></p>
       <blockquote>
         <p>
           <strong>⚠️ AUTHOR-SPECIFIC SCOPE:</strong> This report analyzes the
-          maintainer’s deployed <code>~/bin/ggrbm</code> and current local
-          checkout inventory. The design is reusable, but the paths and
+          maintainer's deployed <code>~/bin/ggrbm</code> and current local
+          checkout inventory. The proposal is reusable, but that path and the
           inventory observations are specific to this setup.
         </p>
       </blockquote>
-      <h2 id="decision">Decision</h2>
+      <blockquote>
+        <p>
+          <strong>Status:</strong> This document proposes an upstream design.
+          It does not describe an implemented git-machete feature, accepted
+          command names, or a committed delivery schedule.
+        </p>
+      </blockquote>
+
+      <h2 id="recommendation">Recommendation</h2>
       <p>
-        <strong
-          >Enhance git-machete upstream, then retire <code>ggrbm</code>. Do not
-          build a second full orchestration engine locally.</strong
-        >
+        Propose a planning layer for <code>git machete traverse</code>
+        upstream, then replace
+        <code>ggrbm</code> with it. The design should combine git-machete's
+        branch graph and existing traversal choices with an inspectable plan,
+        exact stale-input checks, recovery refs, conflict journaling, optional
+        remote synchronization, and optional pull-request or merge-request
+        updates.
       </p>
       <p>
-        Git-machete already owns the hard domain logic: branch graphs,
-        fork-point inference, parent-before-child traversal, update semantics,
-        hooks, and linked-worktree handling. A substantial standalone rewrite
-        of <code>ggrbm</code> would duplicate that logic behind a weaker public
-        interface and would drift as git-machete evolves.
+        This should not turn plain <code>git machete traverse</code> into a
+        different command. Without a planning option, its user-visible behavior
+        should remain unchanged. The new lifecycle is explicit: create or edit
+        a plan, refresh it, inspect it, and apply that exact plan.
       </p>
       <p>
-        The missing upstream capability is a narrow, deterministic rebase mode
-        with a machine-readable plan. It should select only rebases, never
-        implicitly pull, reset, push, slide out branches, rewrite the layout,
-        or perform code-hosting operations. The plan should freeze refs and
-        fork points, support explicit approval, create recovery refs, and stop
-        with structured resume state on a conflict.
+        Git-machete already owns the difficult parts: branch layout, fork-point
+        inference, parent-before-child traversal, update modes, qualifiers,
+        hooks, and linked-worktree handling. Rebuilding those rules in a large
+        local script would create a second orchestration engine that drifts from
+        upstream. The right goal is not to make git-machete imitate
+        <code>ggrbm</code>. It is to give <code>traverse</code> a safer and more
+        capable planned mode.
       </p>
-      <p>The preferred lifecycle is therefore:</p>
-      <ol type="1">
-        <li>Propose the deterministic planning contract upstream.</li>
-        <li>
-          Implement it inside git-machete, reusing its internal graph, update,
-          hook, and worktree machinery.
-        </li>
-        <li>
-          Keep <code>ggrbm</code> temporarily as a thin policy shim for local
-          whitespace checks and compatibility while the upstream feature lands.
-        </li>
-        <li>
-          Retire the shim once callers can invoke the upstream command directly.
-        </li>
-      </ol>
-      <p>
-        “Deterministic” here means deterministic inputs, ordering, decisions,
-        side effects, and recovery. A rebase cannot promise identical commit
-        hashes across runs because commit timestamps, hooks, Git versions, and
-        conflict resolutions can change them.
-      </p>
-      <h2 id="why-the-current-script-should-be-replaced">
-        Why the current script should be replaced
-      </h2>
+
+      <h2 id="what-is-wrong-with-ggrbm">What is wrong with <code>ggrbm</code></h2>
       <p>
         The current
         <a href="https://github.com/aspiers/git-config/blob/master/bin/ggrbm"
           ><code>ggrbm</code></a
         >
-        has served since 2009, but its control model assumes a person is sitting
-        at a terminal.
+        has served since 2009, but its control model assumes a person is at a
+        terminal. Its useful idea is simple: update related branches in a known
+        order and stop when a replay needs attention. Its implementation now
+        duplicates state and leaves too much implicit.
       </p>
       <table>
         <colgroup>
-          <col style="width: 50%" />
-          <col style="width: 50%" />
+          <col style="width: 46%" />
+          <col style="width: 54%" />
         </colgroup>
         <thead>
           <tr>
             <th>Current behavior</th>
-            <th>Consequence for an agent</th>
+            <th>Problem</th>
           </tr>
         </thead>
         <tbody>
           <tr>
             <td>
-              Reads ordered <code>git rebase</code> argument lists from
+              Reads ordered <code>git rebase</code> arguments from
               <code>.git/topic-branches</code>
             </td>
             <td>
-              Duplicates the branch graph now owned by
-              <code>.git/machete</code>, with no graph validation
+              Duplicates the branch graph in <code>.git/machete</code> and
+              cannot validate cycles, repeated branches, or parent order
             </td>
           </tr>
           <tr>
+            <td>Launches a nested shell after failures or conflicts</td>
             <td>
-              Launches <code>bash</code> after a failed command or conflicted
-              rebase
-            </td>
-            <td>
-              Hides state inside a nested interactive shell and gives the caller
-              no structured resume point
+              Hides execution state from callers and provides no structured
+              resume point
             </td>
           </tr>
           <tr>
+            <td>Prompts while mutation is already in progress</td>
             <td>
-              Prompts after whitespace findings and after recovered failures
-            </td>
-            <td>Requires a TTY and makes policy decisions during mutation</td>
-          </tr>
-          <tr>
-            <td>
-              Accepts arbitrary <code>!git ...</code> commands in the same file
-            </td>
-            <td>
-              Makes a rebase plan capable of unrelated ref, checkout, merge, and
-              remote changes
+              Makes unattended use unsafe and can discover a blocking decision
+              after earlier refs have moved
             </td>
           </tr>
           <tr>
-            <td>Mutates one branch at a time with no up-front snapshot</td>
+            <td>Accepts arbitrary <code>!git ...</code> commands</td>
             <td>
-              A late invalid branch or dirty worktree is discovered only after
-              earlier refs moved
+              Gives a branch-update file unbounded checkout, ref, merge, and
+              remote side effects
+            </td>
+          </tr>
+          <tr>
+            <td>Relies on reflogs and operator memory for recovery</td>
+            <td>
+              Creates no named backup refs, run journal, or mechanical rollback
             </td>
           </tr>
         </tbody>
       </table>
-      <p>There are also concrete failure cases:</p>
+      <p>Concrete failure cases make a direct rewrite unattractive:</p>
       <ul>
         <li>
           A failed <code>git rebase</code> that leaves neither
-          <code>rebase-apply</code> nor <code>rebase-merge</code> can be
-          reported as done and processing continues.
+          <code>rebase-apply</code> nor <code>rebase-merge</code> can be reported
+          as finished, after which processing continues.
         </li>
         <li>
-          The initial in-progress check only examines
-          <code>$root/.git/rebase-apply</code>, which is incomplete for
-          merge-backend rebases and linked worktrees.
+          The initial in-progress check examines only
+          <code>$root/.git/rebase-apply</code>. That misses the merge backend and
+          does not handle linked-worktree Git paths correctly.
         </li>
         <li>
-          The custom config is trusted for ordering. It cannot reject a
-          child-before-parent sequence, duplicate branch, cycle, stale ref, or
-          repeated rebase.
+          The custom file cannot reject a stale ref, child-before-parent entry,
+          duplicate branch, cycle, or repeated update before mutation starts.
         </li>
         <li>
-          Whitespace checking uses the configured upstream-to-branch range
-          rather than the exact fork-point-to-branch range that will be
-          replayed.
-        </li>
-        <li>
-          Recovery depends on reflogs and the operator remembering where
-          execution stopped. The script creates no named backup refs or
-          machine-readable journal.
+          The script may discover a dirty worktree or invalid branch only after
+          previous branch refs have moved.
         </li>
       </ul>
       <p>
-        The useful behaviors are worth preserving: process a set in dependency
-        order, check commits before replay, restore the original checkout when
-        safe, and pause rather than guessing through conflicts.
+        The replacement should preserve the intent, not the accidental
+        interface. Arbitrary Git commands do not belong in a traverse plan, and
+        mixdown remains a separate workflow. Core git-machete and the default
+        compatibility shim should contain no <code>ggdcm</code> or whitespace
+        policy. Repositories can enforce such policy through their existing
+        Git and git-machete hooks.
       </p>
-      <h2 id="why-plain-traverse--y-is-the-wrong-default">
-        Why plain <code>traverse -y</code> is the wrong default
-      </h2>
+
+      <h2 id="plain-traverse-stays-plain">Plain <code>traverse</code> stays plain</h2>
       <p>
-        <code>git machete traverse</code> already walks layout order,
-        understands worktrees, rebases branches, and can run without prompts.
-        The tempting replacement is:
-      </p>
-      <div class="sourceCode" id="cb1">
-        <pre
-          class="sourceCode bash"
-        ><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> machete traverse <span class="at">--yes</span> <span class="at">--no-push</span> <span class="at">--return-to</span><span class="op">=</span>here</span></code></pre>
-      </div>
-      <p>
-        That command is broader than <code>ggrbm</code> should be. According to
-        the
-        <a href="https://git-machete.readthedocs.io/en/stable/#traverse"
-          >git-machete traverse reference</a
-        >, traversal can also:
-      </p>
-      <ul>
-        <li>pull a branch that is behind its remote counterpart;</li>
-        <li>reset a diverged branch to a newer remote counterpart;</li>
-        <li>slide a merged branch out of <code>.git/machete</code>;</li>
-        <li>rewrite <code>.git/machete</code> as part of slide-out;</li>
-        <li>push unless <code>--no-push</code> is supplied explicitly.</li>
-      </ul>
-      <p>
-        <code>--no-push</code> disables pushes, not remote pulls, remote resets,
-        or slide-out. <code>--yes</code> removes prompts by accepting
-        git-machete’s proposed actions. That is automation, but it is not a
-        narrow or inspectable rebase plan.
+        Today's <code>git machete traverse</code> walks the layout, updates
+        branches, understands worktrees, and offers interactive or
+        <code>--yes</code> operation. It can rebase, merge, fast-forward from a
+        remote, handle diverged remote state, push, and slide merged branches
+        out of the layout according to its options and prompts. Those existing
+        semantics should remain intact when no plan option is present.
       </p>
       <p>
-        Keep <code>traverse -y --no-push</code> available as an explicitly
-        selected convenience for repositories whose policy accepts all of those
-        behaviors. The gap is best closed inside git-machete with an operation
-        allowlist and a plan/apply contract, rather than by reproducing
-        traversal in <code>ggrbm</code>.
+        Planned traversal adds a contract around the same domain model. It does
+        not make rebase the only legitimate update. It supports rebase and
+        merge, including Git's interactive and non-interactive rebase forms.
+        An unattended apply rejects interactive rebase steps because they
+        require live human input.
       </p>
-      <h2 id="upstream-status">Upstream status</h2>
       <p>
-        The canonical tracker already contains adjacent work. Open
+        Keep every current traversal scope choice. With no option, traversal
+        starts from the current branch. <code>--start-from</code> continues to
+        accept <code>here</code>, <code>root</code>, <code>first-root</code>, or
+        a branch name. Preserve <code>--stop-after</code>, <code>--whole</code>,
+        and <code>-W</code>, where <code>-W</code> means a pre-plan fetch followed
+        by whole-layout planning. If upstream adds a subtree selector, it is
+        additive. It must not replace or narrow those choices.
+      </p>
+
+      <h2 id="upstream-research">Upstream research</h2>
+      <p>
+        The upstream tracker contains pieces of this design but not the full
+        plan/apply workflow. Open
         <a href="https://github.com/VirtusLab/git-machete/issues/1210"
           >issue #1210</a
-        > requests machine-readable JSON status. A maintainer explicitly invited
-        a pull request and acknowledged that downstream integrations need stable
-        plumbing rather than access to git-machete’s private Python objects.
+        >
+        requests machine-readable JSON status. A maintainer invited a pull
+        request and recognized that integrations need stable plumbing instead
+        of access to private Python objects. The event stream proposed here can
+        build on that work without treating status JSON as a saved plan.
       </p>
       <p>
-        Closed <a href="https://github.com/VirtusLab/git-machete/issues/293"
+        Closed
+        <a href="https://github.com/VirtusLab/git-machete/issues/293"
           >issue #293</a
-        > introduced branch qualifiers such as <code>rebase=no</code> and
-        <code>push=no</code>. Closed
+        >
+        introduced traverse branch qualifiers such as
+        <code>rebase=no</code> and <code>push=no</code>. Closed
         <a href="https://github.com/VirtusLab/git-machete/issues/1619"
           >issue #1619</a
-        > and merged
+        >
+        and merged
         <a href="https://github.com/VirtusLab/git-machete/pull/1626"
           >PR #1626</a
-        > show continuing upstream interest in safer traversal behavior.
+        >
+        concern safer traversal when local and remote branches disagree. They
+        are evidence that planned safety belongs in traversal itself, but none
+        supplies the complete design in this report.
       </p>
       <p>
-        No existing issue or open pull request was found for the complete
-        deterministic rebase-only plan/apply mode. That search is evidence, not
-        proof of absence; a focused upstream proposal should reference #1210
-        rather than duplicate it.
+        A search found no existing issue or open pull request for this full
+        proposal. That is not proof that no related discussion exists. An
+        upstream proposal should cite #1210, #293, #1619, and PR #1626, and
+        should separate overlapping work rather than claiming a blank slate.
       </p>
-      <h2 id="proposed-upstream-architecture">
-        Proposed upstream architecture
-      </h2>
-      <h3 id="one-source-of-branch-structure">
-        1. One source of branch structure
-      </h3>
+
+      <h2 id="illustrative-interface">Illustrative interface</h2>
       <p>
-        Retire <code>.git/topic-branches</code>. The upstream implementation
-        should consume git-machete’s internal branch-layout model directly,
-        preserving layout order as the deterministic tie-breaker between
-        independent siblings. It should not shell out to its own CLI or make a
-        downstream wrapper reconstruct the graph.
+        The following syntax explains the lifecycle. Exact command and option
+        names are for upstream discussion, not a claim about the current CLI:
       </p>
+      <pre class="text"><code>git machete traverse plan [--start-from WHERE | --whole | -W] \
+  [--stop-after BRANCH] [--subtree BRANCH] [--fetch] \
+  [--output PLAN.yaml]
+
+git machete traverse plan refresh PLAN.yaml
+git machete traverse apply PLAN.yaml
+git machete traverse apply PLAN.yaml --unattended \
+  --expected-plan-hash SHA256 --yes
+git machete traverse continue PLAN.yaml
+git machete traverse abort-step PLAN.yaml
+git machete traverse rollback PLAN.yaml
+git machete traverse backup prune RUN-ID</code></pre>
       <p>
-        Machine-readable status remains valuable for integrations and should be
-        delivered through <a href="https://github.com/VirtusLab/git-machete/issues/1210"
-          >issue #1210</a
-        >. Until then, a temporary <code>ggrbm</code> shim may use only the
-        documented plumbing commands <code>file</code>, <code>list managed</code>,
-        <code>show up</code>, <code>fork-point</code>, and
-        <code>is-managed</code>. It must not parse presentation-oriented
-        <code>status</code> output or import private Python modules.
-      </p>
-      <p>
-        Planning must not invoke <code>discover</code>. Discovery is heuristic
-        and can replace a curated layout; initialization and reparenting remain
-        separate, explicit setup operations.
-      </p>
-      <h3 id="separate-planning-from-mutation">
-        2. Separate planning from mutation
-      </h3>
-      <p>
-        Add a narrow upstream command rather than changing the established
-        meaning of plain <code>traverse</code>. One illustrative interface is:
-      </p>
-      <pre
-        class="text"
-      ><code>git machete restack plan [--from BRANCH] --output PLAN.json
-git machete restack apply PLAN.json
-git machete restack continue PLAN.json
-git machete restack abort PLAN.json</code></pre>
-      <p>
-        The exact name is an upstream design choice. Extending
-        <code>traverse</code> with an explicit operation allowlist and
-        <code>--plan</code> would also work, provided the allowlist is closed:
-        selecting <code>rebase</code> must exclude pull, reset, push, slide-out,
-        layout edits, and code-hosting actions without relying on a growing set
-        of <code>--no-*</code> flags.
+        <code>plan</code> gathers facts but moves no local branch refs and
+        performs no pushes or hosting-provider API calls. It may fetch only when
+        the caller asks it to, and only before it computes the plan. There is no
+        implicit fetch between planning and apply. A caller that wants fresher
+        remote refs must fetch and create or refresh a new plan.
       </p>
       <p>
-        <code>plan</code> must not move refs. Store plans in the common Git
-        directory so every linked worktree sees the same run, for example:
+        Saved plans are YAML because people must be able to read and edit
+        choices. Structured machine and agent event streams are JSON, one event
+        per record, with documented schemas and exit codes. JSON status output
+        and YAML plans solve different problems and should not be conflated.
       </p>
-      <pre
-        class="text"
-      ><code>$(git rev-parse --git-common-dir)/machete/restack/&lt;run-id&gt;/plan.json</code></pre>
-      <p>The plan should record:</p>
+
+      <h2 id="plan-model">Plan model and integrity</h2>
+      <p>
+        Plan state defaults under the Git common directory, for example
+        <code>$(git rev-parse --git-common-dir)/machete/traverse/&lt;run-id&gt;/</code>.
+        Every linked worktree can therefore see the same plan, journal, and
+        backup inventory. Git-machete generates the run ID as a computed,
+        non-editable identifier. Creating a run fails atomically if either its
+        state directory or backup-ref namespace already exists.
+      </p>
+      <p>
+        The YAML separates editable choices from computed facts. Choices include
+        update methods, yes/no/ask policies, fork-point corrections, qualifier
+        overrides, worktree handling, remote actions, and ordering. Computed
+        facts include SHAs, commit lists, layout and configuration fingerprints,
+        hook inventory, resolved worktrees, and remote expectations. After a
+        person edits a choice, <code>plan refresh</code> recomputes every
+        dependent fact and invalidates the old plan hash.
+      </p>
+      <pre class="text"><code>version: 1
+run_id: 20260907T120000Z-example
+choices:
+  ordering: local-then-push-then-hosting
+  branches:
+    topic/example:
+      update: rebase
+      unusual_replay_range: yes
+      push: yes
+computed:
+  layout_hash: sha256:...
+  branch_tips:
+    topic/example: 0123456789abcdef...
+  replay_commits:
+    topic/example:
+      - 89abcdef01234567...</code></pre>
+      <p>
+        The plan hash is the SHA-256 digest of the exact saved YAML bytes and is
+        not embedded in the file it hashes. Apply reads the file once, hashes
+        that byte buffer, and parses and executes the same buffer. It must not
+        reopen the path after verification. Git-machete stores no approval
+        state. Interactive apply calculates and displays the digest with the
+        refreshed plan, then asks for confirmation at apply time. Unattended
+        apply requires the caller to provide the expected digest. This binds
+        apply to the file selected by the caller. It does not authorize the
+        caller, grant repository permissions, or replace operating-system and
+        hosting-provider authentication.
+      </p>
+      <p>
+        The general policy for an action is <code>yes</code>, <code>no</code>, or
+        <code>ask</code>. Interactive planning may replace <code>ask</code> with
+        a saved choice. Interactive apply may instead leave it intact and ask at
+        the planned branch; the hash then covers a deliberate delegation to one
+        of the precomputed choices, not a final yes or no. The runtime answer is
+        appended to the journal without rewriting the plan. Unattended apply
+        rejects every unresolved <code>ask</code>. <code>--yes</code> skips
+        confirmation only for an already resolved plan with the expected hash.
+        It never chooses update methods, remotes, resets, force-pushes,
+        qualifier overrides, fork points, or any other missing decision.
+      </p>
+
+      <h2 id="planned-actions">Actions a plan can contain</h2>
+      <p>
+        A plan uses a typed action vocabulary rather than arbitrary shell or Git
+        commands. Core actions therefore have finite validation, preview, stale
+        check, journal, and rollback rules. Existing hooks remain trusted,
+        unbounded extension points; their side effects cannot generally be
+        predicted or rolled back by the plan.
+      </p>
+      <h3 id="local-update-actions">Local update actions</h3>
       <ul>
         <li>
-          repository identity, git-machete version, layout path, and layout
-          checksum;
+          <strong>Rebase.</strong> Record branch tip, parent tip, fork point,
+          exact commits to replay, rebase options, and whether Git runs in
+          interactive or non-interactive mode. Interactive mode is valid only
+          for attended execution.
         </li>
-        <li>original HEAD branch or detached commit;</li>
         <li>
-          ordered branch, parent, branch-tip, parent-tip, and fork-point SHAs;
+          <strong>Merge.</strong> Record the branch, parent, expected tips,
+          merge options, expected fast-forward or merge-commit behavior, and
+          whether an attended run may open the merge-message editor. Unattended
+          apply requires no-edit behavior. Preserve the invocation-wide
+          <code>--merge</code> option and any recognized
+          <code>update=merge</code> annotation. Planned mode also records the
+          resolved update method for each branch.
         </li>
-        <li>the exact commit list that each step will replay;</li>
-        <li>branch-to-worktree mapping and clean/dirty state;</li>
-        <li>detected Git and git-machete hooks;</li>
-        <li>results from configured read-only planning checks;</li>
-        <li>requested mode and every explicit override.</li>
+        <li>
+          <strong>Fast-forward from a remote-tracking ref.</strong> A local
+          branch that is behind can move forward through an explicit planned
+          action. The plan records old local SHA, target remote-tracking SHA,
+          and remote-ref expectation.
+        </li>
+        <li>
+          <strong>Reset a diverged local branch.</strong> This is an explicit
+          per-branch choice. Show the commits unique to the local branch and the
+          commits unique to the remote-tracking branch. Present no action,
+          reset-local, and force-push-remote as explicit choices. Never use
+          commit timestamps to recommend one. Record old and target SHAs, and
+          create the backup ref before the reset.
+        </li>
+        <li>
+          <strong>Autostash.</strong> Dirty worktrees block by default. A plan
+          may explicitly create and later restore a stash for a named worktree,
+          with failure handling in the journal.
+        </li>
       </ul>
-      <p>
-        Print the same facts as concise text for a person and JSON for an agent.
-        <code>apply</code> should require the plan path and verify its checksum.
-        An optional <code>--approve &lt;plan-hash&gt;</code> makes it impossible
-        to apply a different plan from the one reviewed. The JSON schema and
-        exit codes become a documented upstream interface, not a local parsing
-        convention.
-      </p>
-      <h3 id="turn-ambiguity-into-a-preflight-failure">
-        3. Turn ambiguity into a preflight failure
-      </h3>
-      <p>The upstream planner should classify every edge before applying:</p>
+      <h3 id="remote-actions">Remote actions</h3>
       <ul>
         <li>
-          <strong>Green:</strong> parent tip is an ancestor of the child and
-          equals the recorded fork point. The relationship is unambiguous.
+          <strong>Push.</strong> Pushes are optional planned actions, never an
+          automatic consequence of a local update. Record the remote,
+          destination ref, and expected destination SHA. If an earlier rebase or
+          merge will generate the source commit, record a dependency on that
+          action rather than an impossible future SHA. Apply resolves the
+          dependency from the journal and pushes that exact object ID.
         </li>
         <li>
-          <strong>Red:</strong> parent is no longer an ancestor. This is the
-          ordinary restack case. Show the inferred fork point and exact replayed
-          commits in the plan.
+          <strong>Force-push.</strong> Resolve it separately for each branch and
+          display the exact protection:
+          <code>--force-with-lease=refs/heads/&lt;destination&gt;:&lt;expected-sha&gt;</code>.
+          Interactive plan or apply may ask when the choice is unspecified.
+          Unattended apply requires the choice and lease SHA to be resolved.
         </li>
         <li>
-          <strong>Yellow:</strong> parent is an ancestor, but git-machete’s fork
-          point lies before the parent tip. Stop planning unless the plan
-          receives an explicit fork point or reparenting decision.
+          <strong>Publish an untracked branch.</strong> A branch with no
+          upstream needs an explicit publish action containing the remote,
+          source and destination refspec, and the tracking configuration change
+          to make after a successful push.
+        </li>
+      </ul>
+      <h3 id="layout-and-hosting-actions">Layout and hosting actions</h3>
+      <ul>
+        <li>
+          <strong>Slide out a merged branch.</strong> Existing merge detection
+          may offer this as an optional plan or interactive action. Sliding out
+          reparents the branch's children in the machete layout. It does not
+          delete the Git branch. Detection alone never performs the change.
         </li>
         <li>
-          <strong>Strictly merged:</strong> child tip is an ancestor of its
-          parent. Mark it skipped. Do not delete it or slide it out.
+          <strong>Create or retarget a pull request or merge request.</strong>
+          Hosting-provider API actions are an optional final phase. Each action
+          records provider identity, repository, head, base, stale-state
+          expectations, and a stable operation ID where the provider supports
+          one. Credentials stay outside the plan. After a timeout or unknown
+          result, apply queries provider state before retrying or generating a
+          compensating action; it never retries blindly.
         </li>
       </ul>
       <p>
-        Fork-point inference is powerful but heuristic. The
+        Keep the existing merge-detection modes configurable and retain
+        <code>simple</code> as the default. Detection can only offer a slide-out
+        action. The action still needs <code>yes</code> or an attended answer.
+      </p>
+      <p>
+        The default phase order is deliberate: finish all selected local branch
+        updates, then perform pushes, then call pull-request or merge-request
+        APIs. This keeps local graph repair separate from externally visible
+        changes. Branch-by-branch local-update-and-push ordering remains an
+        optional plan choice for workflows that need it.
+      </p>
+      <p>
+        Mixdown is not an action type. The existing
+        <code>git mix</code>/<code>git mixdown</code> workflow should run
+        separately after traversal. A plan must reject arbitrary
+        <code>git</code> or shell commands, including the old
+        <code>!branch</code> and <code>!merge</code> escape hatch.
+      </p>
+
+      <h2 id="ambiguity-and-qualifiers">Ambiguity, fork points, and qualifiers</h2>
+      <p>
+        Fork-point inference is useful but heuristic. The
         <a href="https://git-machete.readthedocs.io/en/stable/#fork-point"
-          >git-machete fork-point reference</a
+          >fork-point documentation</a
         >
-        says the tool searches reflogs of local and remote-tracking branches and
-        can infer incorrectly when relevant local branches have been deleted.
-        The plan should therefore expose the SHA and commit range rather than
-        silently treating inference as truth.
-      </p>
-      <p>For a yellow edge, require one of these during planning:</p>
-      <pre class="text"><code>git machete restack plan --fork-point &lt;branch&gt;=&lt;sha&gt;
-git machete restack plan --fork-point &lt;branch&gt;=parent
-git machete restack plan --skip &lt;branch&gt;</code></pre>
-      <p>
-        Reparenting changes the branch model and belongs outside the rebase run.
-        This is a deliberate stop, not a request for the agent to guess.
-      </p>
-      <h3 id="freeze-refs-and-create-recovery-points">
-        4. Freeze refs and create recovery points
-      </h3>
-      <p>
-        Before the first rebase, <code>apply</code> must verify that the layout
-        checksum and every planned branch tip still match. If any ref changed
-        after planning, invalidate the whole plan.
-      </p>
-      <p>Create one backup ref per managed branch:</p>
-      <pre
-        class="text"
-      ><code>refs/machete/restack/&lt;run-id&gt;/&lt;branch&gt;</code></pre>
-      <p>
-        Also record the refs in the journal. Reflogs already provide recovery,
-        but named refs make restoring a large set mechanical:
-      </p>
-      <div class="sourceCode" id="cb8">
-        <pre
-          class="sourceCode bash"
-        ><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> update-ref refs/heads/<span class="op">&lt;</span>branch<span class="op">&gt;</span> refs/machete/restack/<span class="op">&lt;</span>run-id<span class="op">&gt;</span>/<span class="op">&lt;</span>branch<span class="op">&gt;</span></span></code></pre>
-      </div>
-      <p>
-        Do not delete backup refs automatically. Report their namespace after
-        completion.
-      </p>
-      <h3 id="reuse-the-update-engine-internally">
-        5. Reuse the <code>update</code> engine internally
-      </h3>
-      <p>
-        Implement execution inside git-machete, calling the same internal
-        rebase path used by <code>git machete update</code>. Do not make the new
-        command spawn one git-machete subprocess per branch. Native reuse keeps
-        graph state, hook behavior, worktree transitions, diagnostics, and
-        future fixes in one codebase.
+        explains that git-machete searches local and remote-tracking reflogs and
+        can infer incorrectly after relevant branches disappear.
       </p>
       <p>
-        Each step must use the fork point and expected parent tip frozen in the
-        approved plan. This is equivalent to the existing
-        <code>update --fork-point=&lt;planned-old-fork-point&gt;</code> operation,
-        but with compare-before-mutate checks around it. An explicit old fork
-        point prevents a child from carrying its parent’s pre-rebase commits
-        after the parent has moved.
+        When git-machete infers an unusual replay range, the situation commonly
+        shown as a yellow edge, the plan should avoid color as the explanation.
+        It should state that the inferred fork point predates the current parent
+        tip, print the fork-point SHA, parent and child SHAs, and list every
+        commit to replay. Planning then requires explicit approval of that range
+        or a corrected fork point. It must not guess from graph color or continue
+        unattended.
       </p>
       <p>
-        Rebase-only mode must reject a conflicting <code>update=merge</code>
-        annotation rather than silently changing operation type. It must also
-        record and freeze <code>GIT_MACHETE_REBASE_OPTS</code>, or replace that
-        ambient input with options stored directly in the plan.
+        Branch qualifiers such as <code>rebase=no</code>,
+        <code>push=no</code>, and <code>slide-out=no</code> block the
+        corresponding action by default. A plan
+        may override a qualifier only for a named branch through an explicit
+        choice. The rendered plan, YAML choice section, event stream, and
+        journal must record the override prominently. A global
+        <code>--yes</code> cannot override qualifiers.
       </p>
-      <p>Before each internal update, verify all of the following again:</p>
-      <ul>
-        <li>the current branch tip still equals the expected journal value;</li>
-        <li>
-          the parent tip equals either its original tip or the result recorded
-          by the previous successful step;
-        </li>
-        <li>
-          no Git operation is already in progress, using
-          <code>git rev-parse --git-path</code> rather than assuming
-          <code>.git</code> is a directory;
-        </li>
-        <li>the selected worktree is clean;</li>
-        <li>the branch is still managed and has the same parent;</li>
-        <li>its annotation does not select <code>update=merge</code>;</li>
-        <li>the rebase options environment matches the plan;</li>
-        <li>the exact replay range still matches the plan.</li>
-      </ul>
+
+      <h2 id="worktrees-hooks-and-return">Worktrees, hooks, and checkout return</h2>
       <p>
-        Keep the author-specific <code>ggdcm</code> whitespace policy out of
-        git-machete. During migration, the thin <code>ggrbm</code> shim can run
-        <code>ggdcm &lt;fork-point&gt;..&lt;branch&gt;</code> against every planned
-        range before calling <code>apply</code>. Longer term, expose a generic
-        planning or pre-rebase hook whose non-zero exit blocks mutation; local
-        policy can then live entirely in that hook.
-      </p>
-      <h3 id="treat-worktrees-explicitly">6. Treat worktrees explicitly</h3>
-      <p>Read <code>git worktree list --porcelain</code> during planning.</p>
-      <ul>
-        <li>
-          If a branch is already checked out in a worktree, run its update with
-          <code>git -C &lt;path&gt;</code> after confirming that worktree is
-          clean.
-        </li>
-        <li>
-          If it is not checked out, attach it to one temporary worktree owned by
-          the run, update it there, then reuse or remove that worktree.
-        </li>
-        <li>
-          Refuse before any mutation if a required worktree is dirty. Do not
-          stash automatically.
-        </li>
-      </ul>
-      <p>
-        This avoids moving the user’s main checkout between branches and handles
-        the case that plain
-        <code>git rebase &lt;upstream&gt; &lt;branch&gt;</code> cannot check out
-        a branch owned by another worktree. Git-machete’s
-        <a href="https://git-machete.readthedocs.io/en/stable/#traverse"
-          >traverse documentation</a
-        >
-        confirms that worktree placement is already part of its execution model.
-        The new upstream planner should expose that placement in the plan and
-        reuse the same worktree switching machinery during apply.
-      </p>
-      <h3 id="replace-nested-shells-with-a-journal">
-        7. Replace nested shells with a journal
-      </h3>
-      <p>On conflict or hook failure, stop immediately. Record:</p>
-      <ul>
-        <li>current step and worktree;</li>
-        <li>expected and actual refs;</li>
-        <li>whether a rebase is active;</li>
-        <li>exact allowed next commands;</li>
-        <li>stdout, stderr, and exit status from the failed command.</li>
-      </ul>
-      <p><code>git machete restack continue PLAN.json</code> should:</p>
-      <ol type="1">
-        <li>verify that the same rebase is active in the recorded worktree;</li>
-        <li>
-          run <code>git rebase --continue</code> with editor behavior made
-          explicit;
-        </li>
-        <li>verify the resulting branch and parent relation;</li>
-        <li>append the new tip to the journal;</li>
-        <li>continue with the next planned branch.</li>
-      </ol>
-      <p>
-        <code>abort</code> should abort only the active rebase. Restoring every
-        branch from backup refs should be a separate explicit command because it
-        discards successful conflict resolutions from earlier steps.
+        Planning reads <code>git worktree list --porcelain</code>. If a selected
+        branch is already checked out, the plan targets that worktree. A branch
+        not checked out anywhere defaults to a temporary worktree owned by the
+        run. Existing choices for operating in the current worktree, switching
+        worktrees, or using configured worktree behavior remain available and
+        appear in the plan.
       </p>
       <p>
-        Hooks must remain enabled. Silently bypassing <code>pre-rebase</code>,
-        <code>machete-pre-rebase</code>, or repository hooks would defeat
-        project policy. Planning should list executable hooks and fail early if
-        deterministic agent mode cannot guarantee that they are non-interactive.
-      </p>
-      <h2 id="keep-mixdowns-separate">Keep mixdowns separate</h2>
-      <p>
-        The <code>!branch</code> and <code>!merge</code> escape hatch should not
-        survive migration. It mixes an arbitrary Git program into a file
-        presented as a branch graph.
+        Dirty worktrees block by default before their first affected mutation.
+        Explicit planned autostash is allowed. The plan identifies the worktree,
+        stash timing, and restoration policy. An unattended apply must not
+        improvise a stash because it encounters dirt.
       </p>
       <p>
-        The existing <code>git mix</code> / <code>git mixdown</code> workflow
-        already owns temporary integration branches. Run it only after a
-        successful rebase run, as a separate command with its own configuration
-        and failure state. This prevents a failed mixdown from being mistaken
-        for an incomplete restack and prevents a rebase plan from acquiring
-        unbounded side effects.
+        Planned mode defaults to returning to the checkout where the run began,
+        including a detached HEAD. All current return choices remain
+        configurable. Temporary worktree cleanup and checkout restoration are
+        journaled steps so failure does not masquerade as a completed run.
       </p>
       <p>
-        Likewise, remote fetch, pull, reset, push, PR retargeting, branch
-        deletion, and machete layout cleanup should remain separate explicit
-        stages.
+        Existing Git and git-machete hooks remain usable. The plan fingerprints
+        relevant hook and configuration inputs, including executable hook files
+        and options that affect update behavior. Hooks are arbitrary programs,
+        so fingerprinting does not make their side effects deterministic.
+        Unattended apply closes standard input and disables Git's terminal and
+        editor prompts. A hook can still open <code>/dev/tty</code>, sleep, or
+        mutate state outside the action model, so unattended hook execution also
+        needs a configurable timeout recorded in the plan. Preserve each hook's
+        existing failure semantics: operation-hook failures stop and journal the
+        run, while informational status-hook failures remain non-fatal. A
+        post-slide-out hook fails after the layout mutation and must therefore
+        leave enough journal state for guarded restoration. The design adds no
+        core or default-shim whitespace check.
       </p>
+
+      <h2 id="staleness-rules">Staleness rules</h2>
+      <p>
+        Plan-enabled apply takes a lock in the Git common directory to prevent
+        two planned runs from operating concurrently. That lock cannot control
+        ordinary Git commands or hooks, so every mutation still needs an atomic
+        guard. Ref updates compare the current object ID with the expected old
+        ID. Layout changes use a lock file, verify the expected layout hash, and
+        replace the file atomically. Apply rechecks affected state after hooks
+        and before the next mutation.
+      </p>
+      <p>
+        Before each affected mutation, apply compares current inputs with the
+        computed plan facts. A stale local branch ref, remote-tracking ref,
+        layout, qualifier, relevant option, hook, or configuration input fails
+        before that mutation and requires an explicit replan. Apply never
+        silently recomputes a fork point, replay range, lease, worktree choice,
+        update method, or action policy.
+      </p>
+      <p>
+        A partially completed run is not refreshed in place. The operator must
+        first finish or abort any active Git operation. A replan-remaining
+        command then creates a successor plan whose immutable prefix cites the
+        completed journal entries and whose newly computed suffix covers only
+        unfinished actions. It gets a new run ID and hash. Interactive execution
+        confirms that successor at apply time; unattended execution supplies its
+        expected hash. No implicit fetch occurs during this process.
+      </p>
+
+      <h2 id="backups-conflicts-and-recovery">Backups, conflicts, and recovery</h2>
+      <p>
+        Every plan-enabled apply creates backup refs before its first mutation
+        under <code>refs/machete/backups/&lt;run-id&gt;/...</code>. The plan records
+        the complete backup set. Apply creates the namespace with no-clobber ref
+        transactions and fails if any target backup ref already exists. Back up
+        each local branch that the plan can move, including branches subject to
+        reset, rebase, merge, or fast-forward. Plans that contain only remote or
+        API actions still create anchor refs in the run namespace. Only an
+        explicit backup-prune operation removes these refs. Completion, abort,
+        and rollback do not prune them.
+      </p>
+      <p>
+        Planned runs use a durable write-ahead journal. Before an action, append
+        and flush an intent record containing its expected inputs. After the
+        mutation, inspect actual state and atomically append and flush its result.
+        On restart, an intent without a result is reconciled against refs, Git
+        operation state, layout, remote state, or provider state before any
+        retry. The journal also records conflicts, hook failures, generated
+        commits, stashes, worktree moves, pushes, and API results. Plain
+        immediate <code>traverse</code> remains stateless and keeps its current
+        conflict behavior. The persistent journal belongs only to plan/apply
+        mode.
+      </p>
+      <p>
+        <code>traverse continue</code> is explicit. It verifies the recorded Git
+        operation and worktree, checks all still-relevant facts, continues the
+        current rebase or merge, records its resulting SHA, and advances to the
+        next planned action. An interactive rebase can continue only in an
+        attended session.
+      </p>
+      <p>
+        Recovery has two different commands. Abort-current-step applies only
+        while an abortable Git operation, such as rebase or merge, is active; it
+        invokes that operation's abort command. Completed fast-forwards, resets,
+        and slide-outs have no native abort operation. Full local rollback uses
+        backup refs plus the pre-run layout snapshot stored in the journal to
+        restore all local ref and layout changes.
+      </p>
+      <p>
+        Rollback must use guarded ref updates. By default, each current ref must
+        still equal the post-action SHA in the journal, each affected checked-out
+        worktree must be clean, and the current layout must match the journaled
+        post-action hash. It also restores or reports every journaled stash,
+        checkout move, and temporary worktree; failure to restore one leaves the
+        rollback incomplete rather than silently declaring success. If newer
+        local work exists, rollback stops. An explicit per-branch override may
+        replace that newer state only after creating a further backup and showing
+        the exact refs and layout bytes to restore.
+      </p>
+      <p>
+        Local rollback cannot pretend to undo a push or hosting-provider API
+        call. Remote restoration requires a separate compensating plan. That
+        plan reads current remote refs, obtains new explicit lease checks, and
+        describes reverse pushes or API changes as new actions. It never reuses
+        an old lease or silently rewinds a remote.
+      </p>
+
+      <h2 id="execution-inside-git-machete">Execution inside git-machete</h2>
+      <p>
+        Implement planning and execution in git-machete's existing Python
+        codebase. Reuse the internal graph, fork-point, update, qualifier, hook,
+        merge-detection, and worktree machinery. Do not spawn one git-machete
+        subprocess per branch, parse presentation-oriented status output, or ask
+        a wrapper to import private Python modules.
+      </p>
+      <p>
+        A documented YAML plan schema, JSON event schema, and exit-code contract
+        are appropriate public interfaces. A possible exit-code set is:
+      </p>
+      <pre class="text"><code>0  completed, or plan valid
+2  usage error or invalid plan schema
+3  unresolved choice or preflight block before mutation
+4  conflict or hook failure, resumable
+5  planned input became stale, replan required
+6  abort or local rollback failed
+7  remote or hosting action failed</code></pre>
+      <p>
+        These numbers are illustrative too. The contract matters more than the
+        exact values: JSON events go to standard output, diagnostics go to
+        standard error, and automation should not scrape prose.
+      </p>
+
       <h2 id="migration-path">Migration path</h2>
       <p>
-        The current local inventory makes eventual migration small: ten
-        checked-out repositories under <code>~/.GIT</code> have a
+        The existing author-specific inventory suggests a small eventual
+        migration: ten checked-out repositories under <code>~/.GIT</code> have a
         <code>.git/machete</code> file, while one has
         <code>.git/topic-branches</code>. The remaining topic file contains only
-        upstream/branch rebase pairs and no active arbitrary
-        <code>!</code> commands.
+        upstream/branch rebase pairs and no active arbitrary commands. These
+        figures describe one checkout inventory, not a general installation
+        assumption.
       </p>
       <ol type="1">
         <li>
-          Open an upstream feature request describing the operation allowlist,
-          immutable JSON plan, stale-ref checks, recovery refs, and journaled
-          resume. Link #1210 rather than duplicating its JSON-status scope.
+          Open one upstream design issue for plan-enabled traverse. Link #1210,
+          #293, #1619, and PR #1626, and state that plain traverse is unchanged.
         </li>
         <li>
-          Agree the smallest upstream increment with maintainers and implement
-          it with disposable-repository tests.
+          Agree the full design upstream, then deliver it through incremental
+          pull requests. Start with plan schema and read-only generation, then
+          stale checks and backups, local apply and recovery, remote actions,
+          and hosting-provider actions.
         </li>
         <li>
-          While waiting for a release, keep the existing <code>ggrbm</code>
-          unchanged or reduce it only to a thin compatibility and whitespace
-          policy shim. Do not build the full fallback orchestrator unless the
-          upstream proposal is rejected.
+          Keep <code>ggrbm</code> as a small compatibility wrapper while those
+          increments ship. The default wrapper translates scope and policy,
+          invokes upstream commands, and relays exit codes. It does not retain
+          <code>ggdcm</code> or whitespace checks.
         </li>
         <li>
           Convert the remaining <code>.git/topic-branches</code> relationships
-          into <code>.git/machete</code>, verify every edge, and test the released
-          planning mode without applying it.
+          to <code>.git/machete</code>, verify every edge and qualifier, and test
+          generated plans without applying them.
         </li>
         <li>
-          Switch <code>ggrbm</code> and <code>ggrbim</code> callers to the
-          upstream command, then retire both wrappers after one successful
-          compatibility cycle.
+          Run attended apply cycles, then unattended cycles with expected plan
+          hashes. Retire <code>ggrbm</code> and <code>ggrbim</code> only after
+          compatibility is proven.
         </li>
       </ol>
-      <h2 id="implementation-choice">Implementation choice</h2>
       <p>
-        Implement the feature in git-machete’s existing Python codebase. The
-        project already has typed domain objects for layouts, branches, fork
-        points, sync status, hooks, and worktrees; those are precisely the
-        objects a reliable planner needs. Keeping the change upstream avoids
-        serializing private state merely so a second program can reconstruct it.
+        Upstream acceptance should cover the complete model even though code
+        arrives in smaller reviews. This avoids an early rebase-only contract
+        that later has to be broken to represent merge, remote, slide-out, or
+        hosting actions.
       </p>
-      <p>
-        Expose only documented CLI and JSON contracts. Third-party tools should
-        not import git-machete’s private Python modules. A temporary local shim
-        should remain small enough to delete: validate local policy, invoke the
-        upstream plan/apply commands, and relay their exit status.
-      </p>
-      <p>Suggested exit codes:</p>
-      <pre class="text"><code>0  completed or plan valid
-2  usage or invalid plan
-3  preflight blocked before mutation
-4  conflict or hook failure, resumable
-5  refs/layout changed since plan
-6  recovery command failed</code></pre>
-      <p>
-        Every status line should be a single structured event when
-        <code>--format=json</code> is selected. Send diagnostics to stderr and
-        data to stdout.
-      </p>
-      <h2 id="minimum-test-matrix">Minimum test matrix</h2>
-      <p>The upstream feature is ready only when disposable repositories cover:</p>
+
+      <h2 id="test-matrix">Minimum test matrix</h2>
+      <p>Disposable repositories should cover at least:</p>
       <ul>
-        <li>a three-branch stack where the root moved;</li>
-        <li>two sibling branches, proving stable tie-break ordering;</li>
-        <li>a yellow edge that blocks before mutation;</li>
-        <li>an explicitly supplied fork point;</li>
-        <li>a conflict followed by <code>continue</code>;</li>
-        <li>a failure that leaves no rebase state;</li>
-        <li>a branch already checked out in another clean worktree;</li>
-        <li>a dirty required worktree, blocked before any ref moves;</li>
-        <li>a planning-hook failure that blocks before any ref moves;</li>
-        <li>a ref or layout change between plan and apply;</li>
         <li>
-          interruption after one successful branch and journal-based resume;
+          default current-branch scope, every <code>--start-from</code> value,
+          <code>--stop-after</code>, <code>--whole</code>, <code>-W</code>, and
+          additive subtree selection;
         </li>
-        <li>backup-ref restoration;</li>
-        <li>a merged branch skipped without layout mutation;</li>
-        <li>detached original HEAD restoration;</li>
-        <li>a failing or interactive hook.</li>
+        <li>
+          rebase, merge, non-interactive rebase, attended interactive rebase,
+          edited merge messages, no-edit merges, and unattended rejection of
+          editor-dependent updates;
+        </li>
+        <li>
+          parent-before-child ordering, stable sibling order, and optional
+          branch-by-branch remote ordering;
+        </li>
+        <li>
+          an unusual inferred replay range that lists commits and blocks until
+          approval or a corrected fork point;
+        </li>
+        <li>
+          qualifier blocking and a prominent explicit per-branch override;
+        </li>
+        <li>
+          merge detection in every existing mode, with <code>simple</code> as
+          default and no slide-out before approval;
+        </li>
+        <li>
+          slide-out reparenting children without deleting the Git branch;
+        </li>
+        <li>
+          a branch behind its remote, a diverged reset with unique commit lists,
+          a normal push whose source depends on a generated update result, a
+          force-push with exact destination lease, and publication with tracking
+          setup;
+        </li>
+        <li>
+          fetch before planning and proof that no fetch occurs between plan and
+          apply;
+        </li>
+        <li>
+          plan YAML editing, refresh, old-hash invalidation, hashing and parsing
+          the same byte buffer, interactive apply-time confirmation, unattended
+          expected-hash checking, and rejection of colliding run IDs or backup
+          namespaces;
+        </li>
+        <li>
+          no unresolved <code>ask</code> in unattended mode and proof that
+          <code>--yes</code> invents no choice;
+        </li>
+        <li>
+          stale local ref, remote ref, layout, qualifier, option, hook, and
+          config input, each failing before its affected mutation, plus racing
+          updates rejected by guarded ref or layout writes;
+        </li>
+        <li>
+          a branch in another clean worktree, a temporary worktree, a dirty
+          block, explicit autostash, detached HEAD, and every return choice;
+        </li>
+        <li>
+          existing operation and status hooks, post-slide-out hook failure,
+          closed standard input, disabled Git prompts, and timeout handling in
+          unattended mode;
+        </li>
+        <li>
+          crashes before and after every mutation boundary, reconciliation of a
+          write-ahead intent without a result, conflict journal and continue,
+          active-operation abort, successor planning for unfinished actions,
+          guarded full local rollback with layout snapshots, persistent backups,
+          explicit prune, and refusal to overwrite newer local work by default;
+        </li>
+        <li>
+          compensating remote restoration with fresh lease checks;
+        </li>
+        <li>
+          all-local-then-push-then-hosting default order, provider failure or
+          unknown result followed by state reconciliation, and absence of
+          credentials from plans and events;
+        </li>
+        <li>
+          rejection of arbitrary Git commands and proof that plain immediate
+          traverse remains behaviorally unchanged and journal-free.
+        </li>
       </ul>
       <p>
-        Tests should assert ref SHAs, parent relationships, backup refs, journal
-        state, exit codes, and absence of pushes or
-        <code>.git/machete</code> changes. They should not only match
-        human-readable output.
+        Tests should assert exact ref SHAs, unique and replay commit lists,
+        parent relationships, layout changes, backup refs, worktree and stash
+        state, journals, plan hashes, JSON events, API requests, exit codes, and
+        the absence of unplanned fetches or remote mutations. Matching prose is
+        not enough.
       </p>
-      <h2 id="recommended-first-increment">Recommended first increment</h2>
-      <p>Submit a focused upstream proposal before writing implementation code:</p>
-      <ol type="1">
-        <li>
-          Define a closed rebase-only operation set that guarantees no pull,
-          reset, push, slide-out, layout edit, or code-hosting side effect.
-        </li>
-        <li>
-          Define immutable JSON plan fields and stale-plan validation, building
-          on the machine-readable status discussion in #1210.
-        </li>
-        <li>
-          Agree whether this is a new <code>restack</code> command or an explicit
-          mode of <code>traverse</code>.
-        </li>
-        <li>
-          Implement read-only plan generation first, with fixtures and schema
-          tests. Add apply, recovery refs, and journaled conflict resume in
-          reviewable follow-up increments.
-        </li>
-      </ol>
-      <p>
-        Defer subtree selection, interactive rebase, automatic mixdown, and
-        local compatibility code until the upstream contract is accepted. If
-        upstream declines the feature, the original standalone plan/apply
-        orchestrator remains a fallback, not the preferred starting point.
-      </p>
+
       <h2 id="sources">Sources</h2>
       <ul>
         <li>
@@ -935,7 +1030,7 @@ git machete restack plan --skip &lt;branch&gt;</code></pre>
         </li>
         <li>
           <a href="https://git-machete.readthedocs.io/en/stable/#traverse"
-            ><code>traverse</code> behavior and options</a
+            ><code>traverse</code> behavior, scope, and options</a
           >
         </li>
         <li>
@@ -945,13 +1040,13 @@ git machete restack plan --skip &lt;branch&gt;</code></pre>
         </li>
         <li>
           <a href="https://git-machete.readthedocs.io/en/stable/#update"
-            ><code>update --fork-point</code></a
+            ><code>update</code> rebase and merge behavior</a
           >
         </li>
         <li>
           <a
             href="https://github.com/VirtusLab/git-machete/blob/develop/skills/git-machete/SKILL.md"
-            >git-machete’s official agent skill and side-effect catalog</a
+            >git-machete's official agent skill and traverse side effects</a
           >
         </li>
         <li>
@@ -961,12 +1056,12 @@ git machete restack plan --skip &lt;branch&gt;</code></pre>
         </li>
         <li>
           <a href="https://github.com/VirtusLab/git-machete/issues/293"
-            >issue #293: traversal rebase and push qualifiers</a
+            >issue #293: traverse rebase and push qualifiers</a
           >
         </li>
         <li>
           <a href="https://github.com/VirtusLab/git-machete/issues/1619"
-            >issue #1619: traversal safeguards</a
+            >issue #1619: traverse safeguards</a
           >
         </li>
         <li>
@@ -975,13 +1070,23 @@ git machete restack plan --skip &lt;branch&gt;</code></pre>
           >
         </li>
         <li>
+          <a href="https://git-scm.com/docs/git-rebase"
+            ><code>git rebase</code> documentation</a
+          >
+        </li>
+        <li>
+          <a href="https://git-scm.com/docs/git-push"
+            ><code>git push --force-with-lease</code> documentation</a
+          >
+        </li>
+        <li>
           <a href="https://git-scm.com/docs/git-worktree"
             ><code>git worktree</code> documentation</a
           >
         </li>
         <li>
-          <a href="https://git-scm.com/docs/git-reflog"
-            ><code>git reflog</code> documentation</a
+          <a href="https://git-scm.com/docs/git-update-ref"
+            ><code>git update-ref</code> documentation</a
           >
         </li>
       </ul>

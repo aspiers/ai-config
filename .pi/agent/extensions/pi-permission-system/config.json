@@ -3,6 +3,8 @@
   "debugLog": true,
   "permissionReviewLog": true,
   "yoloMode": true,
+  "doublePressToConfirm": true,
+  "showPersistenceSummary": true,
   "piInfrastructureReadPaths": [
     "~/.agents/skills"
   ],

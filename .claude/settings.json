@@ -316,6 +316,7 @@
       }
     }
   },
+  "outputStyle": "Attention-kind",
   "alwaysThinkingEnabled": false,
   "effortLevel": "high",
   "tui": "fullscreen",
@@ -325,7 +326,6 @@
   },
   "skipWorkflowUsageWarning": true,
   "theme": "auto",
-  "outputStyle": "Attention-kind",
   "verbose": true,
   "preferredNotifChannel": "terminal_bell",
   "autoCompactEnabled": true,

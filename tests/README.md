@@ -3,6 +3,16 @@
 This directory contains test suites for the AI configuration scripts and
 deployment contracts.
 
+## Upstreaming Status Skill Tests
+
+`test_upstreaming_status_skill.py` verifies the skill's routing metadata,
+progress-ordered `wt list`-style report contract, mixdown distinction, and
+links to the related upstream workflows.
+
+```bash
+python3 tests/test_upstreaming_status_skill.py
+```
+
 ## Research Report Location Tests
 
 `test_research_report_locations.py` verifies that cross-agent policy and the

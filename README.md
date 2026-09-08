@@ -232,7 +232,7 @@ See [AGENTS.md](AGENTS.md) for the detailed delegation pattern.
   - Example: `audit-npm-packages --output /tmp/audit.json pi-web-access pi-lens`
 - **`ccu`** - Runs the latest version of `ccusage` to monitor Claude Code usage statistics
 - **`ccul`** - Live monitoring of Claude Code usage with automatic refresh
-  every 5 seconds using blocks display format; although for _live_ monitoring,
+  every 5 seconds using blocks display format; although for *live* monitoring,
   I actually prefer [Claude Code Usage
   Monitor](https://github.com/Maciek-roboblog/Claude-Code-Usage-Monitor) (`uv
   tool install claude-monitor`) (not to be confused with `npx ccmonitor` from

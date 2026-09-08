@@ -117,6 +117,17 @@
 
 - Never assume problems are fixed without testing them.
 
+- **CRITICAL RULE — the user only reads end-of-turn messages.** Text written
+  mid-turn (between tool calls) may never be rendered in the terminal, and
+  the user does not read scrollback. Therefore:
+  - Every answer, finding, or deliverable MUST appear in the final message
+    of the turn, even if that repeats something written earlier in the turn.
+  - Never say "as shown above", "demoed above", or refer back to earlier
+    output — paste the relevant content verbatim into the final message.
+  - When the user asks a question mid-turn, treat it as an interrupt: stop,
+    and make the answer the first thing in the next end-of-turn message
+    rather than weaving it into an ongoing progress narrative.
+
 - **IMPORTANT**: When asked to check GitHub issues, PRs, action runs etc., use
   the `gh` command-line with tee(1) to capture output for multiple analyses
   without re-fetching.  **Do NOT use** `browser_navigate`, `browser_snapshot`,

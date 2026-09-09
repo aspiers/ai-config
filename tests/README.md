@@ -6,8 +6,9 @@ deployment contracts.
 ## Upstreaming Status Skill Tests
 
 `test_upstreaming_status_skill.py` verifies the skill's routing metadata,
-progress-ordered `wt list`-style report contract, HTML rendering and escaping,
-mixdown distinction, and links to the related upstream workflows.
+progress-ordered `wt list`-style terminal contract, sentence-length HTML
+rendering and escaping, stacked-branch dependencies, the separate Git Machete
+graph, mixdown distinction, and related workflow links.
 
 ```bash
 python3 tests/test_upstreaming_status_skill.py

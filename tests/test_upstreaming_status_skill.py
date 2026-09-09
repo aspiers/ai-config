@@ -20,15 +20,26 @@ class UpstreamingStatusSkillTests(unittest.TestCase):
 
     def test_frontmatter_routes_upstreaming_status_requests(self) -> None:
         self.assertRegex(self.text, r"(?m)^name: upstreaming-status$")
-        self.assertIn("browser-rendered HTML report", self.text)
+        self.assertIn(
+            "compact terminal table plus a browser-rendered HTML report", self.text
+        )
         self.assertIn("ahead/behind counts", self.text)
-        self.assertIn("pull-request or merge-request status", self.text)
+        self.assertIn("change-request status", self.text)
 
     def test_report_contract_is_progress_ordered_and_wt_inspired(self) -> None:
         self.assertIn("Order rows from least progress to furthest progress", self.text)
         self.assertIn("`↑<branch-only> ↓<upstream-only>`", self.text)
+        self.assertIn(
+            "| Branch and purpose | `<upstream-ref>` ↕ | Upstream progress | Next step |",
+            self.text,
+        )
+        self.assertIn("Always return the compact table in chat", self.text)
         self.assertIn("scripts/render-report.py", self.text)
         self.assertRegex(self.text, r"temporary\s+`\.html` file outside the repository")
+        self.assertIn("sentence-length description", self.text)
+        self.assertIn("dependencies", self.text)
+        self.assertIn("machete_graph", self.text)
+        self.assertIn("Git Machete graph in a separate preformatted section", self.text)
         emoji_positions = [
             self.text.index(emoji)
             for emoji in ("⚪", "🟡", "📝", "🔴", "🟢", "⛔", "✅")
@@ -62,6 +73,7 @@ class UpstreamingStatusRendererTests(unittest.TestCase):
             "as_of": "2026-09-09 18:00 UTC",
             "summary": "One branch needs action.",
             "stale": False,
+            "machete_graph": "main\n|\no-fix/<unsafe>",
             "branches": branches,
             "runtime_notes": ["working is a runtime mixdown."],
         }
@@ -89,6 +101,8 @@ class UpstreamingStatusRendererTests(unittest.TestCase):
                 {
                     "name": "fix/merged",
                     "purpose": "already upstream",
+                    "description": "This branch has already landed upstream and can now be removed locally.",
+                    "dependencies": ["fix/base<&>"],
                     "ahead": 1,
                     "behind": 5,
                     "stage": "merged",
@@ -102,6 +116,8 @@ class UpstreamingStatusRendererTests(unittest.TestCase):
                 {
                     "name": "fix/<unsafe>",
                     "purpose": "keep <choices> visible",
+                    "description": "Keeps <choices> visible while a custom answer is entered, making both response paths easy to compare.",
+                    "dependencies": [],
                     "ahead": 5,
                     "behind": 0,
                     "stage": "published",
@@ -116,7 +132,16 @@ class UpstreamingStatusRendererTests(unittest.TestCase):
         self.assertIn("↑5 ↓0", rendered)
         self.assertIn("fix/&lt;unsafe&gt;", rendered)
         self.assertNotIn("fix/<unsafe>", rendered)
+        self.assertIn(
+            "Keeps &lt;choices&gt; visible while a custom answer is entered, making both response paths easy to compare.",
+            rendered,
+        )
+        self.assertNotIn("keep &lt;choices&gt; visible", rendered)
         self.assertIn('href="https://example.com/owner/project/pull/40"', rendered)
+        self.assertIn("fix/base&lt;&amp;&gt;", rendered)
+        self.assertIn("Git Machete status graph", rendered)
+        self.assertIn("o-fix/&lt;unsafe&gt;", rendered)
+        self.assertNotIn("o-fix/<unsafe>", rendered)
         self.assertIn("working is a runtime mixdown.", rendered)
         self.assertNotRegex(rendered, r"\{\{[A-Z_]+\}\}")
 

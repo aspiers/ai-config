@@ -19,6 +19,8 @@ STAGES = {
 REQUIRED_BRANCH_FIELDS = {
     "name",
     "purpose",
+    "description",
+    "dependencies",
     "ahead",
     "behind",
     "stage",
@@ -49,7 +51,14 @@ def validate(data: object) -> dict:
     if not isinstance(data, dict):
         raise TypeError("report input must be a JSON object")
 
-    required = {"repository", "upstream_ref", "as_of", "summary", "branches"}
+    required = {
+        "repository",
+        "upstream_ref",
+        "as_of",
+        "summary",
+        "branches",
+        "machete_graph",
+    }
     missing = required - data.keys()
     if missing:
         raise ValueError(f"missing report fields: {', '.join(sorted(missing))}")
@@ -69,16 +78,41 @@ def validate(data: object) -> dict:
         if branch["stage"] not in STAGES:
             choices = ", ".join(STAGES)
             raise ValueError(f"branch {index} stage must be one of: {choices}")
+        dependencies = branch["dependencies"]
+        if not isinstance(dependencies, list) or any(
+            not isinstance(dependency, str) or not dependency
+            for dependency in dependencies
+        ):
+            raise TypeError(
+                f"branch {index} dependencies must be an array of non-empty strings"
+            )
+        if len(dependencies) != len(set(dependencies)):
+            raise ValueError(f"branch {index} dependencies must not contain duplicates")
+        if branch["name"] in dependencies:
+            raise ValueError(f"branch {index} must not depend on itself")
         for field in ("ahead", "behind"):
             if not isinstance(branch[field], int) or branch[field] < 0:
                 raise ValueError(
                     f"branch {index} {field} must be a non-negative integer"
                 )
 
+    machete_graph = data["machete_graph"]
+    if not isinstance(machete_graph, str) or not machete_graph.strip():
+        raise TypeError("machete_graph must be a non-empty string")
+
     runtime_notes = data.get("runtime_notes", [])
     if not isinstance(runtime_notes, list):
         raise TypeError("runtime_notes must be a JSON array")
     return data
+
+
+def render_dependencies(dependencies: list[str]) -> str:
+    if not dependencies:
+        return '<span class="no-dependencies" aria-label="No source-branch dependencies">—</span>'
+    items = "".join(
+        f"<li><code>{escaped(dependency)}</code></li>" for dependency in dependencies
+    )
+    return f'<ol class="dependencies">{items}</ol>'
 
 
 def render_rows(branches: list[dict]) -> str:
@@ -87,14 +121,15 @@ def render_rows(branches: list[dict]) -> str:
     for branch in ordered:
         stage = branch["stage"]
         emoji = STAGES[stage][1]
-        purpose = f'<span class="purpose"> · {escaped(branch["purpose"])}</span>'
+        description = f'<p class="description">{escaped(branch["description"])}</p>'
         request = branch.get("request")
         request_html = ""
         if isinstance(request, dict) and request.get("label"):
             request_html = linked_text(request["label"], request.get("url")) + " "
         rows.append(
             f'<tr class="stage-{stage}">'
-            f"<td><code>{escaped(branch['name'])}</code>{purpose}</td>"
+            f"<td><code>{escaped(branch['name'])}</code>{description}</td>"
+            f"<td>{render_dependencies(branch['dependencies'])}</td>"
             f'<td class="divergence">↑{branch["ahead"]} ↓{branch["behind"]}</td>'
             f'<td class="progress"><span aria-hidden="true">{emoji}</span> '
             f"{request_html}{escaped(branch['progress'])}</td>"
@@ -133,6 +168,7 @@ def render_report(data: dict, template: str) -> str:
         if data["branches"]
         else '<p class="empty">No source branches qualify.</p>',
         "{{TABLE_HIDDEN}}": "" if data["branches"] else " hidden",
+        "{{MACHETE_GRAPH}}": escaped(data["machete_graph"]),
         "{{NOTES}}": render_notes(data.get("runtime_notes", [])),
     }
     markers = set(re.findall(r"\{\{[A-Z_]+\}\}", template))

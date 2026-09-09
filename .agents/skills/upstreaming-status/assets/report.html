@@ -1,123 +1,243 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{TITLE}}</title>
-  <style>
-    :root {
-      color-scheme: light dark;
-      --bg: #f5f7fa;
-      --panel: #ffffff;
-      --text: #172033;
-      --muted: #5d6778;
-      --border: #d7dce5;
-      --accent: #3157c8;
-      --local: #697386;
-      --published: #a66b00;
-      --draft: #7253ba;
-      --blocked: #bc2f3b;
-      --ready: #147d57;
-      --closed: #697386;
-      --merged: #147d57;
-      --shadow: 0 10px 28px rgb(30 42 68 / 10%);
-    }
-    @media (prefers-color-scheme: dark) {
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{TITLE}}</title>
+    <style>
       :root {
-        --bg: #111722;
-        --panel: #1a2230;
-        --text: #edf2f7;
-        --muted: #aeb9c7;
-        --border: #344054;
-        --accent: #91a9ff;
-        --local: #aeb9c7;
-        --published: #efbd64;
-        --draft: #c4a7ff;
-        --blocked: #ff8a80;
-        --ready: #5bd6a2;
-        --closed: #aeb9c7;
-        --merged: #5bd6a2;
-        --shadow: 0 10px 28px rgb(0 0 0 / 28%);
+        color-scheme: light dark;
+        --bg: #f5f7fa;
+        --panel: #ffffff;
+        --text: #172033;
+        --muted: #5d6778;
+        --border: #d7dce5;
+        --accent: #3157c8;
+        --local: #697386;
+        --published: #a66b00;
+        --draft: #7253ba;
+        --blocked: #bc2f3b;
+        --ready: #147d57;
+        --closed: #697386;
+        --merged: #147d57;
+        --shadow: 0 10px 28px rgb(30 42 68 / 10%);
       }
-    }
-    * { box-sizing: border-box; }
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font: 16px/1.5 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      margin: 0;
-    }
-    main {
-      margin: 0 auto;
-      max-width: 1180px;
-      padding: clamp(1.25rem, 4vw, 3rem);
-    }
-    h1 { font-size: clamp(1.8rem, 5vw, 3rem); line-height: 1.1; margin: 0 0 0.7rem; }
-    h2 { font-size: 1.2rem; }
-    a { color: var(--accent); }
-    a:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
-    .summary { font-size: 1.1rem; margin-bottom: 0.35rem; }
-    .meta { color: var(--muted); margin: 0 0 1.5rem; }
-    .table-wrap {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      box-shadow: var(--shadow);
-      overflow-x: auto;
-    }
-    table { border-collapse: collapse; min-width: 820px; width: 100%; }
-    caption { font-weight: 700; padding: 0.85rem 1rem; text-align: left; }
-    th, td { border-bottom: 1px solid var(--border); padding: 0.85rem 1rem; text-align: left; vertical-align: top; }
-    th { background: color-mix(in srgb, var(--panel), var(--accent) 6%); font-size: 0.9rem; }
-    tbody tr:last-child td { border-bottom: 0; }
-    tbody tr { box-shadow: inset 4px 0 var(--stage); }
-    .stage-local { --stage: var(--local); }
-    .stage-published { --stage: var(--published); }
-    .stage-draft { --stage: var(--draft); }
-    .stage-blocked { --stage: var(--blocked); }
-    .stage-ready { --stage: var(--ready); }
-    .stage-closed { --stage: var(--closed); }
-    .stage-merged { --stage: var(--merged); }
-    code { font-size: 0.95em; }
-    .purpose, .meta { color: var(--muted); }
-    .divergence { font-variant-numeric: tabular-nums; white-space: nowrap; }
-    .progress { white-space: nowrap; }
-    .notes {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      margin-top: 1.5rem;
-      padding: 1rem 1.25rem;
-    }
-    .notes h2 { margin: 0 0 0.5rem; }
-    .notes ul { margin: 0; padding-left: 1.25rem; }
-    .empty { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 1rem; }
-    .hidden { display: none; }
-  </style>
-</head>
-<body>
-  <main>
-    <h1>{{HEADING}}</h1>
-    <p class="summary">{{SUMMARY}}</p>
-    <p class="meta">{{META}}</p>
-    {{EMPTY}}
-    <div class="table-wrap{{TABLE_HIDDEN}}">
-      <table>
-        <caption>Source branches ordered by upstream progress</caption>
-        <thead>
-          <tr>
-            <th scope="col">Branch and purpose</th>
-            <th scope="col">Upstream ↕</th>
-            <th scope="col">Upstream progress</th>
-            <th scope="col">Next step</th>
-          </tr>
-        </thead>
-        <tbody>
-          {{ROWS}}
-        </tbody>
-      </table>
-    </div>
-    {{NOTES}}
-  </main>
-</body>
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #111722;
+          --panel: #1a2230;
+          --text: #edf2f7;
+          --muted: #aeb9c7;
+          --border: #344054;
+          --accent: #91a9ff;
+          --local: #aeb9c7;
+          --published: #efbd64;
+          --draft: #c4a7ff;
+          --blocked: #ff8a80;
+          --ready: #5bd6a2;
+          --closed: #aeb9c7;
+          --merged: #5bd6a2;
+          --shadow: 0 10px 28px rgb(0 0 0 / 28%);
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font:
+          16px/1.5 system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+        margin: 0;
+      }
+      main {
+        margin: 0 auto;
+        max-width: 1180px;
+        padding: clamp(1.25rem, 4vw, 3rem);
+      }
+      h1 {
+        font-size: clamp(1.8rem, 5vw, 3rem);
+        line-height: 1.1;
+        margin: 0 0 0.7rem;
+      }
+      h2 {
+        font-size: 1.2rem;
+      }
+      a {
+        color: var(--accent);
+      }
+      a:focus-visible {
+        outline: 3px solid var(--accent);
+        outline-offset: 3px;
+      }
+      .summary {
+        font-size: 1.1rem;
+        margin-bottom: 0.35rem;
+      }
+      .meta {
+        color: var(--muted);
+        margin: 0 0 1.5rem;
+      }
+      .table-wrap {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+        overflow-x: auto;
+      }
+      table {
+        border-collapse: collapse;
+        min-width: 1040px;
+        width: 100%;
+      }
+      caption {
+        font-weight: 700;
+        padding: 0.85rem 1rem;
+        text-align: left;
+      }
+      th,
+      td {
+        border-bottom: 1px solid var(--border);
+        padding: 0.85rem 1rem;
+        text-align: left;
+        vertical-align: top;
+      }
+      th {
+        background: color-mix(in srgb, var(--panel), var(--accent) 6%);
+        font-size: 0.9rem;
+      }
+      tbody tr:last-child td {
+        border-bottom: 0;
+      }
+      tbody tr {
+        box-shadow: inset 4px 0 var(--stage);
+      }
+      .stage-local {
+        --stage: var(--local);
+      }
+      .stage-published {
+        --stage: var(--published);
+      }
+      .stage-draft {
+        --stage: var(--draft);
+      }
+      .stage-blocked {
+        --stage: var(--blocked);
+      }
+      .stage-ready {
+        --stage: var(--ready);
+      }
+      .stage-closed {
+        --stage: var(--closed);
+      }
+      .stage-merged {
+        --stage: var(--merged);
+      }
+      code {
+        font-size: 0.95em;
+      }
+      .description {
+        color: var(--muted);
+        margin: 0.45rem 0 0;
+        max-width: 72ch;
+      }
+      .meta {
+        color: var(--muted);
+      }
+      .dependencies {
+        margin: 0;
+        padding-left: 1.25rem;
+      }
+      .dependencies li + li {
+        margin-top: 0.25rem;
+      }
+      .no-dependencies {
+        color: var(--muted);
+      }
+      .divergence {
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+      }
+      .progress {
+        white-space: nowrap;
+      }
+      .machete,
+      .notes {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        margin-top: 1.5rem;
+        padding: 1rem 1.25rem;
+      }
+      .machete h2,
+      .notes h2 {
+        margin: 0 0 0.5rem;
+      }
+      .machete p {
+        color: var(--muted);
+        margin: 0 0 0.75rem;
+      }
+      .machete pre {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        margin: 0;
+        overflow-x: auto;
+        padding: 1rem;
+      }
+      .machete pre code {
+        font-size: 0.9rem;
+      }
+      .notes ul {
+        margin: 0;
+        padding-left: 1.25rem;
+      }
+      .empty {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 1rem;
+      }
+      .hidden {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>{{HEADING}}</h1>
+      <p class="summary">{{SUMMARY}}</p>
+      <p class="meta">{{META}}</p>
+      {{EMPTY}}
+      <div class="table-wrap{{TABLE_HIDDEN}}">
+        <table>
+          <caption>
+            Source branches ordered by upstream progress
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Branch and description</th>
+              <th scope="col">Depends on</th>
+              <th scope="col">Upstream ↕</th>
+              <th scope="col">Upstream progress</th>
+              <th scope="col">Next step</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{ROWS}}
+          </tbody>
+        </table>
+      </div>
+      <section class="machete">
+        <h2>Git Machete status graph</h2>
+        <p>The configured stack topology, shown separately from upstream progress.</p>
+        <pre><code>{{MACHETE_GRAPH}}</code></pre>
+      </section>
+      {{NOTES}}
+    </main>
+  </body>
 </html>

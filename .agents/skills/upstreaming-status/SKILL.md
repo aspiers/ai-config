@@ -2,8 +2,8 @@
 name: upstreaming-status
 description: >-
   Reports how local Git branches are progressing toward canonical upstream
-  inclusion as a compact, progress-ordered table with branch purpose,
-  ahead/behind counts, pull-request or merge-request status, and next action.
+  inclusion as a browser-rendered HTML report with branch purpose, ahead/behind
+  counts, pull-request or merge-request status, and next action.
   Use when asked for upstreaming status, local branch submission progress,
   which branches have change requests, or what remains before they can land.
 ---
@@ -66,26 +66,67 @@ Order rows from least progress to furthest progress, with merged branches last.
 Within the same stage, put blocked branches before ready branches. Never make an
 emoji imply readiness that the tracker, CI, or review state does not support.
 
-## Report format
+## Build and open the HTML report
 
-Use this compact table:
+Write report data to a temporary JSON file outside the repository. Use this
+shape; `request` is optional and `stage` must be one of the status names above:
 
-| Branch and purpose | `<upstream-ref>` ↕ | Upstream progress | Next step |
-|---|---:|---|---|
-| `fix/inline-freeform-answer` · keep choices visible while typing | ↑5 ↓0 | 🟡 Fork published, no PR | Open PR |
-| `fix/number-custom-response` · activate custom input using number keys | ↑1 ↓5 | 🔴 PR #41 open, conflicting | Rebase |
-| `fix/overlay-list-height` · show more choices when prompt space is unused | ↑1 ↓5 | 🟢 PR #42 open, mergeable | Await review |
-| `fix/overlay-toggle-kitty-events` · prevent release events toggling twice | ↑1 ↓5 | ✅ PR #40 merged | Prune branch |
+```json
+{
+  "repository": "owner/project",
+  "canonical_url": "https://example.com/owner/project",
+  "upstream_ref": "origin/main",
+  "as_of": "2026-09-09 18:00 UTC",
+  "summary": "Two branches need action; one is ready for review.",
+  "stale": false,
+  "branches": [
+    {
+      "name": "fix/example",
+      "purpose": "keep choices visible while typing",
+      "ahead": 5,
+      "behind": 0,
+      "stage": "published",
+      "progress": "Fork published, no PR",
+      "next_step": "Open PR"
+    },
+    {
+      "name": "fix/other",
+      "purpose": "expand lists into unused space",
+      "ahead": 1,
+      "behind": 5,
+      "stage": "ready",
+      "progress": "open, mergeable",
+      "request": {
+        "label": "PR #42",
+        "url": "https://example.com/owner/project/pull/42"
+      },
+      "next_step": "Await review"
+    }
+  ],
+  "runtime_notes": [
+    "working is the published runtime mixdown, not an upstream submission branch."
+  ]
+}
+```
 
-Keep branch names, change-request numbers, and counts exact. Link change-request
-numbers when URLs are available. Keep the next step concrete and short.
+Keep branch names, change-request numbers, counts, and tracker URLs exact. Keep
+purpose and next-step text concrete and short. Set `stale` to `true` when remote
+state was not refreshed.
 
-Exclude mixdown and runtime-only branches from the progress ordering by default.
-Name them in one sentence below the table when their role matters, for example:
+Render the JSON with the bundled `scripts/render-report.py` into a temporary
+`.html` file outside the repository. The renderer escapes dynamic content,
+orders rows by progress, links change requests, and applies the bundled
+responsive light/dark theme. Generated input and HTML files must not dirty the
+repository.
 
-> `working` is the published runtime mixdown, not an upstream submission branch.
+Then load and follow [`open-in-user-browser`](../open-in-user-browser/SKILL.md),
+the `/open` workflow, with the generated HTML file as its target. In chat,
+report only that the browser report opened and give its path; do not repeat the
+whole table unless browser opening fails or the user asks for the text.
 
-If no branches qualify, say so directly instead of emitting an empty table.
+Exclude mixdown and runtime-only branches from the progress rows by default.
+Put them in `runtime_notes` when their role matters. If no source branches
+qualify, use an empty `branches` array and explain that in `summary`.
 
 ## Related workflows
 

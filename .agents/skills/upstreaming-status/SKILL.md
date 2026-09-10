@@ -134,7 +134,7 @@ shape; `request` is optional and `stage` must be one of the status names above:
     }
   ],
   "runtime_notes": [
-    "working is the published runtime mixdown, not an upstream submission branch."
+    "`working` is the published runtime mixdown, not an upstream submission branch."
   ]
 }
 ```
@@ -161,8 +161,10 @@ opened, including its path. If browser opening fails, report that failure and
 still return the terminal table.
 
 Exclude mixdown and runtime-only branches from the progress rows by default.
-Put them in `runtime_notes` when their role matters. If no source branches
-qualify, use an empty `branches` array and explain that in `summary`.
+Put them in `runtime_notes` when their role matters, wrapping every branch name
+in backticks so the safe inline-code renderer keeps it monospace. Other Markdown
+is not interpreted there. If no source branches qualify, use an empty `branches`
+array and explain that in `summary`.
 
 ## Related workflows
 

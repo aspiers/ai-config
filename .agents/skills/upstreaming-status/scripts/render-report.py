@@ -101,8 +101,10 @@ def validate(data: object) -> dict:
         raise TypeError("machete_graph must be a non-empty string")
 
     runtime_notes = data.get("runtime_notes", [])
-    if not isinstance(runtime_notes, list):
-        raise TypeError("runtime_notes must be a JSON array")
+    if not isinstance(runtime_notes, list) or any(
+        not isinstance(note, str) for note in runtime_notes
+    ):
+        raise TypeError("runtime_notes must be an array of strings")
     return data
 
 
@@ -139,10 +141,20 @@ def render_rows(branches: list[dict]) -> str:
     return "\n".join(rows)
 
 
-def render_notes(notes: list[object]) -> str:
+def render_inline_code(text: str) -> str:
+    parts = re.split(r"(`[^`\n]+`)", text)
+    return "".join(
+        f"<code>{escaped(part[1:-1])}</code>"
+        if part.startswith("`") and part.endswith("`")
+        else escaped(part)
+        for part in parts
+    )
+
+
+def render_notes(notes: list[str]) -> str:
     if not notes:
         return ""
-    items = "".join(f"<li>{escaped(note)}</li>" for note in notes)
+    items = "".join(f"<li>{render_inline_code(note)}</li>" for note in notes)
     return f'<section class="notes"><h2>Other branches</h2><ul>{items}</ul></section>'
 
 

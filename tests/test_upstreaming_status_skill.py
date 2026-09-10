@@ -75,7 +75,10 @@ class UpstreamingStatusRendererTests(unittest.TestCase):
             "stale": False,
             "machete_graph": "main\n|\no-fix/<unsafe>",
             "branches": branches,
-            "runtime_notes": ["working is a runtime mixdown."],
+            "runtime_notes": [
+                "`working` is a runtime mixdown.",
+                "`fix/<unsafe>` remains local; never render <script>.",
+            ],
         }
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -144,7 +147,10 @@ class UpstreamingStatusRendererTests(unittest.TestCase):
         self.assertIn("Git Machete status graph", rendered)
         self.assertIn("o-fix/&lt;unsafe&gt;", rendered)
         self.assertNotIn("o-fix/<unsafe>", rendered)
-        self.assertIn("working is a runtime mixdown.", rendered)
+        self.assertIn("<code>working</code> is a runtime mixdown.", rendered)
+        self.assertIn("<code>fix/&lt;unsafe&gt;</code> remains local", rendered)
+        self.assertIn("never render &lt;script&gt;", rendered)
+        self.assertNotIn("never render <script>", rendered)
         self.assertNotRegex(rendered, r"\{\{[A-Z_]+\}\}")
 
     def test_empty_report_hides_the_table(self) -> None:

@@ -87,8 +87,9 @@ Always return the compact table in chat, even when the HTML report opens:
 | `fix/overlay-toggle-kitty-events` · prevent release events toggling twice | ↑1 ↓5 | ✅ PR #40 merged | Prune branch |
 
 Keep this terminal version terse, with exact branch names, change-request
-numbers, counts, and a concrete next step. Link change-request numbers when URLs
-are available.
+numbers, counts, and a concrete next step. Format every branch name as monospace
+code in both report versions, including dependency lists. Link change-request
+numbers when URLs are available.
 
 ## Build and open the additional HTML report
 

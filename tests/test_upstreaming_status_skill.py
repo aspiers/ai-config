@@ -139,6 +139,8 @@ class UpstreamingStatusRendererTests(unittest.TestCase):
         self.assertNotIn("keep &lt;choices&gt; visible", rendered)
         self.assertIn('href="https://example.com/owner/project/pull/40"', rendered)
         self.assertIn("fix/base&lt;&amp;&gt;", rendered)
+        self.assertIn("font-family:", rendered)
+        self.assertIn("ui-monospace", rendered)
         self.assertIn("Git Machete status graph", rendered)
         self.assertIn("o-fix/&lt;unsafe&gt;", rendered)
         self.assertNotIn("o-fix/<unsafe>", rendered)

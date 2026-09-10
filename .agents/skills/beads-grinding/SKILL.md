@@ -15,7 +15,10 @@ current worktree. **Do not stop between issues.**
 
 Load and apply the [`beads-best-practices`](../beads-best-practices/SKILL.md)
 skill throughout, especially its human-attention and honest work-in-progress
-rules.
+rules. Load and apply
+[`git-branch-management`](../git-branch-management/SKILL.md) alongside it, so
+each bead's commits land on a branch shaped for upstream submission, rather
+than accumulating unrelated work on whatever branch is checked out.
 
 For overlapping several beads at once in isolated worktrees, use
 [`beads-parallel-grinding`](../beads-parallel-grinding/SKILL.md) instead. This
@@ -192,6 +195,8 @@ still waiting for the user.
 
 - [`beads-best-practices`](../beads-best-practices/SKILL.md) — issue-writing
   and update practices; authoritative for the human-attention protocol
+- [`git-branch-management`](../git-branch-management/SKILL.md) — how to choose
+  the branch each bead's commits belong on; authoritative for branch structure
 - [`beads-parallel-grinding`](../beads-parallel-grinding/SKILL.md) — the
   concurrent variant, running several beads in isolated worktrees
 - [`beads-blocker-review`](../beads-blocker-review/SKILL.md) — how the user

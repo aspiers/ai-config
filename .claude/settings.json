@@ -295,6 +295,21 @@
           }
         ]
       }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/adam/bin/herdr-claude-title-watch",
+            "args": [
+              "--resync"
+            ],
+            "timeout": 10
+          }
+        ]
+      }
     ]
   },
   "statusLine": {

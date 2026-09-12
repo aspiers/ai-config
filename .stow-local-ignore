@@ -85,6 +85,7 @@ COPYING
 ^/\.agents/skills/allow-commands
 ^/\.agents/skills/beads
 ^/tests
+^/orca-plugins
 tmp
 nohup\.out
 ^/\.beads

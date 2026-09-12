@@ -1,0 +1,31 @@
+{
+  "manifestVersion": 1,
+  "id": "attention-cycling",
+  "publisher": "aspiers",
+  "name": "Attention Cycling",
+  "version": "0.1.0",
+  "description": "Shortcuts that jump to the previous or next agent needing attention, via orca-cycle-attention-agent.",
+  "repository": "https://github.com/aspiers/ai-config",
+  "engines": { "orca": ">=1.4.0" },
+  "pluginApi": 1,
+  "main": "main.mjs",
+  "contributes": {
+    "commands": [
+      {
+        "id": "next-attention-agent",
+        "title": "Next Agent Needing Attention",
+        "context": "global"
+      },
+      {
+        "id": "previous-attention-agent",
+        "title": "Previous Agent Needing Attention",
+        "context": "global"
+      }
+    ],
+    "keybindings": [
+      { "command": "next-attention-agent", "key": "Alt+Shift+ArrowDown", "when": "global" },
+      { "command": "previous-attention-agent", "key": "Alt+Shift+ArrowUp", "when": "global" }
+    ]
+  },
+  "capabilities": []
+}

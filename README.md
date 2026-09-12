@@ -267,11 +267,26 @@ See [AGENTS.md](AGENTS.md) for the detailed delegation pattern.
 - **`orca-cycle-attention-agent`** - Focuses the previous or next Orca agent
   that needs attention (blocked or waiting for input first, then recently
   finished, newest first), via the `orca` CLI. Orca has no built-in shortcut
-  for this ([stablyai/orca#12577](https://github.com/stablyai/orca/issues/12577))
-  and cannot bind shell commands to keys, so bind
-  `orca-cycle-attention-agent next` / `previous` to a desktop-level hotkey
+  for this
+  ([stablyai/orca#12577](https://github.com/stablyai/orca/issues/12577)), so
+  the `orca-plugins/attention-cycling` plugin binds it inside Orca
 - **`llm-setup`** - Installs/upgrades [llm](https://llm.datasette.io/) with common plugins
   (gpt4all, anthropic, gemini, openrouter, deepseek)
+
+### Orca plugins (`orca-plugins/`)
+
+Plugins for [Orca](https://github.com/stablyai/orca), loaded as development
+plugins rather than stowed: Orca rejects symlinks inside plugin content, so
+point it at this checkout's real path.
+
+- **`attention-cycling`** - Binds `Alt+Shift+Up` / `Alt+Shift+Down` inside
+  Orca to `orca-cycle-attention-agent previous` / `next`. Orca's own
+  keybindings cannot run shell commands, but a plugin's worker-backed
+  commands can, so this is the only way to get an in-app shortcut without
+  a global hotkey. To enable it, open Orca's Settings, Plugins, add this
+  plugin's directory as a development plugin path, and approve it. The
+  worker only inherits `PATH` and `HOME`, so the script must be on `PATH`
+  or in `~/bin`.
 
 ### AppArmor profiles (`root-etc-stow-pkg/apparmor.d/`)
 
@@ -297,6 +312,8 @@ Shell configuration fragments loaded by
 - `test_ai_safe_rm.py` - Unit tests for the `ai-safe-rm` script
 - `test_orca_cycle_attention_agent.py` - Unit tests for the
   `orca-cycle-attention-agent` script
+- `test_orca_attention_plugin.py` - Tests for the `attention-cycling` Orca
+  plugin manifest and worker entry
 
 ### Other files
 

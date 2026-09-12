@@ -5,13 +5,25 @@ deployment contracts.
 
 ## Orca Attention-Agent Cycling Tests
 
-`test_orca_cycle_attention_agent.py` verifies that `orca-cycle-attention-agent`
-orders blocked and waiting agents before recent completions, drops stale or
-interrupted completions, joins agent panes to live terminal handles, finds the
-focused pane through nested layouts, and issues the expected `orca` CLI calls.
+`test_orca_cycle_attention_agent.py` verifies that
+`orca-cycle-attention-agent` orders blocked and waiting agents before recent
+completions, drops stale or interrupted completions, joins agent panes to live
+terminal handles, finds the focused pane through nested layouts, and issues
+the expected `orca` CLI calls.
 
 ```bash
 python3 tests/test_orca_cycle_attention_agent.py
+```
+
+## Orca Attention-Cycling Plugin Tests
+
+`test_orca_attention_plugin.py` checks the `attention-cycling` plugin manifest
+against the rules Orca enforces and runs its worker entry under Node to pin
+the registered commands, the `~/bin` fallback, and error reporting. Requires
+`node` on `PATH`.
+
+```bash
+python3 tests/test_orca_attention_plugin.py
 ```
 
 ## Upstreaming Status Skill Tests

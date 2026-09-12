@@ -26,3 +26,52 @@
 #                   credential; MUST NOT enter this public repo
 /.orca/*
 !/.orca/keybindings.json
+
+# Orca application state (~/.config/orca) is never tracked or stowed. It is
+# an Electron profile directory, not a settings directory. Named explicitly
+# so that a stray `git add -A` cannot sweep a live credential into this
+# public repository's permanent history.
+#
+# Live secrets:
+/.config/orca/agent-session-authority.key
+/.config/orca/orca-e2ee-keypair.json
+/.config/orca/orca-runtime.json
+/.config/orca/orca-devices.json
+/.config/orca/profiles/*/orca-secret-protection.json
+/.config/orca/profiles/*/account-session.json*
+/.config/orca/Cookies*
+/.config/orca/Trust?Tokens*
+/.config/orca/TransportSecurity
+#
+# Account and device identity:
+/.config/orca/orca-profile-index.json*
+/.config/orca/codex-pane-accounts.json
+#
+# Rolling usage, stats and session data:
+/.config/orca/orca-*-usage.json
+/.config/orca/orca-stats.json
+/.config/orca/agent-sessions/
+/.config/orca/codex-session-backfill/
+/.config/orca/terminal-history/
+/.config/orca/ai-vault/
+/.config/orca/logs/
+/.config/orca/profiles/
+/.config/orca/orchestration.db*
+#
+# Caches and Chromium/Electron runtime state:
+/.config/orca/Cache/
+/.config/orca/Code?Cache/
+/.config/orca/GPUCache/
+/.config/orca/Dawn*Cache/
+/.config/orca/blob_storage/
+/.config/orca/Local?Storage/
+/.config/orca/Shared?Dictionary/
+/.config/orca/SharedStorage*
+/.config/orca/Partitions/
+/.config/orca/Crashpad/
+/.config/orca/DIPS*
+/.config/orca/Dictionaries/
+/.config/orca/speech-models/
+/.config/orca/Singleton*
+/.config/orca/*.sock
+/.config/orca/*.log

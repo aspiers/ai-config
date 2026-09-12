@@ -174,6 +174,14 @@ deliberately left unmanaged and is excluded by `.gitignore`:
 - `linear-workspaces.json` and `linear-tokens/` - Linear account identifiers
   and an encrypted credential, which must never enter a public repository
 
+Orca's other location, `~/.config/orca/`, is an Electron application profile
+directory rather than a settings directory, and none of it is tracked or
+stowed. It holds live secrets (a runtime auth token, a mobile device pairing
+token, an E2EE keypair, a session authority key), account identity, rolling
+usage and session data, and browser caches. The known paths are named
+explicitly in `.gitignore` so that a stray `git add -A` cannot commit a
+credential to this public repository's permanent history.
+
 #### Response output styles
 
 The agents here share a single response style, sourced from

@@ -143,7 +143,9 @@
   full output for analysis. Only use head(1) when you specifically need the
   first N lines and are confident no errors appear later.
 
-- When running `git diff` or similar, always use `--no-ext-diff`.
+- When running `git diff` or similar, always use `--no-ext-diff`. The flag
+  has to come after the subcommand: `git diff --no-ext-diff`, never
+  `git --no-ext-diff diff` (that fails with "unknown option").
 
 - **Git commit references**: `HEAD^!` is a revision range equivalent to `HEAD^..HEAD`,
   i.e. specifying the one commit `HEAD`.

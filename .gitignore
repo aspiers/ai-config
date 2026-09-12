@@ -75,3 +75,10 @@
 /.config/orca/Singleton*
 /.config/orca/*.sock
 /.config/orca/*.log
+
+# Orca installs its own agent extensions into the Pi and OMP config
+# directories, which are themselves stow paths here. They carry an
+# `@orca-managed-pi-extension` marker on line 1 and Orca rewrites them on
+# launch, so tracking them would dirty this repository on every start.
+/.pi/agent/extensions/orca-*.ts
+/.omp/agent/extensions/orca-*.ts

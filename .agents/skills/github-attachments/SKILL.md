@@ -23,9 +23,28 @@ remove it without notice.** Verified working against github.com on
 
 ## Upload one file
 
+`repository_id` must be a repository **you can push to** — it is the upload
+quota's owner, not the destination. It does not have to be the repo the issue
+or PR lives in, and the resulting URL is not tied to it: an asset uploaded
+against your fork renders fine on an upstream issue.
+
+So when contributing to a repo you do not own, do not reach for the upstream's
+id. Pushable means `permissions.push` is true — being able to open issues or
+PRs against a public repo does not grant it, and for any upstream you
+contribute to via a fork it will be false:
+
+```bash
+gh api repos/OWNER/REPO --jq .permissions
+```
+
+Prefer your own fork (or any repo you own) as the upload target. Using an
+upstream you lack push on fails with a misleading `404 Not Found` rather than
+a permissions error, which reads like a broken endpoint or a bad asset name.
+
 ```bash
 FILE=screenshot.png
-REPO_ID=$(gh api repos/OWNER/REPO --jq .id)
+# A repo you can push to — your fork, not the upstream you are filing against.
+REPO_ID=$(gh api repos/YOUR-FORK-OWNER/REPO --jq .id)
 TOKEN=$(gh auth token)
 
 curl -sS -X POST \
@@ -37,8 +56,7 @@ curl -sS -X POST \
 
 HTTP 201 with `{"url":"https://github.com/user-attachments/assets/<uuid>"}`.
 
-`content_type` must match the file (`image/png`, `image/jpeg`, ...). Any
-repository the token can push to works.
+`content_type` must match the file (`image/png`, `image/jpeg`, ...).
 
 Reference the returned URL as ordinary markdown in the body:
 
@@ -58,6 +76,10 @@ valid URL immediately, but the URL does not resolve until it is referenced.
 This is not propagation delay. Waiting does not help, and re-uploading only
 creates orphaned assets. Do not diagnose a 404 at this stage as a failed
 upload.
+
+Two different 404s, distinguished by when they happen: on the **POST** it
+means the token cannot push to `repository_id` (use a repo you own); on
+**fetching an asset URL** it means nothing references it yet.
 
 So:
 

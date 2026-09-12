@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "keybindings": {},
+  "platforms": {
+    "darwin": {},
+    "linux": {
+      "worktree.quickOpen": [],
+      "sidebar.left.toggle": [
+        "Mod+Backquote"
+      ],
+      "sidebar.right.toggle": [
+        "Mod+Shift+Backquote"
+      ],
+      "voice.dictation": [
+        "Mod+Alt+E"
+      ],
+      "view.tasks": [
+        "Mod+Alt+T"
+      ],
+      "browser.find": [],
+      "editor.find": [],
+      "workspace.create": [
+        "Mod+Shift+N"
+      ],
+      "terminal.clear": [],
+      "terminal.closePane": [],
+      "tab.close": [
+        "Mod+Shift+W"
+      ],
+      "tab.newTerminal": [
+        "Mod+Shift+N"
+      ],
+      "app.settings": [
+        "Mod+Period"
+      ],
+      "worktree.palette": [
+        "Mod+Comma"
+      ],
+      "terminal.search": [
+        "Mod+Shift+F"
+      ]
+    },
+    "win32": {}
+  }
+}

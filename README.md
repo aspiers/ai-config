@@ -159,6 +159,21 @@ this public repository.
 Codex reads `AGENTS.md` automatically, so the repository's instructions apply
 without further configuration.
 
+#### `.orca/`
+
+Orca configuration containing:
+
+- `keybindings.json` - Per-platform keyboard shortcut overrides
+
+Only this file is tracked. Orca's other state under `~/.orca/` is
+deliberately left unmanaged and is excluded by `.gitignore`:
+
+- `agent-hooks/` - shell shims Orca regenerates on every version upgrade, so
+  stowing them would let the app write into this repository through the
+  symlink
+- `linear-workspaces.json` and `linear-tokens/` - Linear account identifiers
+  and an encrypted credential, which must never enter a public repository
+
 #### Response output styles
 
 The agents here share a single response style, sourced from

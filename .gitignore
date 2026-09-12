@@ -17,3 +17,12 @@
 *.db
 .beads-credential-key
 .beads/proxieddb/
+
+# Orca: track only non-transient, generic config (keybindings.json).
+# Everything else under .orca/ is app-generated or per-session data:
+#   agent-hooks/  - rewritten by Orca on every version upgrade, so stowing
+#                   them would make the app dirty this repo through the symlink
+#   linear-*      - workspace identifiers, account email and an encrypted
+#                   credential; MUST NOT enter this public repo
+/.orca/*
+!/.orca/keybindings.json

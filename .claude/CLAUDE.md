@@ -20,7 +20,13 @@
   frameworks, or tools, always prefer consulting official documentation over
   guessing or reverse-engineering behavior. Use WebFetch to retrieve docs when
   needed. Do not assume you know how something works based on patterns or
-  similar tools - verify against the actual documentation.
+  similar tools - verify against the actual documentation. If docs don't
+  answer it, continue in order of cost: changelog, web search, issue tracker.
+  Inspecting a local install is a fallback, not an opening move.
+
+- **Re-pick your approach when new information arrives**: don't keep
+  executing a plan formed under worse information. An announced plan is not
+  a commitment.
 
 - **Verify assumptions before acting**: When uncertain about API behavior,
   check official docs or source code first. Do not make changes based on

@@ -146,5 +146,16 @@ publication action and return its URL or delivery result. Do not turn approval
 to file an issue into permission to push code, or approval to push a branch
 into permission to open a change request.
 
+## Who publishes it
+
+Publishing through an API or CLI is not always the right channel. Offer to
+hand the draft to the user to paste into the project's web form when the
+tracker applies metadata the API bypasses — a GitHub issue form applies its
+`type:` and `labels:` on submission, which `gh issue create` does not — or
+when the submission should plainly be the user's own.
+
+For that flow, and for the field-splitting and clipboard sequence it needs,
+read [`reference/manual-web-form-submission.md`](reference/manual-web-form-submission.md).
+
 After a code submission, use the `pr-comment-resolving` skill for review
 feedback and `watching-ci-runs` when CI results determine the next step.

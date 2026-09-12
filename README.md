@@ -168,9 +168,10 @@ Orca configuration containing:
 Only this file is tracked. Orca's other state under `~/.orca/` is
 deliberately left unmanaged and is excluded by `.gitignore`:
 
-- `agent-hooks/` - shell shims Orca regenerates on every version upgrade, so
-  stowing them would let the app write into this repository through the
-  symlink
+- `agent-hooks/` - Orca's own hook shims, referenced by absolute path from
+  the hook blocks Orca injects into `.claude/settings.json` and
+  `.codex/hooks.json`. They are an implementation detail of the app rather
+  than settings authored here
 - `linear-workspaces.json` and `linear-tokens/` - Linear account identifiers
   and an encrypted credential, which must never enter a public repository
 

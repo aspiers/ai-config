@@ -20,8 +20,10 @@
 
 # Orca: track only non-transient, generic config (keybindings.json).
 # Everything else under .orca/ is app-generated or per-session data:
-#   agent-hooks/  - rewritten by Orca on every version upgrade, so stowing
-#                   them would make the app dirty this repo through the symlink
+#   agent-hooks/  - Orca's own hook shims, referenced by absolute path from
+#                   the Orca-injected hook blocks in .claude/settings.json
+#                   and .codex/hooks.json. An implementation detail of the
+#                   app, not settings authored here.
 #   linear-*      - workspace identifiers, account email and an encrypted
 #                   credential; MUST NOT enter this public repo
 /.orca/*

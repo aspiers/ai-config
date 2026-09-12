@@ -264,6 +264,12 @@ See [AGENTS.md](AGENTS.md) for the detailed delegation pattern.
   OK but far less popular)
 - **`cl`** and **`claude`** - Wrappers for running the local Claude Code installation
 - **`cursor`** - Launches Cursor IDE with systemd resource limits (memory, CPU, I/O)
+- **`orca-cycle-attention-agent`** - Focuses the previous or next Orca agent
+  that needs attention (blocked or waiting for input first, then recently
+  finished, newest first), via the `orca` CLI. Orca has no built-in shortcut
+  for this ([stablyai/orca#12577](https://github.com/stablyai/orca/issues/12577))
+  and cannot bind shell commands to keys, so bind
+  `orca-cycle-attention-agent next` / `previous` to a desktop-level hotkey
 - **`llm-setup`** - Installs/upgrades [llm](https://llm.datasette.io/) with common plugins
   (gpt4all, anthropic, gemini, openrouter, deepseek)
 
@@ -289,6 +295,8 @@ Shell configuration fragments loaded by
 ### Testing (`tests/`)
 
 - `test_ai_safe_rm.py` - Unit tests for the `ai-safe-rm` script
+- `test_orca_cycle_attention_agent.py` - Unit tests for the
+  `orca-cycle-attention-agent` script
 
 ### Other files
 

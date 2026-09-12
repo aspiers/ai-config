@@ -3,6 +3,17 @@
 This directory contains test suites for the AI configuration scripts and
 deployment contracts.
 
+## Orca Attention-Agent Cycling Tests
+
+`test_orca_cycle_attention_agent.py` verifies that `orca-cycle-attention-agent`
+orders blocked and waiting agents before recent completions, drops stale or
+interrupted completions, joins agent panes to live terminal handles, finds the
+focused pane through nested layouts, and issues the expected `orca` CLI calls.
+
+```bash
+python3 tests/test_orca_cycle_attention_agent.py
+```
+
 ## Upstreaming Status Skill Tests
 
 `test_upstreaming_status_skill.py` verifies the skill's routing metadata,

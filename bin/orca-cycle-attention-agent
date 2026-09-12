@@ -1,0 +1,188 @@
+#!/usr/bin/env python3
+"""Focus the previous or next Orca agent that requires attention.
+
+Orca has no keybinding action that jumps to an agent needing input
+(stablyai/orca#12577), and its keybindings cannot run shell commands, so
+this helper is meant to be bound to a desktop-level hotkey instead. It
+reads agent states from ``orca worktree ps``, maps each agent's pane to a
+terminal handle via ``orca terminal list``, and reveals the chosen pane with
+``orca terminal switch``.
+
+Candidates are ordered like Orca's own "Smart" sidebar sort: agents that are
+blocked or waiting for input first, then agents that finished recently, each
+group newest first. Interrupted completions and completions older than the
+staleness window are ignored, again matching Orca.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import subprocess
+import sys
+import time
+from typing import Any
+
+CLIENT = "orca-cycle-attention-agent"
+ATTENTION_PRIORITY = {"blocked": 2, "waiting": 2, "done": 1}
+# Mirrors Orca's AGENT_STATUS_STALE_AFTER_MS: a completion older than this
+# has aged out of the sidebar's "done" class, so it stops being attention.
+DONE_STALE_AFTER_MS = 30 * 60 * 1000
+# Orca pages both listings (default 200 worktrees); ask for far more than any
+# real session holds so a busy host cannot hide an agent behind the cap.
+LISTING_LIMIT = "10000"
+
+
+def run_orca(args: list[str]) -> dict[str, Any]:
+    completed = subprocess.run(
+        ["orca", *args, "--json"], capture_output=True, text=True, check=False
+    )
+    if not completed.stdout.strip():
+        detail = completed.stderr.strip() or f"exit status {completed.returncode}"
+        raise RuntimeError(f"orca {' '.join(args)} produced no JSON: {detail}")
+    response = json.loads(completed.stdout)
+    if not response.get("ok"):
+        error = response.get("error") or {}
+        raise RuntimeError(
+            f"orca {' '.join(args)} failed: "
+            f"{error.get('code', 'unknown')}: {error.get('message', 'no message')}"
+        )
+    return response["result"]
+
+
+def needs_attention(agent: dict[str, Any], now_ms: int) -> bool:
+    state = agent.get("state")
+    if state not in ATTENTION_PRIORITY:
+        return False
+    if state != "done":
+        return True
+    if agent.get("interrupted"):
+        return False
+    # `worktree ps` exposes no completion timestamp, but a `done` row's
+    # stateStartedAt is when the turn completed.
+    started = agent.get("stateStartedAt")
+    return isinstance(started, (int, float)) and now_ms - started <= DONE_STALE_AFTER_MS
+
+
+def attention_agents(
+    worktrees: list[dict[str, Any]], now_ms: int
+) -> list[dict[str, Any]]:
+    candidates = [
+        agent
+        for worktree in worktrees
+        for agent in worktree.get("agents", [])
+        if needs_attention(agent, now_ms)
+    ]
+    return sorted(
+        candidates,
+        key=lambda agent: (
+            -ATTENTION_PRIORITY[agent["state"]],
+            -agent.get("stateStartedAt", 0),
+        ),
+    )
+
+
+def terminal_handles(terminals: list[dict[str, Any]]) -> dict[str, str]:
+    """Map each live terminal's pane key (``tabId:leafId``) to its handle."""
+    return {
+        f"{terminal['tabId']}:{terminal['leafId']}": terminal["handle"]
+        for terminal in terminals
+        if terminal.get("connected", True)
+        and terminal.get("tabId")
+        and terminal.get("leafId")
+        and terminal.get("handle")
+    }
+
+
+def active_pane_keys(node: dict[str, Any]) -> set[str]:
+    """Pane keys of the active leaf in every group's active tab under ``node``."""
+    if node.get("type") == "split":
+        return active_pane_keys(node["first"]) | active_pane_keys(node["second"])
+    active_tab_id = node.get("activeTabId")
+    for tab in node.get("tabs", []):
+        if tab.get("tabId") == active_tab_id and tab.get("activeLeafId"):
+            return {f"{active_tab_id}:{tab['activeLeafId']}"}
+    return set()
+
+
+def focused_pane_keys(
+    worktrees: list[dict[str, Any]], layouts: list[dict[str, Any]]
+) -> set[str]:
+    """Pane keys that may currently hold focus.
+
+    The layout snapshot marks the active tab per group but not the active
+    group, so a worktree split into several groups yields several keys.
+    """
+    active_ids = {wt["worktreeId"] for wt in worktrees if wt.get("isActive")}
+    keys: set[str] = set()
+    for layout in layouts:
+        if layout.get("worktreeId") in active_ids:
+            keys |= active_pane_keys(layout.get("root", {}))
+    return keys
+
+
+def target_agent(
+    candidates: list[dict[str, Any]], focused: set[str], direction: str
+) -> dict[str, Any] | None:
+    if not candidates:
+        return None
+    current_index = next(
+        (
+            index
+            for index, agent in enumerate(candidates)
+            if agent["paneKey"] in focused
+        ),
+        None,
+    )
+    if current_index is None:
+        target_index = 0 if direction == "next" else len(candidates) - 1
+    elif direction == "next":
+        target_index = (current_index + 1) % len(candidates)
+    else:
+        target_index = (current_index - 1) % len(candidates)
+    return candidates[target_index]
+
+
+def cycle_attention_agent(direction: str, now_ms: int | None = None) -> str | None:
+    """Reveal the target agent's pane and return its terminal handle, if any."""
+    if now_ms is None:
+        now_ms = int(time.time() * 1000)
+    ps = run_orca(["worktree", "ps", "--limit", LISTING_LIMIT])
+    listing = run_orca(
+        ["terminal", "list", "--include-visual-layouts", "--limit", LISTING_LIMIT]
+    )
+    worktrees = ps.get("worktrees", [])
+    handles = terminal_handles(listing.get("terminals", []))
+    # An agent row whose pane no longer has a live terminal cannot be focused.
+    candidates = [
+        agent
+        for agent in attention_agents(worktrees, now_ms)
+        if agent.get("paneKey") in handles
+    ]
+    focused = focused_pane_keys(worktrees, listing.get("visualLayouts", []))
+    target = target_agent(candidates, focused, direction)
+    if target is None:
+        return None
+    handle = handles[target["paneKey"]]
+    run_orca(["terminal", "switch", "--terminal", handle])
+    return handle
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("direction", choices=("previous", "next"))
+    return parser.parse_args()
+
+
+def main() -> int:
+    args = parse_args()
+    try:
+        cycle_attention_agent(args.direction)
+    except (KeyError, OSError, RuntimeError, ValueError, json.JSONDecodeError) as error:
+        print(f"{CLIENT}: {error}", file=sys.stderr)
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

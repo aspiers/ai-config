@@ -175,7 +175,11 @@ def target_agent(
 
 
 def cycle_attention_agent(direction: str, now_ms: int | None = None) -> str | None:
-    """Reveal the target agent's pane and return its terminal handle, if any."""
+    """Reveal the target agent's pane and return its terminal handle, if any.
+
+    Returns None when no agent needs attention. Logs one line describing the
+    decision, since hotkey runs usually have no visible stdout or stderr.
+    """
     if now_ms is None:
         now_ms = int(time.time() * 1000)
     ps = run_orca(["worktree", "ps", "--limit", LISTING_LIMIT])
@@ -193,24 +197,52 @@ def cycle_attention_agent(direction: str, now_ms: int | None = None) -> str | No
     focused = focused_pane_keys(worktrees, listing.get("visualLayouts", []))
     target = target_agent(candidates, focused, direction)
     if target is None:
+        log(f"{direction}: no agent needs attention")
         return None
     handle = handles[target["paneKey"]]
-    run_orca(["terminal", "switch", "--terminal", handle])
+    focus = run_orca(["terminal", "switch", "--terminal", handle]).get("focus", {})
+    log(
+        f"{direction}: {len(candidates)} candidate(s), "
+        f"{'already focused' if target['paneKey'] in focused else 'switching to'} "
+        f"{target.get('state')} {target.get('agentType')} {handle} "
+        f"navigated={focus.get('navigated')}"
+    )
     return handle
+
+
+LOG_PATH: Path | None = None
+
+
+def log(message: str) -> None:
+    line = f"{time.strftime('%Y-%m-%d %H:%M:%S')} {CLIENT}: {message}"
+    print(line, file=sys.stderr)
+    if LOG_PATH is not None:
+        LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+        with LOG_PATH.open("a", encoding="utf-8") as stream:
+            stream.write(line + "\n")
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("direction", choices=("previous", "next"))
+    parser.add_argument(
+        "--log",
+        type=Path,
+        metavar="FILE",
+        help="also append each run's outcome to FILE (for hotkey runs whose "
+        "stderr is discarded)",
+    )
     return parser.parse_args()
 
 
 def main() -> int:
+    global LOG_PATH
     args = parse_args()
+    LOG_PATH = args.log
     try:
         cycle_attention_agent(args.direction)
     except (KeyError, OSError, RuntimeError, ValueError, json.JSONDecodeError) as error:
-        print(f"{CLIENT}: {error}", file=sys.stderr)
+        log(f"{args.direction}: {error}")
         return 1
     return 0
 

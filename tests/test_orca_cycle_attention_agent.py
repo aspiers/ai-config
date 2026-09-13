@@ -216,9 +216,23 @@ class CycleAttentionAgentTests(unittest.TestCase):
         ps = {"worktrees": [{"worktreeId": "wt", "agents": [agent("t1:l1", "working")]}]}
         listing = {"terminals": [terminal("t1:l1", "term_a")], "visualLayouts": []}
         with patch.object(MODULE, "run_orca", side_effect=(ps, listing)) as run:
-            self.assertIsNone(MODULE.cycle_attention_agent("next", now_ms=NOW))
+            with patch.object(MODULE, "log") as log:
+                self.assertIsNone(MODULE.cycle_attention_agent("next", now_ms=NOW))
 
         self.assertEqual(run.call_count, 2)
+        log.assert_called_once_with("next: no agent needs attention")
+
+    def test_log_appends_to_the_requested_file(self) -> None:
+        with tempfile.TemporaryDirectory() as state_dir:
+            path = Path(state_dir) / "nested" / "attention.log"
+            with patch.object(MODULE, "LOG_PATH", path):
+                MODULE.log("next: switching to done claude term_x navigated=True")
+
+            self.assertRegex(
+                path.read_text(),
+                r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} orca-cycle-attention-agent: "
+                r"next: switching to done claude term_x navigated=True\n$",
+            )
 
 
 class OrcaCliResolutionTests(unittest.TestCase):

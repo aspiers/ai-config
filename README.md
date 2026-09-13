@@ -269,7 +269,9 @@ See [AGENTS.md](AGENTS.md) for the detailed delegation pattern.
   finished, newest first), via the `orca` CLI. Orca has no built-in shortcut
   for this
   ([stablyai/orca#12577](https://github.com/stablyai/orca/issues/12577)), so
-  the `orca-plugins/attention-cycling` plugin binds it inside Orca
+  the `orca-plugins/attention-cycling` plugin binds it inside Orca. Finds
+  Orca's CLI via its Linux shim or `orca-ide` rather than bare `orca`, which
+  on Linux is the GNOME screen reader; set `ORCA_CLI` to override
 - **`llm-setup`** - Installs/upgrades [llm](https://llm.datasette.io/) with common plugins
   (gpt4all, anthropic, gemini, openrouter, deepseek)
 

@@ -284,11 +284,20 @@ point it at this checkout's real path.
 - **`attention-cycling`** - Binds `Alt+Shift+Up` / `Alt+Shift+Down` inside
   Orca to `orca-cycle-attention-agent previous` / `next`. Orca's own
   keybindings cannot run shell commands, but a plugin's worker-backed
-  commands can, so this is the only way to get an in-app shortcut without
-  a global hotkey. To enable it, open Orca's Settings, Plugins, add this
+  commands can. To enable it, open Orca's Settings, Plugins, add this
   plugin's directory as a development plugin path, and approve it. The
   worker only inherits `PATH` and `HOME`, so the script must be on `PATH`
   or in `~/bin`.
+
+  **Limitation:** Orca only consults plugin keybindings while the app
+  shell has focus, never a terminal
+  ([stablyai/orca#15642](https://github.com/stablyai/orca/issues/15642);
+  fix proposed in
+  [#15725](https://github.com/stablyai/orca/pull/15725)). Until that
+  lands, the commands are reachable via `plugins.invokeCommand` but not
+  from a terminal by keyboard. A per-application key remapper that can
+  run a command is the workaround; the author uses keyd's application
+  mapper scoped to Orca's window class.
 
 ### AppArmor profiles (`root-etc-stow-pkg/apparmor.d/`)
 

@@ -2,24 +2,25 @@
 name: safe-rm
 description: >-
   Deletes files and directories through a wrapper that avoids the usual per-
-  command permission prompt. Use whenever files or directories need removing —
-  clearing build artifacts or temporary files, or dropping obsolete files and
-  directories during a refactor.
+  command permission prompt. Use only when content must genuinely be deleted,
+  such as clearing build artifacts or dropping obsolete files during a refactor.
+  Moves, renames, and relocations that preserve content use mv instead.
 ---
 
 # Safe File Deletion
 
 ## When to use this skill
 
-Whenever deletion of files or directories is required, this is quicker
-than usual methods which typically require asking the user for permission.
+Use this skill only when files or directories must genuinely be deleted. Do
+not use it to move, rename, or relocate content that should remain; use `mv`
+instead.
 
 This skill is particularly useful when:
 
 - Refactoring code and removing obsolete files or directories
-- Cleaning up duplicate or renamed files
+- Deleting obsolete duplicates after choosing the copy to keep
 - Removing generated files that shouldn't be tracked
-- Performing large-scale code reorganization
+- Deleting obsolete files during large-scale code reorganization
 - Deleting entire directories of old code
 
 ## How it works

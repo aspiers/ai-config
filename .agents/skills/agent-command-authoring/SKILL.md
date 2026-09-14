@@ -1,19 +1,19 @@
 ---
 name: agent-command-authoring
-description: Create Claude Code slash commands, OpenCode command files, and Pi prompt templates that delegate to the right subagent or skill. Use when creating new commands or refactoring existing ones to follow platform conventions.
+description: Create Claude Code slash commands, OpenCode command files, Pi prompt templates, and Codex custom prompts that delegate to the right subagent or skill. Use when creating new commands, porting commands across agent platforms, or refactoring existing commands to follow platform conventions.
 ---
 
 # Agent Command Authoring
 
-Create commands for Claude Code, OpenCode, and Pi that are thin wrappers around
-reusable agent capabilities.
+Create commands for Claude Code, OpenCode, Pi, and Codex that are thin wrappers
+around reusable agent capabilities.
 
 ## When to Use This Skill
 
 Use this skill when:
 - Creating a new custom command
 - Refactoring an existing command to delegate correctly
-- Porting commands between Claude Code, OpenCode, and Pi
+- Porting commands between Claude Code, OpenCode, Pi, and Codex
 - Ensuring consistency between command implementations across agent harnesses
 
 ## Platform Model
@@ -25,10 +25,16 @@ Different harnesses support different delegation mechanisms:
 | Claude Code | `.claude/commands/<name>.md` | `Task(subagent-name)` for context-independent tasks; `Skill(skill-name)` for session-context-dependent tasks |
 | OpenCode | `.config/opencode/command/<name>.md` | `agent: subagent-name` for context-independent tasks; omit `agent:` and call the skill directly for session-context-dependent tasks |
 | Pi | `.pi/prompts/<name>.md` project-local, or `~/.pi/agent/prompts/<name>.md` global | Prompt template that invokes the skill directly |
+| Codex | `$CODEX_HOME/prompts/<name>.md`, usually `~/.codex/prompts/<name>.md` | Custom prompt that invokes the skill directly |
 
-Pi does **not** have subagents by default, so Pi command templates should not
-reference `Task(...)`, `agent:`, or "use the `<name>` subagent". Convert those
-to direct skill invocation.
+Pi does **not** have subagents by default, and Codex custom prompts do not
+declare a subagent target. Their templates should not reference `Task(...)`,
+`agent:`, or "use the `<name>` subagent". Convert those to direct skill
+invocation.
+
+Codex custom prompts are deprecated upstream. Keep reusable behavior in
+skills. Add a custom prompt only when the user or repository wants an explicit
+`/prompts:<name>` command.
 
 ## The Delegation Pattern
 
@@ -39,7 +45,8 @@ delegate to subagents, which in turn delegate to skills:
 command → subagent → skill
 ```
 
-For Pi, commands are prompt templates and should invoke skills directly:
+For Pi and Codex, commands are prompt templates and should invoke skills
+directly:
 
 ```
 prompt template → skill
@@ -104,9 +111,12 @@ Use the `<subagent-name>` subagent to accomplish this task.
 For session-context-dependent commands, omit `agent:` so the command runs in
 the primary agent's context, and invoke the skill directly in the body.
 
-## Pi Prompt Template Structure
+## Pi and Codex Prompt Template Structure
 
 **Pi prompt template** (`.pi/prompts/<name>.md` or `~/.pi/agent/prompts/<name>.md`):
+
+**Codex custom prompt** (`$CODEX_HOME/prompts/<name>.md`, usually
+`~/.codex/prompts/<name>.md`):
 
 ```yaml
 ---
@@ -136,12 +146,26 @@ Arguments: $ARGUMENTS
   them. Prefer direct skill invocation.
 - After adding or changing templates in a running Pi session, run `/reload`.
 
-### Common Subagent → Skill Mapping for Pi
+### Codex Rules
 
-When porting existing Claude/OpenCode commands to Pi, map common subagents to
-skills:
+- Filename becomes the slash command: `~/.codex/prompts/review.md` creates
+  `/prompts:review`.
+- Use `$ARGUMENTS` to pass the user's trailing command text.
+- Do not include Claude/OpenCode-only fields such as `allowed-tools` or
+  `agent`.
+- In a dotfiles repository, edit its source path, such as
+  `.codex/prompts/<name>.md`, then verify that the deployment exposes it under
+  `$CODEX_HOME/prompts/`. Do not assume that committing the source deploys it.
+- When the Pi and Codex bodies are identical in a shared config repository,
+  make the Codex source a relative symlink to the Pi template. Keep separate
+  files only when platform syntax requires different content.
 
-| Subagent | Pi skill |
+### Common Subagent → Skill Mapping for Pi and Codex
+
+When porting existing Claude/OpenCode commands to Pi or Codex, map common
+subagents to skills:
+
+| Subagent | Pi/Codex skill |
 |----------|----------|
 | `git-committer` | `git-commit` |
 | `git-stager` | `git-staging` |
@@ -174,7 +198,7 @@ and argument-passing instructions.
 Use the `<subagent-name>` subagent to accomplish this task.
 ```
 
-**Pi prompt template or direct-skill command:**
+**Pi/Codex prompt template or direct-skill command:**
 
 ```markdown
 Use the `<skill-name>` skill to accomplish this task.
@@ -212,7 +236,7 @@ agent: git-committer
 Use the `git-committer` subagent to create a well-formatted commit.
 ```
 
-### Minimal Command (Pi)
+### Minimal Prompt Template (Pi or Codex)
 
 ```yaml
 ---
@@ -234,7 +258,7 @@ allowed-tools: Task(prp-generator)
 Use the `prp-generator` subagent to create a Product Requirements Prompt.
 ```
 
-### Command with Arguments (Pi)
+### Prompt Template with Arguments (Pi or Codex)
 
 ```yaml
 ---
@@ -255,7 +279,7 @@ Feature: $ARGUMENTS
 4. **Token efficiency**: Skills load progressively via progressive disclosure
 5. **No duplication**: Implementation lives in one place (the skill)
 6. **Isolation where available**: Claude/OpenCode subagents run context-independent tasks in their own context
-7. **Pi compatibility**: Pi prompt templates preserve slash-command ergonomics without assuming subagents
+7. **Pi/Codex compatibility**: Prompt templates preserve slash-command ergonomics without assuming subagents
 
 ## Anti-Pattern to Avoid
 
@@ -279,7 +303,7 @@ Stage relevant changes via `git add`...
 6. Run `git status` again...
 ```
 
-**BAD for Pi** - Pi template that references a subagent:
+**BAD for Pi/Codex** - Prompt template that references a subagent:
 
 ```yaml
 ---
@@ -289,7 +313,7 @@ description: Stage changes via git add
 Use the `git-stager` subagent to stage relevant changes.
 ```
 
-**GOOD for Pi** - Pi template that invokes the skill directly:
+**GOOD for Pi/Codex** - Prompt template that invokes the skill directly:
 
 ```yaml
 ---
@@ -339,8 +363,8 @@ Use the `code-refactoring-dry` skill to remove duplication in the files you
 have worked on in this session.
 ```
 
-In OpenCode, omit the `agent:` field entirely for the same effect. In Pi, all
-prompt templates should use this direct skill-invocation style.
+In OpenCode, omit the `agent:` field entirely for the same effect. In Pi and
+Codex, all prompt templates should use this direct skill-invocation style.
 
 ## Workflow
 
@@ -351,13 +375,20 @@ prompt templates should use this direct skill-invocation style.
    - OpenCode: `.config/opencode/agents/<name>.md`
 3. **If no subagent exists for Claude/OpenCode**: Ask the user if they want one created.
    - If yes, use the `subagent-authoring` skill to create it first.
-   - If no, create only the Pi template or stop and explain the limitation.
+   - If no, create only the Pi and Codex templates or stop and explain the
+     limitation.
 4. Create/refactor Claude Code command with `allowed-tools: Task(subagent-name)`.
 5. Create/refactor OpenCode command with `agent: subagent-name`.
 6. Create/refactor Pi prompt template with direct skill invocation in `.pi/prompts/<name>.md`.
-7. Verify the chains:
+7. Create/refactor the Codex custom prompt with direct skill invocation in
+   `$CODEX_HOME/prompts/<name>.md`, or in the corresponding deployment source
+   path when working in a dotfiles repository.
+8. Verify the chains:
    - Claude/OpenCode: command → subagent → skill
-   - Pi: prompt template → skill
+   - Pi/Codex: prompt template → skill
+9. If source files require a separate deployment step, verify the deployed
+   command exists. Run the deployment only when the user or repository policy
+   authorizes it.
 
 ## Missing Subagent Handling
 
@@ -379,8 +410,8 @@ If either file is missing, **ask the user**:
 > the Claude/OpenCode command?"
 
 Do NOT create Claude/OpenCode commands that reference non-existent subagents.
-This requirement does not apply to Pi prompt templates, which should reference
-skills directly.
+This requirement does not apply to Pi or Codex prompt templates, which should
+reference skills directly.
 
 ## Verification
 
@@ -391,7 +422,13 @@ After creating or refactoring commands:
 python3 - <<'PY'
 from pathlib import Path
 import yaml
-for root in ['.claude/commands', '.config/opencode/command', '.pi/prompts']:
+for root in [
+    '.claude/commands',
+    '.config/opencode/command',
+    '.pi/prompts',
+    '.pi/agent/prompts',
+    '.codex/prompts',
+]:
     for path in Path(root).glob('*.md'):
         text = path.read_text()
         if text.startswith('---\n'):
@@ -400,13 +437,16 @@ print('command frontmatter ok')
 PY
 ```
 
-For Pi, also check that templates do not contain Claude/OpenCode-only fields:
+For Pi and Codex, also check that templates do not contain
+Claude/OpenCode-only fields:
 
 ```bash
-grep -RIn 'allowed-tools\|^agent:\|Task(\|subagent' .pi/prompts || true
+rg -n 'allowed-tools|^agent:|Task\(|`ask_user`|`ToolSearch`|!`' \
+  .pi/prompts .pi/agent/prompts .codex/prompts 2>/dev/null || true
 ```
 
 Run `/reload` in active Pi sessions after changing Pi prompt templates.
+Start a new Codex session if it does not discover a newly deployed prompt.
 
 ## Related Skills
 

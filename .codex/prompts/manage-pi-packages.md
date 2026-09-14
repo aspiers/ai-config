@@ -1,0 +1,1 @@
+../../.pi/agent/prompts/manage-pi-packages.md

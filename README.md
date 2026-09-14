@@ -152,9 +152,10 @@ this public repository.
 - `config.toml` - Model, reasoning effort, approvals, feature flags, hook
   trust state, and MCP server definitions
 - `hooks.json` - Session and tool-use hooks
-- `prompts/` - Custom slash commands, as prompt templates that invoke skills
-  directly. Codex has no subagents, so these mirror the Pi templates in
-  `.pi/agent/prompts/` rather than the Claude Code and OpenCode commands.
+- `prompts/` - Deprecated custom slash commands, invoked as
+  `/prompts:<name>`. They invoke skills directly and mirror the Pi templates
+  in `.pi/agent/prompts/`, because Codex custom prompts cannot select a
+  subagent.
 
 Codex reads `AGENTS.md` automatically, so the repository's instructions apply
 without further configuration.

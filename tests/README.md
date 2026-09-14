@@ -67,6 +67,16 @@ durable checklist, and surface `bd human list` at unattended handoff.
 python3 tests/test_background_human_attention.py
 ```
 
+## Agent Command Parity Tests
+
+`test_agent_command_parity.py` verifies that Codex exposes every Pi prompt
+through a relative symlink, and that the shared templates have valid
+frontmatter without platform-specific tool names or shell expansion.
+
+```bash
+python3 tests/test_agent_command_parity.py
+```
+
 ## Beads Blocker-Review Tests
 
 `test_beads_blocker_review.py` verifies that `/blockers` separates actionable

@@ -1,0 +1,1 @@
+../../.pi/agent/prompts/plan-to-beads.md

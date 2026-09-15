@@ -9,6 +9,15 @@
           }
         ],
         "matcher": "^Bash$"
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f '/home/adam/.orca/agent-hooks/codex-hook.sh' ] && [ -r '/home/adam/.orca/agent-hooks/codex-hook.sh' ] && [ -x '/home/adam/.orca/agent-hooks/codex-hook.sh' ]; then /bin/sh '/home/adam/.orca/agent-hooks/codex-hook.sh'; else { command -p cat 2>/dev/null || cat; } >/dev/null 2>&1 || :; fi",
+            "timeout": 10
+          }
+        ]
       }
     ],
     "PostToolUseFailure": [
@@ -31,6 +40,15 @@
           }
         ],
         "matcher": "^Bash$"
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f '/home/adam/.orca/agent-hooks/codex-hook.sh' ] && [ -r '/home/adam/.orca/agent-hooks/codex-hook.sh' ] && [ -x '/home/adam/.orca/agent-hooks/codex-hook.sh' ]; then /bin/sh '/home/adam/.orca/agent-hooks/codex-hook.sh'; else { command -p cat 2>/dev/null || cat; } >/dev/null 2>&1 || :; fi",
+            "timeout": 10
+          }
+        ]
       }
     ],
     "SessionStart": [
@@ -40,6 +58,70 @@
             "command": "bash '/home/adam/.codex/herdr-agent-state.sh' session",
             "timeout": 10,
             "type": "command"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f '/home/adam/.orca/agent-hooks/codex-hook.sh' ] && [ -r '/home/adam/.orca/agent-hooks/codex-hook.sh' ] && [ -x '/home/adam/.orca/agent-hooks/codex-hook.sh' ]; then /bin/sh '/home/adam/.orca/agent-hooks/codex-hook.sh'; else { command -p cat 2>/dev/null || cat; } >/dev/null 2>&1 || :; fi",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f '/home/adam/.orca/agent-hooks/codex-hook.sh' ] && [ -r '/home/adam/.orca/agent-hooks/codex-hook.sh' ] && [ -x '/home/adam/.orca/agent-hooks/codex-hook.sh' ]; then /bin/sh '/home/adam/.orca/agent-hooks/codex-hook.sh'; else { command -p cat 2>/dev/null || cat; } >/dev/null 2>&1 || :; fi",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f '/home/adam/.orca/agent-hooks/codex-hook.sh' ] && [ -r '/home/adam/.orca/agent-hooks/codex-hook.sh' ] && [ -x '/home/adam/.orca/agent-hooks/codex-hook.sh' ]; then /bin/sh '/home/adam/.orca/agent-hooks/codex-hook.sh'; else { command -p cat 2>/dev/null || cat; } >/dev/null 2>&1 || :; fi",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f '/home/adam/.orca/agent-hooks/codex-hook.sh' ] && [ -r '/home/adam/.orca/agent-hooks/codex-hook.sh' ] && [ -x '/home/adam/.orca/agent-hooks/codex-hook.sh' ]; then /bin/sh '/home/adam/.orca/agent-hooks/codex-hook.sh'; else { command -p cat 2>/dev/null || cat; } >/dev/null 2>&1 || :; fi",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f '/home/adam/.orca/agent-hooks/codex-hook.sh' ] && [ -r '/home/adam/.orca/agent-hooks/codex-hook.sh' ] && [ -x '/home/adam/.orca/agent-hooks/codex-hook.sh' ]; then /bin/sh '/home/adam/.orca/agent-hooks/codex-hook.sh'; else { command -p cat 2>/dev/null || cat; } >/dev/null 2>&1 || :; fi",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f '/home/adam/.orca/agent-hooks/codex-hook.sh' ] && [ -r '/home/adam/.orca/agent-hooks/codex-hook.sh' ] && [ -x '/home/adam/.orca/agent-hooks/codex-hook.sh' ]; then /bin/sh '/home/adam/.orca/agent-hooks/codex-hook.sh'; else { command -p cat 2>/dev/null || cat; } >/dev/null 2>&1 || :; fi",
+            "timeout": 10
           }
         ]
       }

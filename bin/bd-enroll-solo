@@ -286,26 +286,56 @@ check_skill_repair_prerequisites() {
     fi
 }
 
+# A tracked, non-symlink CLAUDE.md that differs from AGENTS.md. Shared by the
+# pre-enrollment verification and --check so enrollment can never report
+# success on a layout that --check would then reject.
+instruction_files_diverged() {
+    git ls-files --error-unmatch -- CLAUDE.md >/dev/null 2>&1 || return 1
+    [[ -L "$ROOT/CLAUDE.md" ]] && return 1
+    ! cmp -s "$ROOT/AGENTS.md" "$ROOT/CLAUDE.md"
+}
+
 # In tracked mode a diverged AGENTS.md/CLAUDE.md pair is a policy error: bd
 # init writes different platform sections to each, so enrolling would deepen
 # the divergence. A symlinked CLAUDE.md is safe and is the recommended layout.
 check_instruction_files() {
     [[ "$LOCAL_MODE" == true ]] && return 0
 
-    git ls-files --error-unmatch -- CLAUDE.md >/dev/null 2>&1 || return 0
+    if [[ ! -e "$ROOT/CLAUDE.md" && ! -L "$ROOT/CLAUDE.md" ]]; then
+        return 0
+    fi
 
     if [[ -L "$ROOT/CLAUDE.md" ]]; then
         info "CLAUDE.md is a symlink; managed-section injection is safe"
         return 0
     fi
 
-    cmp -s "$ROOT/AGENTS.md" "$ROOT/CLAUDE.md" ||
+    git ls-files --error-unmatch -- CLAUDE.md >/dev/null 2>&1 ||
+        fail "CLAUDE.md exists but is untracked. 'bd init' would inject
+       Claude-only sections into it and stage it, diverging it from
+       AGENTS.md. Replace it with a symlink to AGENTS.md, or re-run with
+       --local."
+
+    if instruction_files_diverged; then
         fail "tracked AGENTS.md and CLAUDE.md differ. Resolve this first;
        never edit only one file in a diverged pair."
+    fi
 
     fail "AGENTS.md and CLAUDE.md are identical regular files. 'bd init' would
        write different platform sections to each. Replace CLAUDE.md with a
        symlink to AGENTS.md, or re-run with --local."
+}
+
+# Without a CLAUDE.md, 'bd init' creates a regular one from its own template,
+# which immediately diverges from AGENTS.md and fails --check. Pre-empt that
+# with the recommended symlink layout so bd writes into a single file.
+ensure_claude_md_symlink() {
+    [[ "$LOCAL_MODE" == true ]] && return 0
+    [[ -e "$ROOT/CLAUDE.md" || -L "$ROOT/CLAUDE.md" ]] && return 0
+
+    info "Creating CLAUDE.md as a symlink to AGENTS.md"
+    run ln -s AGENTS.md "$ROOT/CLAUDE.md"
+    run git add -- CLAUDE.md
 }
 
 # Append exclusion rules to .git/info/exclude, which is per-clone and never
@@ -766,6 +796,10 @@ ${status_after:-  (clean)}"
     else
         git ls-files --error-unmatch -- .beads-solo >/dev/null 2>&1 ||
             fail ".beads-solo marker is not tracked"
+
+        if instruction_files_diverged; then
+            fail "tracked AGENTS.md and CLAUDE.md diverged during enrollment"
+        fi
     fi
 }
 
@@ -878,10 +912,8 @@ run_check() {
         grep -Fq 'Use the `beads-solo` skill' "$ROOT/AGENTS.md" 2>/dev/null ||
             errors+=("AGENTS.md lacks the beads-solo policy declaration")
 
-        if git ls-files --error-unmatch -- CLAUDE.md >/dev/null 2>&1 &&
-               [[ ! -L "$ROOT/CLAUDE.md" ]]; then
-            cmp -s "$ROOT/AGENTS.md" "$ROOT/CLAUDE.md" ||
-                errors+=("tracked AGENTS.md and CLAUDE.md differ")
+        if instruction_files_diverged; then
+            errors+=("tracked AGENTS.md and CLAUDE.md differ")
         fi
     fi
 
@@ -917,8 +949,12 @@ EOF
 
 Profile: tracked
 
-.beads-solo and AGENTS.md are staged but NOT committed. Review them, then
-commit when you are satisfied.
+'bd init' committed the enrollment (.beads-solo, AGENTS.md, CLAUDE.md,
+.beads/ and agent integration files) as "bd init: initialize beads issue
+tracking"; it offers no way to skip that commit. The export settings applied
+afterwards are staged in .beads/config.yaml but NOT committed.
+
+Review AGENTS.md now, then amend or follow up that commit as you see fit.
 EOF
     fi
 
@@ -972,6 +1008,7 @@ main() {
     install_beads_skill_links
     record_opt_in
     install_policy_declaration
+    ensure_claude_md_symlink
     initialize_workspace
     install_local_memory
     configure_workspace

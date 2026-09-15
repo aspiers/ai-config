@@ -122,14 +122,17 @@ class BdEnrollSoloTestCase(unittest.TestCase):
             )
         return result
 
-    def enroll_or_skip(self):
-        """Enroll with --local, skipping only on genuine environment failure.
+    def enroll_or_skip(self, local=True):
+        """Enroll (--local by default), skipping only on environment failure.
 
         A violated invariant must fail the suite, so the script's own
         verification errors are never treated as "unavailable". Only an
         inability to stand up the Beads workspace justifies a skip.
         """
-        result = self.enroll("--local", "--yes", "--prefix", "testrepo", check=False)
+        profile_args = ("--local",) if local else ()
+        result = self.enroll(
+            *profile_args, "--yes", "--prefix", "testrepo", check=False
+        )
         if result.returncode == 0:
             return result
 
@@ -146,7 +149,8 @@ class BdEnrollSoloTestCase(unittest.TestCase):
             "is not tracked",
             "opt-in is not recorded",
             "not in server mode",
-            "beads.role",
+            "beads.role is not pinned",
+            "diverged",
         )
 
         if any(marker in combined for marker in verification_failures):
@@ -444,6 +448,38 @@ class TestCheckMode(BdEnrollSoloTestCase):
             result.returncode, 0, f"check failed:\n{result.stdout}\n{result.stderr}"
         )
         self.assertIn("profile: local", result.stdout)
+
+    @unittest.skipUnless(bd_available(), "bd not installed")
+    def test_reports_tracked_profile_after_tracked_enrollment(self):
+        """A fresh tracked enrollment must pass --check immediately.
+
+        Without a CLAUDE.md, 'bd init' used to create a regular one from its
+        own template, diverging it from AGENTS.md so that --check failed
+        straight after a successful enrollment.
+        """
+        Path("AGENTS.md").write_text("# AGENTS.md\n\nHello.\n")
+        self.run_git("add", "AGENTS.md")
+        self.run_git("commit", "-m", "add AGENTS.md")
+
+        self.enroll_or_skip(local=False)
+        result = self.check()
+        self.assertEqual(
+            result.returncode, 0, f"check failed:\n{result.stdout}\n{result.stderr}"
+        )
+        self.assertIn("profile: tracked", result.stdout)
+        self.assertTrue(
+            Path("CLAUDE.md").is_symlink(), "CLAUDE.md should symlink to AGENTS.md"
+        )
+        self.assertEqual(os.readlink("CLAUDE.md"), "AGENTS.md")
+        self.assertIn(
+            "false",
+            subprocess.run(
+                ["bd", "config", "get", "export.git-add"],
+                capture_output=True,
+                text=True,
+                env=self.command_env,
+            ).stdout,
+        )
 
     @unittest.skipUnless(bd_available(), "bd not installed")
     def test_check_is_read_only_on_an_enrolled_repository(self):

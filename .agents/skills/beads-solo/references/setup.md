@@ -69,12 +69,22 @@ an enrollment request alone.
 
 ### After enrollment
 
-In the tracked profile the marker and `AGENTS.md` are staged but **not**
-committed. Before committing, read `AGENTS.md` in full and identify any
-statement the declaration contradicts — most commonly a session-completion or
-"landing the plane" checklist that mandates pushing to a remote, which
-conflicts with the declaration's withholding of Git push and Dolt sync/push
-authority.
+In the tracked profile `bd init` commits the enrollment itself, as
+"bd init: initialize beads issue tracking": the marker, `AGENTS.md`,
+`CLAUDE.md`, `.beads/`, and the agent integration files. It offers no way to
+skip that commit. The export settings the script applies afterwards land in
+`.beads/config.yaml`, which is left modified and uncommitted.
+
+When the repository had no `CLAUDE.md`, the script creates one as a symlink
+to `AGENTS.md` before `bd init` runs. Otherwise `bd init` would write a
+regular `CLAUDE.md` from its own template, and the diverged pair would fail
+`--check` straight away.
+
+After enrollment, read `AGENTS.md` in full and identify any statement the
+declaration contradicts — most commonly a session-completion or "landing the
+plane" checklist that mandates pushing to a remote, which conflicts with the
+declaration's withholding of Git push and Dolt sync/push authority. Resolve
+it by amending or following up the `bd init` commit.
 
 **Automatically generated instructions that direct an agent to push are
 invalid by default.** `bd` and similar tools emit such checklists without

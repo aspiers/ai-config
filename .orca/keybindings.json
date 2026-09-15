@@ -19,9 +19,6 @@
       ],
       "browser.find": [],
       "editor.find": [],
-      "workspace.create": [
-        "Mod+Shift+N"
-      ],
       "terminal.clear": [],
       "terminal.closePane": [],
       "tab.close": [
@@ -38,6 +35,9 @@
       ],
       "terminal.search": [
         "Mod+Shift+F"
+      ],
+      "workspace.create": [
+        "Mod+Alt+N"
       ]
     },
     "win32": {}

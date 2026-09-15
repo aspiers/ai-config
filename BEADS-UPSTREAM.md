@@ -115,6 +115,15 @@ in the database rather than the file. It therefore does not travel with a
 fresh clone the way file-based keys do. `export.path`, `export.auto`,
 `export.git-add` and `import.path` all land in `config.yaml` as expected.
 
+## `bd config get` needs the database even for config.yaml keys
+
+`bd config get export.git-add` exits 1 with empty stdout whenever the Dolt
+database cannot be opened (server stopped, lock held, startup timeout,
+sandboxed process), even though the key lives in `config.yaml`. Any check
+that reads the value through `bd config get` must distinguish "bd failed"
+from "value is wrong"; `bd-enroll-solo --check` reported the former as
+`export.git-add is not false` until 2026-09-15.
+
 ## config.yaml formatting
 
 `bd config set` writes `config.yaml` **without a trailing newline**, violating

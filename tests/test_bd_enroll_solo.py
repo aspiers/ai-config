@@ -482,6 +482,28 @@ class TestCheckMode(BdEnrollSoloTestCase):
         )
 
     @unittest.skipUnless(bd_available(), "bd not installed")
+    def test_unreachable_database_is_not_reported_as_wrong_settings(self):
+        """A bd failure must not masquerade as a policy violation.
+
+        'bd config get' exits 1 whenever the Dolt server is unreachable, even
+        for keys stored in config.yaml. Agents reading "export.git-add is not
+        false" then ran a pointless repair; the check must name the cause.
+        """
+        self.enroll_or_skip()
+        env = dict(self.command_env, BEADS_DOLT_SERVER_HOST="10.255.255.1")
+        result = subprocess.run(
+            [str(BD_ENROLL_SOLO), "--check"],
+            capture_output=True,
+            text=True,
+            env=env,
+            timeout=120,
+        )
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("Beads database unreachable", result.stderr)
+        self.assertNotIn("export.git-add is not false", result.stderr)
+        self.assertNotIn("policy memory", result.stderr)
+
+    @unittest.skipUnless(bd_available(), "bd not installed")
     def test_check_is_read_only_on_an_enrolled_repository(self):
         self.enroll_or_skip()
         before = self.git_status()

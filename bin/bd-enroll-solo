@@ -850,8 +850,20 @@ run_check() {
     [[ "$(git config --local --get beads.role 2>/dev/null)" == maintainer ]] ||
         errors+=("beads.role is not pinned to maintainer")
 
-    [[ "$(bd config get export.git-add 2>/dev/null)" == *false* ]] ||
-        errors+=("export.git-add is not false; the JSONL export may be staged")
+    # 'bd config get' opens the Dolt database even for keys that live in
+    # config.yaml, so a stopped, locked, or sandboxed server makes it exit 1
+    # with empty output. Reporting that as a wrong value sent agents off to
+    # "repair" a setting that was already correct; name the real cause.
+    local db_ok=true git_add
+    if git_add=$(bd config get export.git-add 2>&1); then
+        [[ "$git_add" == *false* ]] ||
+            errors+=("export.git-add is not false; the JSONL export may be staged")
+    else
+        db_ok=false
+        errors+=("Beads database unreachable, so bd-backed settings could not be
+    validated (bd config get failed: ${git_add%%$'\n'*}).
+    Retry once the Dolt server is available; do not change any setting.")
+    fi
 
     local link privacy_problem skill_path
     local skill_found=false
@@ -900,8 +912,10 @@ run_check() {
         [[ -z "$staged" ]] ||
             errors+=("Beads artifacts are staged: ${staged//$'\n'/, }")
 
-        bd memories --json 2>/dev/null | grep -Fq "$MEMORY_KEY" ||
+        if [[ "$db_ok" == true ]] &&
+               ! bd memories --json 2>/dev/null | grep -Fq "$MEMORY_KEY"; then
             errors+=("policy memory '$MEMORY_KEY' is missing; run 'bd remember'")
+        fi
     else
         [[ -f "$ROOT/.beads-solo" && ! -L "$ROOT/.beads-solo" &&
                ! -s "$ROOT/.beads-solo" ]] ||

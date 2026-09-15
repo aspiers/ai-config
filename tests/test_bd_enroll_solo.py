@@ -498,8 +498,11 @@ class TestCheckMode(BdEnrollSoloTestCase):
             env=env,
             timeout=120,
         )
-        self.assertEqual(result.returncode, 1)
-        self.assertIn("Beads database unreachable", result.stderr)
+        self.assertEqual(result.returncode, 2, result.stderr)
+        self.assertIn("could not be validated", result.stderr)
+        self.assertIn("sandboxed", result.stderr)
+        self.assertIn("Do NOT run 'bd config set'", result.stderr)
+        self.assertNotIn("enrollment is malformed", result.stderr)
         self.assertNotIn("export.git-add is not false", result.stderr)
         self.assertNotIn("policy memory", result.stderr)
 

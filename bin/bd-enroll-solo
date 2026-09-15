@@ -84,8 +84,10 @@ The script:
 Options:
   --check           Validate an existing enrollment instead of creating one.
                     Prints "profile: tracked" or "profile: local" and exits 0
-                    when valid; exits 1 when absent or malformed. This is the
-                    only validation the beads-solo skill needs to run.
+                    when valid; exits 1 when absent or malformed; exits 2
+                    when bd cannot open the Beads database, so nothing could
+                    be validated. This is the only validation the beads-solo
+                    skill needs to run.
   --repair-skills   Install or repair only the repository-local Beads skill
                     links and exclusions in an existing enrollment. Requires
                     --yes unless used with --dry-run.
@@ -813,6 +815,8 @@ ${status_after:-  (clean)}"
 # Exit status:
 #   0  enrolled and valid; profile printed to stdout as "profile: tracked|local"
 #   1  not enrolled, or the enrollment is malformed
+#   2  indeterminate: bd could not open the Beads database, so the
+#      bd-backed settings were not validated and nothing should be changed
 run_check() {
     local errors=()
     local profile=""
@@ -854,15 +858,13 @@ run_check() {
     # config.yaml, so a stopped, locked, or sandboxed server makes it exit 1
     # with empty output. Reporting that as a wrong value sent agents off to
     # "repair" a setting that was already correct; name the real cause.
-    local db_ok=true git_add
+    local db_ok=true db_error="" git_add
     if git_add=$(bd config get export.git-add 2>&1); then
         [[ "$git_add" == *false* ]] ||
             errors+=("export.git-add is not false; the JSONL export may be staged")
     else
         db_ok=false
-        errors+=("Beads database unreachable, so bd-backed settings could not be
-    validated (bd config get failed: ${git_add%%$'\n'*}).
-    Retry once the Dolt server is available; do not change any setting.")
+        db_error=${git_add%%$'\n'*}
     fi
 
     local link privacy_problem skill_path
@@ -935,6 +937,23 @@ run_check() {
         echo "beads-solo enrollment is malformed ($profile profile):" >&2
         printf '  - %s\n' "${errors[@]}" >&2
         return 1
+    fi
+
+    if [[ "$db_ok" != true ]]; then
+        cat >&2 <<EOF
+beads-solo enrollment could not be validated ($profile profile):
+  bd could not open the Beads database, so export.git-add and the policy
+  memory were not checked. Nothing is known to be malformed.
+  ($db_error)
+
+  Usual causes: the Dolt server is stopped, still starting, or holding a
+  lock, or this process is sandboxed without access to the server's socket
+  or network. Rerun this check from a process that can reach the server,
+  for example outside the sandbox or with the same permissions 'bd' normally
+  has. Do NOT run 'bd config set' or any other repair: the settings are
+  unread, not wrong.
+EOF
+        return 2
     fi
 
     echo "profile: $profile"

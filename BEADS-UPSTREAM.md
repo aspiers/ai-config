@@ -122,7 +122,7 @@ database cannot be opened (server stopped, lock held, startup timeout,
 sandboxed process), even though the key lives in `config.yaml`. Any check
 that reads the value through `bd config get` must distinguish "bd failed"
 from "value is wrong"; `bd-enroll-solo --check` reported the former as
-`export.git-add is not false` until 2026-09-15.
+`export.git-add is not false` until 2026-09-15, and now exits 2 instead.
 
 ## config.yaml formatting
 

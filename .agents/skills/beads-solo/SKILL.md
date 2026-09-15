@@ -29,9 +29,11 @@ bd-enroll-solo --check
 - **Exit 1** — not enrolled, or the enrollment is malformed. The reason is on
   stderr. Stop and report it. Create an enrollment only when the user
   explicitly requests it; see [Setup and Repair](references/setup.md).
-  If the reason is "Beads database unreachable", nothing is malformed: `bd`
-  could not open the Dolt database, so retry once it is available and do
-  not change any setting.
+- **Exit 2** — indeterminate. `bd` could not open the Dolt database, so the
+  bd-backed settings were not checked and nothing is known to be malformed.
+  This is what a sandboxed process without access to the Dolt server sees.
+  Rerun the check from a process that can reach the server; do not change
+  any setting, and do not treat it as a malformed enrollment.
 
 `bd-enroll-solo --check` is the **complete** validation for this skill. It
 verifies the opt-in, Dolt server mode, the maintainer role, the export policy,

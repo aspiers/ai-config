@@ -93,8 +93,9 @@ numbers when URLs are available.
 
 ## Build and open the additional HTML report
 
-Write report data to a temporary JSON file outside the repository. Use this
-shape; `request` is optional and `stage` must be one of the status names above:
+Write report data to `tmp/upstreaming-status.json` at the root of the
+repository being reported on, creating `tmp/` if needed. Use this shape;
+`request` is optional and `stage` must be one of the status names above:
 
 ```json
 {
@@ -148,11 +149,22 @@ status output in `machete_graph`; if Machete is unavailable, put the exact reaso
 there rather than inventing a graph. Set `stale` to `true` when remote state was
 not refreshed.
 
-Render the JSON with the bundled `scripts/render-report.py` into a temporary
-`.html` file outside the repository. The renderer escapes dynamic content,
-orders rows by progress, shows stack dependencies per branch, links change
-requests, and renders the Git Machete graph in a separate preformatted section.
-Generated input and HTML files must not dirty the repository.
+Render the JSON with the bundled `scripts/render-report.py` into
+`tmp/upstreaming-status.html`, next to the JSON, so that every run overwrites
+the same file and the browser can be refreshed rather than opening a new tab:
+
+```bash
+python3 <skill-dir>/scripts/render-report.py \
+    --input tmp/upstreaming-status.json --output tmp/upstreaming-status.html
+```
+
+The renderer escapes dynamic content, orders rows by progress, shows stack
+dependencies per branch, links change requests, and renders the Git Machete
+graph in a separate preformatted section. Never use a temporary directory
+outside the repository for these files. Check that `tmp/` is ignored by Git
+(`git check-ignore tmp/upstreaming-status.html`); if it is not, warn the user
+that the generated files will show as untracked rather than committing them
+or moving them elsewhere.
 
 Then load and follow [`open-in-user-browser`](../open-in-user-browser/SKILL.md),
 the `/open` workflow, with the generated HTML file as its target. In chat,

@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+#
+# Terminal launcher for AgentsView's "Resume session" button that opens the
+# resume command as an Orca terminal instead of a standalone emulator.
+#
+# AgentsView runs this with the session's working directory as cwd and the
+# resume command as the sole argument (config: [terminal] mode = "custom",
+# custom_args = "{cmd}"). Orca can only open terminals inside a registered
+# worktree, so a cwd that Orca does not know yet is registered first via
+# `orca repo add`; a cwd outside any git repo falls back to $TERMINAL.
+
+set -euo pipefail
+
+usage() {
+    echo "usage: ${0##*/} <resume-command>" >&2
+    exit 2
+}
+
+[ $# -eq 1 ] || usage
+resume_cmd=$1
+cwd=$PWD
+
+orca_selector() {
+    if orca worktree current --json >/dev/null 2>&1; then
+        echo active
+        return
+    fi
+    local toplevel
+    toplevel=$(git -C "$cwd" rev-parse --show-toplevel 2>/dev/null) || return 1
+    orca repo add --path "$toplevel" --json >/dev/null
+    echo "path:$toplevel"
+}
+
+fallback_terminal() {
+    local term=${TERMINAL:-x-terminal-emulator}
+    echo "${0##*/}: $cwd is not in a git repo; using $term" >&2
+    exec "$term" -e bash -c "$resume_cmd; exec bash"
+}
+
+selector=$(orca_selector) || fallback_terminal
+
+# Orca starts terminals at the worktree root, so restore the session's cwd.
+exec orca terminal create \
+    --worktree "$selector" \
+    --command "cd $(printf %q "$cwd") && $resume_cmd" \
+    --title "${resume_cmd%% *} resume" \
+    --focus --json >/dev/null

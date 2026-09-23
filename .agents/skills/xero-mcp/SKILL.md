@@ -24,8 +24,11 @@ browser report, never from paginating `list-manual-journals`.
 
 The server reads a self-refreshing OAuth2 token file on every tool call,
 so tokens never need refreshing by hand and **the agent session never
-needs restarting for auth**. Several servers (Claude Code, Pi, OpenCode)
-share the file safely.
+needs restarting for auth**. Several agents (Claude Code, Pi, OpenCode)
+share the file safely: refreshes are serialised by a lock, so each
+expiry is refreshed exactly once. They also share Xero's rate limits —
+"Too many requests to Xero" is not an auth failure; avoid fanning out
+many parallel Xero calls and retry after a moment.
 
 ### On an auth error: diagnose — do NOT limp to workarounds
 
@@ -44,9 +47,10 @@ see `references/mcp-vs-browser.md`).
 
 **Also read [`references/authentication.md`](references/authentication.md)**
 for first-time setup, after revoking and re-authorizing the Xero app, or
-when changing scopes. It covers the `xero-oauth` script, `.env`
-configuration, Xero app registration, the refresh-vs-full-flow choice,
-and the scopes newer tools need.
+when changing scopes, or to understand or check how several agents
+share the token. It covers the `xero-oauth` script, `.env`
+configuration, the multi-agent refresh protocol, Xero app registration,
+the refresh-vs-full-flow choice, and the scopes newer tools need.
 
 ## The server is a local best-of-breed build
 

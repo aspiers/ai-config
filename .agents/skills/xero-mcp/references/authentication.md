@@ -26,10 +26,68 @@ connected organisation Xero lists first.
 The token file (0600, in a 0700 directory) is the **single source of
 truth** for the refresh token. Xero rotates the refresh token on every
 use and only honours the previous one for a 30-minute grace period, so
-never copy a refresh token anywhere else. Every writer (the server and
-`xero-oauth`) holds the `<token file>.lock` O_EXCL lock while it
-reads, refreshes and writes, so several servers (Claude Code, Pi,
-OpenCode) can share the file safely.
+never copy a refresh token anywhere else, and never edit or delete the
+file (or its `.lock`) while agents are running.
+
+## Multiple agents sharing the token file
+
+Every agent host (each Claude Code session, Pi, OpenCode) starts its own
+server process, and all of them share the one token file.
+
+- **Access token (~30 min): sharing is harmless.** It is a bearer
+  credential that any number of processes can use at once. Each server
+  re-reads the file on every tool call, so it always uses the newest
+  access token, even one another agent just fetched.
+- **Refresh token: single-use, so refreshing is serialised.** A server
+  refreshes only when the stored access token has under 5 minutes left.
+  It then:
+  1. takes the lock by creating `<token file>.lock` with O_EXCL (only
+     one process can); others poll every 100 ms, for up to 45 s;
+  2. **re-reads the file under the lock** — if another agent refreshed
+     while it waited, it just uses that token and makes no Xero call,
+     so each expiry causes exactly one refresh however many agents
+     notice it;
+  3. calls Xero, writes the new token pair to a unique 0600 temp file,
+     fsyncs, and renames it over the token file (readers never see a
+     half-written file);
+  4. deletes the lock.
+- **Within one server**, concurrent tool calls share a single in-flight
+  refresh.
+- **`xero-oauth`** uses the same lock, so running it while agents are
+  active is safe.
+- **Crashed holder:** a lock older than 60 s is treated as abandoned and
+  broken. The refresh request times out after 20 s, so a live holder
+  never gets near that.
+- **Failed save** (disk full, permissions): that server keeps the rotated
+  token in memory and prints a warning, so the only valid refresh token
+  is not lost. Its session keeps working; after it exits, the full OAuth
+  flow is needed.
+
+Verified 2026-09-23 against live Xero: 6 processes × 20 locked
+read-modify-write cycles lost no updates, and 3 servers hitting the same
+expired token at once all succeeded with the refresh chain intact.
+
+Not verified: whether Xero revokes an old access token as soon as a new
+one is issued. The design does not rely on it (each call reads the
+newest token first); at worst a request already in flight during a
+refresh fails once and succeeds on retry.
+
+**Rate limits are shared too.** All agents use the same Xero app and
+organisation. Firing ~10 calls at once has returned "Too many requests
+to Xero" for some of them: avoid fanning out many parallel Xero calls
+(e.g. across subagents), and retry a rate-limited call after a moment
+rather than treating it as an auth failure.
+
+### Checking that self-refresh is working
+
+```bash
+jq '._obtained_at | todate' ~/.config/xero-mcp/tokens.json
+```
+
+shows when the current access token was minted (UTC). If that is later
+than the last manual `xero-oauth` run, a server refreshed it by itself.
+It moves forward roughly every 25–30 minutes while agents are making
+Xero calls, and stands still while idle (the next call refreshes).
 
 ## When to run `xero-oauth`
 

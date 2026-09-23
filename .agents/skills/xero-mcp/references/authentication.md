@@ -1,114 +1,90 @@
-# Xero MCP Authentication (OAuth2 bearer tokens)
+# Xero MCP Authentication (self-refreshing token file)
 
-The Xero MCP server requires a valid bearer token
-(`XERO_CLIENT_BEARER_TOKEN`) in its environment. Tokens last ~30 minutes;
-refresh before or after expiry using the script below.
+The Xero MCP server runs in `XERO_TOKEN_FILE` mode (upstream PR #200 plus
+local locking fixes; see [`local-server.md`](local-server.md)). It reads
+an OAuth2 token store from disk on **every tool call**, refreshes the
+~30-minute access token itself when it is near expiry, and writes the
+rotated refresh token back. **No agent restart is ever needed for
+tokens.**
 
-## When to (re)authenticate
+## Configuration
 
-- Xero MCP tools return authentication/authorization errors
-- Starting a Xero workflow and unsure if the token is current
-- Token has expired (~30 minute lifetime)
-- After revoking and re-authorizing the Xero app
+`.mcp.json` / `opencode.json` run the server as
+`node --env-file=/home/adam/finance/.env <server>/dist/index.js`, so no
+token or secret lives in a tracked file. `.env` (gitignored) holds:
+
+```
+XERO_CLIENT_ID=<your-xero-app-client-id>
+XERO_CLIENT_SECRET=<your-xero-app-client-secret>
+XERO_TOKEN_FILE=/home/adam/.config/xero-mcp/tokens.json
+XERO_TENANT_ID=<tenant id printed by xero-oauth>
+```
+
+Keep `XERO_TENANT_ID` set: without it the server writes to whichever
+connected organisation Xero lists first.
+
+The token file (0600, in a 0700 directory) is the **single source of
+truth** for the refresh token. Xero rotates the refresh token on every
+use and only honours the previous one for a 30-minute grace period, so
+never copy a refresh token anywhere else. Every writer (the server and
+`xero-oauth`) holds the `<token file>.lock` O_EXCL lock while it
+reads, refreshes and writes, so several servers (Claude Code, Pi,
+OpenCode) can share the file safely.
+
+## When to run `xero-oauth`
+
+Almost never. Only:
+
+- **First-time setup, or after revoking the Xero app** — full OAuth
+  flow (browser).
+- **Changing scopes** — full OAuth flow; a refresh keeps the original
+  scopes.
+- **The refresh token has expired** — unused refresh tokens expire after
+  60 days, e.g. if no Xero MCP call was made for two months. Symptom:
+  every tool call fails authentication and a manual `--refresh` fails
+  too. Needs the full OAuth flow.
+
+A tool call failing authentication is **not** by itself a reason to
+refresh: the server already refreshes on demand. Check the failure
+first — a scope the token lacks (e.g. `list-journals` needs
+`accounting.journals.read`) also reports "Authentication failed".
 
 ## Script
 
 The implementation lives at [`../scripts/xero-oauth`](../scripts/xero-oauth)
 within this skill directory. The `ai-config` repo also keeps a
 `bin/xero-oauth` symlink pointing at it; stowing the repo (`mr restow`)
-places that symlink on `PATH` as `~/bin/xero-oauth`.
-
-All commands below assume `xero-oauth` resolves on `PATH`. Run from a
-project directory that has `.env`, `opencode.json`, and/or `.mcp.json`
-in its working directory — the script always reads/writes those at
-`$PWD`.
-
-## How it works
-
-`xero-oauth` reads credentials from `.env` and writes:
-
-- The new `access_token` into both
-  `opencode.json` → `mcp.xero.environment.XERO_CLIENT_BEARER_TOKEN`
-  (used by OpenCode) and
-  `.mcp.json` → `mcpServers.xero.env.XERO_CLIENT_BEARER_TOKEN`
-  (used by Claude Code's project-level MCP config)
-- The new `refresh_token` back into `.env` → `XERO_REFRESH_TOKEN`
-
-Both files are updated whether you use Claude Code, OpenCode, or both —
-no configuration switch is required.
-
-After running, **restart the agent session** to pick up the new token.
-
-## Prerequisite
-
-Register your own Xero OAuth2 app at
-<https://developer.xero.com/app/manage> with redirect URI
-`http://localhost:8080/callback`. Then `.env` (gitignored) must
-contain:
-
-```
-XERO_CLIENT_ID=<your-xero-app-client-id>
-XERO_CLIENT_SECRET=<your-xero-app-client-secret>
-XERO_REFRESH_TOKEN=<refresh-token>   # only needed for --refresh
-```
-
-## Usage
-
-### NEVER crop `xero-oauth` output
-
-**Run every `xero-oauth` invocation bare, and read the output IN FULL.**
-Do not pipe it through `tail`, `head`, `grep`, `sed`, or anything else
-that crops it.
-
-The status of the refresh — and any error, warning, or instruction the
-script prints — is spread across the whole output. If you crop it you
-cannot tell success from failure, and so cannot honestly report to the
-user whether the token refreshed or tell them to restart.
-
-Evidence (2026-07-17): `xero-oauth --refresh 2>&1 | tail -3` yielded only
-
-```
-already have. If state genuinely mattered, it was already saved
-before you ran this.
-==================================================================
-```
-
-— a fragment of advisory prose with no status in it. "Token refreshed"
-was reported to the user anyway, purely as an assumption.
-
-If output is genuinely long, tee(1) it to a file under the repo's `tmp/`
-and read the file whole (see the `slow-command-running` skill).
-
-### Token refresh (no browser — preferred)
-
-Use when `XERO_REFRESH_TOKEN` is already in `.env`:
+places that symlink on `PATH` as `~/bin/xero-oauth`. Run it from the
+project directory containing `.env`.
 
 ```bash
-xero-oauth --refresh
+xero-oauth           # full OAuth flow, read-only scopes (browser required)
+xero-oauth --write   # full OAuth flow, read+write scopes
+xero-oauth --refresh # rotate the stored refresh token now (no browser)
 ```
 
-### Full OAuth flow (browser required)
+Each writes the token file under the lock and prints the connected
+organisations with their tenant IDs.
 
-Use for first-time authorization or after revoking the app:
+**Run it bare and read the output in full** — never crop it with `tail`,
+`head`, `grep` etc. Success, failure and warnings are spread across the
+output, and a cropped fragment has previously been misreported as a
+successful refresh.
 
-```bash
-xero-oauth          # read-only scopes (default)
-xero-oauth --write  # read+write scopes
-```
-
-Opens a local server on port 8080, prints an authorization URL, and waits
-for the browser callback. The script updates `opencode.json`, `.mcp.json`,
-and `.env` automatically once the flow completes.
-
-By default, only read-only OAuth scopes are requested. Pass `--write` to
-request read+write scopes (needed for creating/updating invoices, contacts,
-bank transactions, manual journals, etc.).
+The full flow opens a local server on port 8080 and waits for the browser
+callback; the Xero app at <https://developer.xero.com/app/manage> must
+list `http://localhost:8080/callback` as a redirect URI.
 
 > If the browser auto-connects without showing the org selector, revoke first:
 > Xero → 3×3 dot icon (top right) → **Manage connected apps** → disconnect,
 > then re-run.
 
-## After running
+## Scopes
 
-Restart the agent session (Claude Code or OpenCode) so the new
-`XERO_CLIENT_BEARER_TOKEN` is picked up by the Xero MCP server.
+The token carries the scopes in `xero-oauth`'s `ACCOUNTING_SCOPES_RW`
+list. Tools from newer PRs need scopes it does not request, and fail
+until a full `--write` flow is re-run with the extra scopes added:
+
+- attachments tools (#109): `accounting.attachments.read`
+- `list-journals` / `get-journal` (#298): `accounting.journals.read`
+  (Xero may require approval before granting it)

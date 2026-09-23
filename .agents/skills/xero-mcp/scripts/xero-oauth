@@ -1,25 +1,34 @@
 #!/usr/bin/env -S node --env-file=.env
 // Xero OAuth2 flow helper
 //
-// Reads XERO_CLIENT_ID, XERO_CLIENT_SECRET, and optionally
-// XERO_REFRESH_TOKEN from .env (via --env-file).
-// Must be run from the repo root.
+// Reads XERO_CLIENT_ID, XERO_CLIENT_SECRET and XERO_TOKEN_FILE from .env
+// (via --env-file). Must be run from the repo root.
+//
+// Writes the OAuth2 token store at XERO_TOKEN_FILE, which the Xero MCP
+// server (XERO_TOKEN_FILE auth mode) reads on every tool call and keeps
+// refreshed itself, so no restart is needed after running this.
 //
 // Usage:
 //   ./xero-oauth           # full OAuth flow, read-only scopes (browser required)
 //   ./xero-oauth --write   # full OAuth flow, read+write scopes
-//   ./xero-oauth --refresh # refresh using stored refresh token
+//   ./xero-oauth --refresh # rotate the stored refresh token now
 
 import http from 'http';
 import https from 'https';
+import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import { spawn } from 'child_process';
 import { URL } from 'url';
 
-const OPENCODE_JSON = path.resolve('opencode.json');
-const MCP_JSON = path.resolve('.mcp.json');
-const ENV_FILE = path.resolve('.env');
+const TOKEN_FILE = process.env.XERO_TOKEN_FILE;
+
+// Must match the MCP server's token-store lock protocol: an O_EXCL
+// `<token file>.lock`, treated as stale after 60s. Xero rotates the refresh
+// token on every use, so refreshing concurrently with the server could leave
+// a spent refresh token on disk.
+const LOCK_STALE_MS = 60_000;
+const LOCK_TIMEOUT_MS = 45_000;
 
 const REDIRECT_URI = 'http://localhost:8080/callback';
 
@@ -76,68 +85,124 @@ function fetchTokens(credentials, body) {
   });
 }
 
-// Write access_token to opencode.json and refresh_token to .env
-function saveTokens(tokens) {
-  const config = JSON.parse(fs.readFileSync(OPENCODE_JSON, 'utf8'));
-  config.mcp.xero.environment.XERO_CLIENT_BEARER_TOKEN = tokens.access_token;
-  fs.writeFileSync(OPENCODE_JSON, JSON.stringify(config, null, 2) + '\n');
-  console.log('opencode.json updated with new bearer token.');
-
-  const mcp = JSON.parse(fs.readFileSync(MCP_JSON, 'utf8'));
-  mcp.mcpServers.xero.env = { XERO_CLIENT_BEARER_TOKEN: tokens.access_token };
-  fs.writeFileSync(MCP_JSON, JSON.stringify(mcp, null, 2) + '\n');
-  console.log('.mcp.json updated with new bearer token.');
-
-  if (tokens.refresh_token) {
-    let env = fs.readFileSync(ENV_FILE, 'utf8');
-    if (env.includes('XERO_REFRESH_TOKEN=')) {
-      env = env.replace(/^XERO_REFRESH_TOKEN=.*/m, `XERO_REFRESH_TOKEN=${tokens.refresh_token}`);
-    } else {
-      env = env.trimEnd() + `\nXERO_REFRESH_TOKEN=${tokens.refresh_token}\n`;
+async function withTokenLock(fn) {
+  const lock = `${TOKEN_FILE}.lock`;
+  const deadline = Date.now() + LOCK_TIMEOUT_MS;
+  fs.mkdirSync(path.dirname(TOKEN_FILE), { recursive: true, mode: 0o700 });
+  for (;;) {
+    try {
+      fs.closeSync(fs.openSync(lock, 'wx', 0o600));
+      break;
+    } catch (error) {
+      if (error.code !== 'EEXIST') throw error;
     }
-    fs.writeFileSync(ENV_FILE, env);
-    console.log('.env updated with new refresh token.');
+    try {
+      if (Date.now() - fs.statSync(lock).mtimeMs > LOCK_STALE_MS) {
+        fs.rmSync(lock, { force: true });
+        continue;
+      }
+    } catch {
+      continue;
+    }
+    if (Date.now() > deadline) throw new Error(`Timed out waiting for ${lock}`);
+    await new Promise(resolve => setTimeout(resolve, 100));
   }
+  try {
+    return await fn();
+  } finally {
+    fs.rmSync(lock, { force: true });
+  }
+}
 
-  console.log(`Note: access_token expires in ${tokens.expires_in} seconds (~30 min).`);
-  console.log('');
-  console.log('==================================================================');
-  console.log('AGENTS: STOP NOW.');
-  console.log('');
-  console.log('Your VERY NEXT output must be one short line asking the user to');
-  console.log('restart. Nothing else. Then end the turn.');
-  console.log('');
-  console.log('  NO further tool calls.  NO saving state.  NO notes or beads.');
-  console.log('  NO summary.  NO explanation.  NO "meanwhile" work.');
-  console.log('');
-  console.log('The restart kills the process you run in, so you cannot work');
-  console.log('while it happens. EVERY extra token you emit delays the restart');
-  console.log('the user is waiting to perform. Saving state is NOT an exception.');
-  console.log('==================================================================');
+function readTokenFile() {
+  try {
+    return JSON.parse(fs.readFileSync(TOKEN_FILE, 'utf8'));
+  } catch (error) {
+    if (error.code === 'ENOENT') return null;
+    throw new Error(`${TOKEN_FILE} is unreadable or not valid JSON`);
+  }
+}
+
+// Same shape and atomic 0600 write as the MCP server's persistTokens().
+function writeTokenFile(tokens) {
+  if (!tokens.access_token || !tokens.refresh_token) {
+    throw new Error('Xero returned no access or refresh token');
+  }
+  const now = Math.floor(Date.now() / 1000);
+  tokens._obtained_at = now;
+  tokens.expires_at = now + (tokens.expires_in ?? 1800);
+
+  const tmp = `${TOKEN_FILE}.${process.pid}.${crypto.randomBytes(6).toString('hex')}.tmp`;
+  const fd = fs.openSync(tmp, 'wx', 0o600);
+  try {
+    fs.writeSync(fd, JSON.stringify(tokens, null, 2));
+    fs.fsyncSync(fd);
+  } finally {
+    fs.closeSync(fd);
+  }
+  fs.renameSync(tmp, TOKEN_FILE);
+  const dirFd = fs.openSync(path.dirname(TOKEN_FILE), 'r');
+  try {
+    fs.fsyncSync(dirFd);
+  } finally {
+    fs.closeSync(dirFd);
+  }
+  console.log(`${TOKEN_FILE} updated; access token valid for ${tokens.expires_in ?? 1800}s.`);
+  console.log('The Xero MCP server reads this file on every call and refreshes it');
+  console.log('itself, so no restart is needed.');
+}
+
+// So XERO_TENANT_ID can be pinned: unpinned, the server writes to whichever
+// connected organisation Xero happens to list first.
+function printConnections(accessToken) {
+  return new Promise((resolve) => {
+    https.get('https://api.xero.com/connections', {
+      headers: { Authorization: `Bearer ${accessToken}`, Accept: 'application/json' },
+    }, (res) => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        try {
+          const connections = JSON.parse(data);
+          console.log('\nConnected organisations (set XERO_TENANT_ID in .env to one of these):');
+          for (const c of connections) console.log(`  ${c.tenantId}  ${c.tenantName}`);
+          if (!process.env.XERO_TENANT_ID) console.log('WARNING: XERO_TENANT_ID is not set.');
+        } catch {
+          console.error(`Could not list connections (HTTP ${res.statusCode}).`);
+        }
+        resolve();
+      });
+    }).on('error', (error) => {
+      console.error(`Could not list connections: ${error.message}`);
+      resolve();
+    });
+  });
 }
 
 async function refresh(credentials) {
-  const refreshToken = process.env.XERO_REFRESH_TOKEN;
-  if (!refreshToken) {
-    console.error('Error: XERO_REFRESH_TOKEN not found in .env. Run without --refresh first.');
-    process.exit(1);
-  }
+  const tokens = await withTokenLock(async () => {
+    // XERO_REFRESH_TOKEN in .env only seeds a token file that doesn't exist
+    // yet; afterwards the file is the sole source, as the server rotates it.
+    const refreshToken = readTokenFile()?.refresh_token ?? process.env.XERO_REFRESH_TOKEN;
+    if (!refreshToken) {
+      throw new Error(`No refresh token in ${TOKEN_FILE} or .env. Run without --refresh first.`);
+    }
 
-  console.log('Refreshing access token...');
-  const body = new URLSearchParams({
-    grant_type: 'refresh_token',
-    refresh_token: refreshToken,
-  }).toString();
+    console.log('Refreshing access token...');
+    const body = new URLSearchParams({
+      grant_type: 'refresh_token',
+      refresh_token: refreshToken,
+    }).toString();
 
-  const tokenRes = await fetchTokens(credentials, body);
-  const tokens = JSON.parse(tokenRes.body);
-
-  if (!tokens.access_token) {
-    console.error('Error refreshing token:', tokenRes.body);
-    process.exit(1);
-  }
-
-  saveTokens(tokens);
+    const tokenRes = await fetchTokens(credentials, body);
+    const fresh = JSON.parse(tokenRes.body);
+    if (!fresh.access_token) {
+      throw new Error(`Error refreshing token (HTTP ${tokenRes.status}): ${fresh.error ?? 'unknown error'}`);
+    }
+    writeTokenFile(fresh);
+    return fresh;
+  });
+  await printConnections(tokens.access_token);
 }
 
 async function fullOAuthFlow(credentials, scopes) {
@@ -183,37 +248,35 @@ async function fullOAuthFlow(credentials, scopes) {
 
     server.close();
     console.log('');
-    saveTokens(tokens);
+    await withTokenLock(async () => writeTokenFile(tokens));
+    await printConnections(tokens.access_token);
   });
 
   server.listen(8080);
 }
 
 function printUsage() {
-  process.stdout.write(`xero-oauth — refresh or obtain a Xero OAuth2 bearer token
+  process.stdout.write(`xero-oauth — obtain or rotate the Xero MCP server's OAuth2 token file
 
 Usage:
   xero-oauth              Run the full OAuth flow with read-only scopes (browser required).
   xero-oauth --write      Run the full OAuth flow with read+write scopes.
-  xero-oauth --refresh    Refresh the bearer token using the stored XERO_REFRESH_TOKEN.
+  xero-oauth --refresh    Rotate the stored refresh token now.
   xero-oauth -h, --help   Show this help and exit.
 
 Reads:
-  .env                    XERO_CLIENT_ID, XERO_CLIENT_SECRET, and (for --refresh) XERO_REFRESH_TOKEN.
+  .env                    XERO_CLIENT_ID, XERO_CLIENT_SECRET, XERO_TOKEN_FILE,
+                          and optionally XERO_TENANT_ID. XERO_REFRESH_TOKEN
+                          is only used to seed a token file that doesn't exist.
 
-Writes (in the current working directory):
-  opencode.json           mcp.xero.environment.XERO_CLIENT_BEARER_TOKEN
-  .mcp.json               mcpServers.xero.env.XERO_CLIENT_BEARER_TOKEN
-  .env                    XERO_REFRESH_TOKEN (rotated)
+Writes:
+  $XERO_TOKEN_FILE        The token store (0600), under the same lock the
+                          MCP server uses when it refreshes the file.
 
-The agent session MUST be restarted after running this, so that the Xero MCP
-server picks up the new bearer token. A running server never re-reads the
-token from disk.
-
-AGENTS: the restart kills the process you run in, so once you have run this,
-STOP. Your very next output must be one short line asking the user to restart,
-then end the turn. No further tool calls, no saving state, no summary. Every
-extra token delays the restart you are waiting on.
+The MCP server (XERO_TOKEN_FILE auth mode) reads the token file on every tool
+call and refreshes it itself, so there is no need to restart the agent session
+after running this. --refresh is only needed if the server has been idle for
+long enough that the refresh token is about to expire (60 days unused).
 `);
 }
 
@@ -226,8 +289,8 @@ async function main() {
   const clientId = process.env.XERO_CLIENT_ID;
   const clientSecret = process.env.XERO_CLIENT_SECRET;
 
-  if (!clientId || !clientSecret) {
-    console.error('Error: XERO_CLIENT_ID and XERO_CLIENT_SECRET must be set in .env');
+  if (!clientId || !clientSecret || !TOKEN_FILE) {
+    console.error('Error: XERO_CLIENT_ID, XERO_CLIENT_SECRET and XERO_TOKEN_FILE must be set in .env');
     process.exit(1);
   }
 
@@ -252,7 +315,12 @@ async function main() {
   }
 
   if (refreshMode) {
-    await refresh(credentials);
+    try {
+      await refresh(credentials);
+    } catch (error) {
+      console.error(`Error: ${error.message}`);
+      process.exit(1);
+    }
   } else {
     const accountingScopes = writeMode ? ACCOUNTING_SCOPES_RW : ACCOUNTING_SCOPES_RO;
     const scopes = [...BASE_SCOPES, ...accountingScopes].join(' ');

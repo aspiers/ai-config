@@ -87,24 +87,14 @@ write. Check:
   call?
 - Line amounts and account codes balance to zero?
 
-A 30-minute token expiry between consecutive write+read calls is also
-plausible: if the read returns 401, refresh the token via `xero-oauth
---refresh`, **restart the agent session**, then re-read. Do not assume
-the write succeeded just because the write call returned without
-error.
+Do not assume the write succeeded just because the write call returned
+without error.
 
-## Token-expiry coupling with multi-step workflows
+## Multi-step workflows
 
 A void-and-replace plus follow-on MJs typically takes 4+ tool calls.
-With a 30-minute token TTL it is realistic to hit a 401 mid-sequence.
-
-Mitigation:
-
-- Run `xero-oauth --refresh` and restart the session **immediately
-  before** the first write, not 10 minutes earlier.
-- If a 401 hits between two writes, do not retry the failing call yet
-  — refresh first, restart, then resume from the next un-attempted
-  step.
-- After each successful write, record the new UUID in your working
-  notes (Notion / scratch file) so a restart does not lose the cross-
-  reference chain.
+The server refreshes its token on demand (see
+[`authentication.md`](authentication.md)), so token expiry no longer
+interrupts a sequence. If any call fails part-way, re-read state before
+resuming, and record each new UUID in your working notes as you go so
+the cross-reference chain survives an interruption.

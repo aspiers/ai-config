@@ -86,10 +86,16 @@ git tag -a best-of-breed-$(date +%F) -m "Best-of-breed mix of open xero-mcp-serv
 git push github refs/tags/best-of-breed-$(date +%F)
 ```
 
-If the set of included PRs changes, update the list in #315 too.
+Tags are never moved: for a second publish on the same day, append a
+suffix (`best-of-breed-2026-09-23-2`). If the set of included PRs
+changes, update the list, counts and snapshot link in #315 too.
 
 ## Adding another upstream PR
 
+0. Before writing a fix yourself, search open **and closed** PRs:
+   `pr/231` (organisation details rendering) was closed by its author
+   only to cut review load, and was a better base than a new fix.
+   Closed PR heads are still fetched as `origin/pr/<N>`.
 1. Review its diff (secrets, network, dependencies, data risk) before it
    ever runs against live books.
 2. `git branch --track pr/<N> origin/pr/<N>`, add it to

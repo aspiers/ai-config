@@ -37,6 +37,18 @@ graph, mixdown distinction, and related workflow links.
 python3 tests/test_upstreaming_status_skill.py
 ```
 
+## Web-Form Paste Sequence Tests
+
+`test_submitting_upstream_paste_fields.py` runs the `submitting-upstream`
+skill's `paste-form-fields.sh` against stubbed clipboard, notification and
+`sleep` commands. It pins field order and labels, `#NOTE` hints, default and
+overridden delays, clipboard content without a trailing newline, and the
+abort on a clipboard read-back mismatch.
+
+```bash
+python3 tests/test_submitting_upstream_paste_fields.py
+```
+
 ## Research Report Location Tests
 
 `test_research_report_locations.py` verifies that cross-agent policy and the

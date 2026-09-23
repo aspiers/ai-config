@@ -72,33 +72,34 @@ labels, so they are not pasted.
    https://github.com/OWNER/REPO/issues/new?template=feature_request.yml
    ```
 
-2. Detect the clipboard tool once, and match it to the session rather than
-   assuming: `wl-copy` for Wayland, `xclip -selection clipboard` for X11.
+2. Where the user needs a field-specific hint, such as a template-prefilled
+   title that needs select-all, make the file's first line `#NOTE: <text>`.
+   The hint appears in the notification and is not copied.
+
+3. Tell the user the sequence is about to start and what to watch for in the
+   fields; the notifications only name the field.
+
+4. Run [`scripts/paste-form-fields.sh`](../scripts/paste-form-fields.sh) in
+   the foreground on the field files, in form order:
 
    ```bash
-   echo "session=${XDG_SESSION_TYPE:-unset}"
-   for c in wl-copy xclip xsel; do command -v "$c" >/dev/null 2>&1 && echo "found: $c"; done
+   scripts/paste-form-fields.sh 1-title.txt 2-problem-or-use-case.txt ...
    ```
 
-3. Copy the first field, then **read the clipboard back and show what it
-   holds**. A silent copy failure otherwise surfaces as the user pasting stale
-   content into a public tracker.
+   For each field it loads the clipboard without a trailing newline, reads
+   it back and aborts on a mismatch, then shows a desktop notification naming
+   the form field. Notifications stay up for 10 seconds and stack, and the
+   script advances every 5 seconds, so the user pastes without reporting back
+   between fields. `-f` sets the first delay, `-d` the later ones and `-t`
+   the display time, all in seconds; use them when the user asks for a
+   different pace.
 
-   ```bash
-   xclip -selection clipboard < 1-title.txt
-   xclip -selection clipboard -o | head -6
-   ```
+   It picks `wl-copy`, `xclip`, `xsel` or `pbcopy` to suit the session, and
+   `notify-send` or macOS `osascript` for notifications. Under `osascript`,
+   macOS decides how long a notification stays up.
 
-4. Tell the user which field to paste into, how many remain, and what to watch
-   for in this particular field — a template-prefilled title needing
-   select-all, or a block whose fenced code should be checked in Preview.
-
-5. Wait for the user to say they are ready, then copy the next field. One
-   field per turn. Never copy ahead: the clipboard holds one thing, and
-   pre-copying destroys the field they are still pasting.
-
-6. Name the scratch file paths once, so the user can grab a field directly if
-   a paste goes wrong.
+5. Name the field file paths once, so the user can re-run the script on a
+   single field if a paste goes wrong or they miss a window.
 
 ## Before they submit
 

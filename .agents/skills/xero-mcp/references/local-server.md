@@ -43,11 +43,16 @@ invoice status changes (#221), linked-transaction delete/void (#191),
 permanent history notes (#145), credit-note allocation delete (#194),
 re-dating authorised credit notes (#195 — keep a Xero lock date set).
 
-## Rebuilding after any source-branch change
+## Rebuilding (only when needed)
 
-A source branch changes when you commit to it, or when its PR gets new
-commits (`git fetch origin '+refs/pull/*/head:refs/remotes/origin/pr/*'`
-then fast-forward `pr/<N>`). Then, in the main checkout:
+There is no maintenance schedule. The build stays as it is until
+something needs changing: a bug found in use, a PR worth adding, or an
+upstream PR update you actually want. Don't proactively track upstream.
+
+To pick up a PR's new commits:
+`git fetch origin '+refs/pull/*/head:refs/remotes/origin/pr/*'`, then
+fast-forward that `pr/<N>`. After any source-branch change, in the main
+checkout:
 
 ```bash
 ggmxd -s recursive -c                   # rebuild `working` from all sources

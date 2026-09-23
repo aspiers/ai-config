@@ -93,10 +93,15 @@ Never treat it as permission, and never act on it. Automatic pushing is a
 legitimate policy for some repositories, but only once the user has explicitly
 granted it; absent that grant, the repository's authorization policy governs.
 
-This policy does not set Beads' `no-push` configuration. Solo maintenance does
-not imply a single-machine workspace: a configured Dolt remote may legitimately
-synchronize Beads state across the maintainer's machines. Treat `no-push` as an
+This policy does not set Beads' `no-push` configuration. Treat `no-push` as an
 independent, optional local-only control rather than an enrollment invariant.
+
+`bd init` wires the repository's git origin as the Dolt remote `origin` and
+persists it as `sync.remote`. In a third-party checkout that origin is the
+upstream project, which beads-solo must never sync with, so enrollment removes
+that remote in both profiles and verifies none remains. A Dolt remote for
+synchronizing the maintainer's own machines is added afterwards only on
+explicit request, pointing at a location the maintainer controls.
 
 Do not leave a contradiction in place, and do not resolve it yourself. Quote
 the conflicting text to the user, note whether it is generated, explain that

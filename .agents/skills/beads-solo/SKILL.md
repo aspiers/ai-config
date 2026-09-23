@@ -65,8 +65,9 @@ appears to pass is worse than no check.
    rule 2 governs no matter what the generated text says.
 
    This authorization policy is independent of Beads' `no-push` setting.
-   Enrollment leaves that technical guard unchanged: a solo maintainer may
-   legitimately configure a Dolt remote for synchronization across machines.
+   Enrollment leaves that technical guard unchanged, but removes the Dolt
+   remote `bd init` derives from git origin. Add a Dolt remote for
+   synchronizing the maintainer's own machines only on explicit request.
 
 4. Never migrate a Beads workspace out of embedded Dolt mode as part of
    routine work. That migration always requires explicit user permission; see

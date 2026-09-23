@@ -151,6 +151,7 @@ class BdEnrollSoloTestCase(unittest.TestCase):
             "not in server mode",
             "beads.role is not pinned",
             "diverged",
+            "Dolt remote 'origin' is still configured",
         )
 
         if any(marker in combined for marker in verification_failures):
@@ -266,6 +267,41 @@ class TestLocalEnrollmentIsInvisibleToGit(BdEnrollSoloTestCase):
         finally:
             os.chdir(self.test_dir)
             self.run_git("worktree", "remove", "--force", str(worktree))
+
+
+class TestBeadsStateStaysLocal(BdEnrollSoloTestCase):
+    """'bd init' wires git origin as a Dolt remote; enrollment must undo it."""
+
+    def add_git_origin(self):
+        origin = Path(tempfile.mkdtemp(prefix="bd-enroll-origin-test-"))
+        self.addCleanup(shutil.rmtree, origin, ignore_errors=True)
+        subprocess.run(
+            ["git", "init", "--bare", str(origin)], capture_output=True, check=True
+        )
+        self.run_git("remote", "add", "origin", str(origin))
+
+    def dolt_remotes(self):
+        return subprocess.run(
+            ["bd", "dolt", "remote", "list"],
+            capture_output=True,
+            text=True,
+            env=self.command_env,
+            check=True,
+        ).stdout
+
+    @unittest.skipUnless(bd_available(), "bd not installed")
+    def test_no_dolt_remote_after_enrollment_with_git_origin(self):
+        self.add_git_origin()
+
+        self.enroll_or_skip()
+
+        self.assertIn("No remotes configured", self.dolt_remotes())
+        config = Path(".beads/config.yaml").read_text()
+        self.assertNotRegex(config, r"(?m)^\s*sync\.remote:")
+
+    def test_dry_run_plans_the_remote_removal(self):
+        result = self.enroll("--local", "--dry-run", "--prefix", "testrepo")
+        self.assertIn("bd dolt remote remove origin", result.stdout)
 
 
 class TestLocalEnrollmentGuardrails(BdEnrollSoloTestCase):

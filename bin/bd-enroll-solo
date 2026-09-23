@@ -77,7 +77,8 @@ The script:
   2. installs repository-local links to the Beads skill
   3. records the opt-in (tracked marker file, or --local Git config)
   4. installs the policy declaration (AGENTS.md, or a Beads memory)
-  5. runs bd init --server --role maintainer
+  5. runs bd init --server --role maintainer, then removes the Dolt remote
+     it derives from git origin, so Beads state stays on this machine
   6. pins beads.role, configures private JSONL export, installs hooks
   7. verifies the resulting enrollment
 
@@ -678,6 +679,21 @@ initialize_workspace() {
     fi
 }
 
+has_dolt_origin_remote() {
+    bd dolt remote list 2>/dev/null | grep -Eq '^origin[[:space:]]'
+}
+
+# 'bd init' wires git origin as the Dolt remote 'origin' (and persists
+# sync.remote), which in a third-party checkout is the upstream project.
+# beads-solo keeps Beads state on this machine, so undo it.
+remove_init_dolt_remote() {
+    if [[ "$DRY_RUN" != true ]] && ! has_dolt_origin_remote; then
+        return 0
+    fi
+    info "Removing the Dolt remote 'bd init' derived from git origin"
+    run bd dolt remote remove origin
+}
+
 # 'bd init' creates a root .gitignore holding its canonical ignore rules. In
 # --local mode that file is an artifact of our private enrollment, not the
 # repository's own policy, so leaving it would break invisibility -- it shows
@@ -771,6 +787,9 @@ verify_enrollment() {
 
     [[ "$(git config --local --get beads.role)" == maintainer ]] ||
         fail "beads.role is not pinned to maintainer"
+
+    ! has_dolt_origin_remote ||
+        fail "a Dolt remote 'origin' is still configured"
 
     if [[ "$LOCAL_MODE" == true ]]; then
         [[ "$(git config --local --get beads.solo.local)" == true ]] ||
@@ -1043,6 +1062,7 @@ main() {
     install_policy_declaration
     ensure_claude_md_symlink
     initialize_workspace
+    remove_init_dolt_remote
     install_local_memory
     configure_workspace
     # After all bd commands, since 'bd hooks install' may also touch ignores.

@@ -71,7 +71,22 @@ worktree off one PR, merge the other PR in, commit the fix, record it
 in `.git/machete`, and replace both PRs in the mix with it (as
 `pr/110+289` does).
 
-Never develop on `working` or push it.
+Never develop on `working` or push it under its own name.
+
+## Publishing the mix for other users
+
+Other users follow the mix through the fork's `best-of-breed` branch
+and dated `best-of-breed-YYYY-MM-DD` tags, announced in upstream
+issue #315. After a verified rebuild (tests, lint, live read-only
+smoke test):
+
+```bash
+git push --force-with-lease=best-of-breed github working:best-of-breed
+git tag -a best-of-breed-$(date +%F) -m "Best-of-breed mix of open xero-mcp-server PRs, $(date +%F)" working
+git push github refs/tags/best-of-breed-$(date +%F)
+```
+
+If the set of included PRs changes, update the list in #315 too.
 
 ## Adding another upstream PR
 

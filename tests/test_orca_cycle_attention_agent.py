@@ -19,6 +19,8 @@ from unittest.mock import call, patch
 
 BIN_DIR = Path(__file__).parents[1] / "bin"
 SCRIPT = BIN_DIR / "orca-cycle-attention-agent"
+# The script imports its shared orca_cli module from its own directory.
+sys.path.insert(0, str(BIN_DIR))
 SPEC = importlib.util.spec_from_loader(
     "orca_cycle_attention_agent",
     SourceFileLoader("orca_cycle_attention_agent", str(SCRIPT)),
@@ -233,49 +235,6 @@ class CycleAttentionAgentTests(unittest.TestCase):
                 r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} orca-cycle-attention-agent: "
                 r"next: switching to done claude term_x navigated=True\n$",
             )
-
-
-class OrcaCliResolutionTests(unittest.TestCase):
-    def test_env_override_wins(self) -> None:
-        self.assertEqual(MODULE.orca_cli({"ORCA_CLI": "/opt/orca"}), "/opt/orca")
-
-    def test_prefers_the_linux_shim_when_present(self) -> None:
-        with tempfile.TemporaryDirectory() as config_home:
-            shim_dir = Path(config_home) / "orca" / "linux-orca-cli-shim"
-            shim_dir.mkdir(parents=True)
-            (shim_dir / "orca").write_text("#!/bin/sh\n")
-
-            self.assertEqual(
-                MODULE.orca_cli({"XDG_CONFIG_HOME": config_home}), str(shim_dir / "orca")
-            )
-
-    def test_falls_back_to_orca_ide_then_bare_orca(self) -> None:
-        with tempfile.TemporaryDirectory() as bin_dir:
-            cli = Path(bin_dir) / "orca-ide"
-            cli.write_text("#!/bin/sh\n")
-            cli.chmod(0o755)
-            env = {"XDG_CONFIG_HOME": "/nonexistent", "PATH": bin_dir}
-
-            self.assertEqual(MODULE.orca_cli(env), str(cli))
-            self.assertEqual(MODULE.orca_cli({**env, "PATH": "/nonexistent"}), "orca")
-
-
-class RunOrcaTests(unittest.TestCase):
-    def test_reports_non_json_output(self) -> None:
-        completed = unittest.mock.Mock(stdout="Screen reader started\n", stderr="", returncode=0)
-        with patch.object(MODULE.subprocess, "run", return_value=completed):
-            with self.assertRaisesRegex(RuntimeError, "non-JSON output"):
-                MODULE.run_orca(["worktree", "ps"])
-
-    def test_raises_on_error_envelope(self) -> None:
-        completed = unittest.mock.Mock(
-            stdout='{"ok": false, "error": {"code": "terminal_handle_stale"}}',
-            stderr="",
-            returncode=1,
-        )
-        with patch.object(MODULE.subprocess, "run", return_value=completed):
-            with self.assertRaisesRegex(RuntimeError, "terminal_handle_stale"):
-                MODULE.run_orca(["terminal", "switch", "--terminal", "x"])
 
 
 if __name__ == "__main__":

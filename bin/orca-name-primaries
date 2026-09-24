@@ -1,0 +1,104 @@
+#!/usr/bin/env python3
+"""Name each primary Orca workspace after its repo instead of its branch.
+
+Orca's automatic workspace name is always the checked-out branch, so every
+primary checkout shows up as ``main`` or ``master`` once the sidebar is
+grouped by anything other than project, and Orca has no setting to change
+that. This pins each primary workspace whose name is still automatic to the
+repo's Orca display name (the text of its repo chip), on the local host and
+on every saved remote environment. Names someone has already fixed are left
+alone, so rerunning is safe.
+"""
+
+from __future__ import annotations
+
+import argparse
+import sys
+from dataclasses import dataclass
+from typing import Any
+
+from orca_cli import run_orca
+
+# Orca pages worktree listings (default 200); ask for far more than any real
+# host holds so primaries cannot hide behind the cap.
+LISTING_LIMIT = "10000"
+
+
+@dataclass(frozen=True)
+class Rename:
+    worktree_id: str
+    old: str
+    new: str
+
+
+def environment_names() -> list[str]:
+    return [env["name"] for env in run_orca(["environment", "list"])["environments"]]
+
+
+def planned_renames(repos: list[dict[str, Any]], worktrees: list[dict[str, Any]]) -> list[Rename]:
+    repo_names = {repo["id"]: repo["displayName"] for repo in repos}
+    return [
+        Rename(worktree["id"], worktree["displayName"], repo_names[worktree["repoId"]])
+        for worktree in worktrees
+        if worktree.get("isMainWorktree")
+        and worktree.get("displayNameMode") == "automatic"
+        and repo_names.get(worktree["repoId"])
+        and worktree["displayName"] != repo_names[worktree["repoId"]]
+    ]
+
+
+def host_renames(host_args: list[str]) -> list[Rename]:
+    repos = run_orca(["repo", "list", *host_args])["repos"]
+    worktrees = run_orca(["worktree", "list", "--limit", LISTING_LIMIT, *host_args])["worktrees"]
+    return planned_renames(repos, worktrees)
+
+
+def apply_rename(rename: Rename, host_args: list[str]) -> None:
+    run_orca(
+        [
+            "worktree",
+            "set",
+            "--worktree",
+            f"id:{rename.worktree_id}",
+            "--display-name",
+            rename.new,
+            *host_args,
+        ]
+    )
+
+
+def name_host(label: str, host_args: list[str], dry_run: bool) -> None:
+    for rename in host_renames(host_args):
+        if not dry_run:
+            apply_rename(rename, host_args)
+        verb = "would rename" if dry_run else "renamed"
+        print(f"{label}: {verb} {rename.old!r} -> {rename.new!r}")
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("-n", "--dry-run", action="store_true", help="only report renames")
+    return parser.parse_args()
+
+
+def main() -> int:
+    args = parse_args()
+    hosts = [("local", [])]
+    failed = False
+    try:
+        hosts += [(name, ["--environment", name]) for name in environment_names()]
+    except (KeyError, RuntimeError) as error:
+        print(f"orca-name-primaries: cannot list environments: {error}", file=sys.stderr)
+        failed = True
+    for label, host_args in hosts:
+        try:
+            name_host(label, host_args, args.dry_run)
+        except (KeyError, OSError, RuntimeError) as error:
+            # One unreachable environment should not stop the others.
+            print(f"orca-name-primaries: {label}: {error}", file=sys.stderr)
+            failed = True
+    return 1 if failed else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -1,6 +1,11 @@
 ---
 name: documentation-updates
-description: Capture durable project or workflow knowledge discovered during work. Use when a mistake, hidden constraint, repeated question, or changed behavior reveals a documentation gap.
+description: >-
+  Capture durable project or workflow knowledge discovered during work.
+  Use when a mistake, hidden constraint, repeated question, or changed
+  behavior reveals a documentation gap. To root-cause one specific mistake
+  the agent just made and let the user pick fixes, use `learn` (`/learn`)
+  instead.
 ---
 
 # Documentation Updates

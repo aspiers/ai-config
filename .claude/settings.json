@@ -208,15 +208,15 @@
         "hooks": [
           {
             "type": "command",
-            "command": "[ \"${HERDR_ENV:-}\" = 1 ] || printf '\\a' > /dev/tty"
+            "command": "ai-agent-host >/dev/null || printf '\\a' > /dev/tty"
           },
           {
             "type": "command",
-            "command": "[ \"${HERDR_ENV:-}\" = 1 ] || mplayer -volume 50 /usr/share/sounds/Oxygen-Sys-App-Positive.ogg"
+            "command": "ai-agent-host >/dev/null || mplayer -volume 50 /usr/share/sounds/Oxygen-Sys-App-Positive.ogg"
           },
           {
             "type": "command",
-            "command": "[ \"${HERDR_ENV:-}\" = 1 ] || notify-send 'Claude Code finished'"
+            "command": "ai-agent-host >/dev/null || notify-send 'Claude Code finished'"
           }
         ]
       }

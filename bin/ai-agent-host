@@ -1,0 +1,28 @@
+#!/bin/sh
+#
+# ai-agent-host - Report which agent host, if any, this process runs under
+#
+# Usage: ai-agent-host
+#
+# Prints the host name (herdr or orca) and exits 0 when running inside an
+# agent host; prints nothing and exits 1 otherwise.
+#
+# Agent hosts surface agent idle / needs-input state in their own UI, so
+# local bells, sounds and desktop notifications fired by agent hooks are
+# duplicates there. Hooks use this as the single place that knows how to
+# detect each host:
+#
+#     ai-agent-host >/dev/null || notify-send ...
+#
+# Detection:
+#   - herdr: HERDR_ENV=1, the convention herdr's own agent hooks use.
+#   - orca:  ORCA_PANE_KEY set, the check Orca's own managed agent
+#            extensions use to decide whether they are running under Orca.
+
+if [ "${HERDR_ENV:-}" = 1 ]; then
+    echo herdr
+elif [ -n "${ORCA_PANE_KEY:-}" ]; then
+    echo orca
+else
+    exit 1
+fi

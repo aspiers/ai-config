@@ -119,18 +119,15 @@ export const NotificationPlugin = async ({ $, client, directory, worktree }) => 
         }
     };
 
-    // Herdr surfaces agent idleness itself, and Collie covers off-machine
-    // alerting, so every notification here is redundant under Herdr.
-    const underHerdr = () => process.env.HERDR_ENV === '1';
+    // Agent hosts (Herdr, Orca) surface agent idleness themselves, so local
+    // bell/sound/desktop notifications are duplicates there. ai-agent-host
+    // is the single source of truth for detecting them.
+    const agentHost = () => {
+        const result = spawnSync('ai-agent-host', [], { encoding: 'utf8' });
+        return result.status === 0 ? result.stdout.trim() : null;
+    };
 
-    const handleSessionIdle = async (event) => {
-        logWithDate(`Started handling ${event.type} event`);
-
-        if (underHerdr()) {
-            logWithDate('running under herdr, skipping all notifications');
-            return;
-        }
-
+    const sendLocalNotifications = (title, lastPrompt) => {
         attempt('bell', ringBell);
 
         if (hasCommand('mplayer')) {
@@ -139,15 +136,33 @@ export const NotificationPlugin = async ({ $, client, directory, worktree }) => 
             logWithDate('mplayer not found on PATH, skipping sound');
         }
 
+        if (hasCommand('notify-send')) {
+            attempt('notify-send', () => sendDesktopNotification(title, lastPrompt));
+        } else {
+            logWithDate('notify-send not found on PATH, skipping notification');
+        }
+    };
+
+    const handleSessionIdle = async (event) => {
+        logWithDate(`Started handling ${event.type} event`);
+
+        // Collie covers off-machine alerting under Herdr, so the ntfy push
+        // is redundant there too; under other hosts it is still wanted.
+        const host = agentHost();
+        if (host === 'herdr') {
+            logWithDate('running under herdr, skipping all notifications');
+            return;
+        }
+
         const sessionID = event.properties?.sessionID;
         const { title, lastPrompt } = await attemptAsync(
             'session context', () => getSessionContext(sessionID)
         ) || { title: worktree || directory || 'unknown', lastPrompt: '' };
 
-        if (hasCommand('notify-send')) {
-            attempt('notify-send', () => sendDesktopNotification(title, lastPrompt));
+        if (host) {
+            logWithDate(`running under ${host}, skipping local notifications`);
         } else {
-            logWithDate('notify-send not found on PATH, skipping notification');
+            sendLocalNotifications(title, lastPrompt);
         }
 
         if (hasCommand('notify-agent-idle')) {

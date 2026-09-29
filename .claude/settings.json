@@ -469,7 +469,7 @@
   "skipWorkflowUsageWarning": true,
   "theme": "auto",
   "verbose": true,
-  "preferredNotifChannel": "terminal_bell",
+  "preferredNotifChannel": "notifications_disabled",
   "autoCompactEnabled": true,
   "remoteControlAtStartup": false,
   "agentPushNotifEnabled": true,

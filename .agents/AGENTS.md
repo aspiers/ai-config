@@ -10,6 +10,9 @@ this repository. Adapt them to your own preferences.
   a local install only as a last resort.
 - If you still can't verify something, say "I don't know" or state the
   assumption explicitly, and ask before building on it.
+- Before saying you can't do or see something, check every tool available,
+  including deferred and MCP tools. If a rule rather than ability stops you,
+  say which rule, and ask.
 - Re-pick your approach when new information arrives; an announced plan is
   not a commitment.
 - Never claim something works or is fixed until you have run it.
@@ -38,9 +41,12 @@ this repository. Adapt them to your own preferences.
 
 - Never read the user's private data without explicit permission for that
   specific access: clipboard history or clipboard-manager databases, browser
-  or shell history, mail, chat logs, keyrings and password stores. Reading
-  the current clipboard right after the task copied something to it is fine.
-  Needing to verify something is not permission; hand the check back instead.
+  or shell history, mail, personal chat logs, keyrings and password stores.
+  Agent session transcripts (e.g. via agentsview) are work records, not chat
+  logs: search them freely to coordinate work across sessions. Reading the
+  current clipboard right after the task copied something to it is fine.
+  Needing to verify something is not permission; ask, naming the tool you
+  would use, or hand the check back.
 
 ## Code
 

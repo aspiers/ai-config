@@ -62,6 +62,7 @@ Claude Code configuration containing:
   - `lint` - Code linting
   - `obs` - Obsidian integration
   - `pc` - Break down uncommitted changes and propose commits
+  - `prod` - Work cautiously on a production system
   - `reflect` - Self-reflection prompt
   - `review` - Code review
   - `small` - Small change workflow

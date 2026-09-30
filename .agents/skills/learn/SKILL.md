@@ -7,7 +7,8 @@ description: >-
   investigation to a background subagent where the harness supports one;
   proposes concrete context improvements, and lets the user choose which to
   apply and how to remediate. Use when the user invokes `/learn` or
-  `$learn`, with or without a description of the mistake. For a broad
+  `$learn`, with or without a description of the mistake, including
+  `/learn /qs`-style shorthand naming the corrective command. For a broad
   end-of-session documentation sweep, use `documentation-updates`
   (`/reflect`) instead.
 ---
@@ -38,6 +39,12 @@ a rule in loaded instructions that was ignored, or a question asked in plain
 text instead of via the questionnaire tool. Confirm your guess with the
 questionnaire tool (in Claude Code, `AskUserQuestion`), offering the most
 likely candidates. If you cannot guess, ask the user what went wrong.
+
+If the argument names a slash command or skill (e.g. `/learn /qs` or
+`/learn /ids`), the mistake is whatever that command corrects. Read its
+`SKILL.md` or command file, restate the mistake from it in one line, and
+skip confirming. The aim is that the user never needs to type that command
+for this again.
 
 ## Delegate steps 2 and 3 where possible
 

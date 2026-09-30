@@ -83,7 +83,6 @@ COPYING
 ^/node_modules
 ^/root-etc-stow-pkg
 ^/\.agents/skills/allow-commands
-^/\.agents/skills/beads
 ^/tests
 ^/orca-plugins
 tmp
@@ -91,5 +90,4 @@ nohup\.out
 ^/\.beads
 ^/\.beads.*\.lock
 \.perles
-^/\.agents/skills/beads/
 ^/\.beads-solo

@@ -130,5 +130,11 @@
   "terminal": {
     "showTerminalProgress": true
   },
-  "tuiMode": "fullscreen"
+  "tuiMode": "fullscreen",
+  "skills": [
+    "-skills/synced/c5826614-6155-4642-8072-6694c9eeef4e_bb2e6f61-fd4a-451e-aa52-45cde9f82774/computer-use/SKILL.md"
+  ],
+  "extensions": [
+    "-builtin:mcp"
+  ]
 }

@@ -79,8 +79,16 @@ trap or a final block that always runs.
 
 ## When anything unexpected happens: stop
 
-If anything goes wrong or behaves unexpectedly (a crash, an error, a partial
-result, a service going down, output you cannot explain), stop at once. Do
-not investigate further, even read-only, and do not try to fix it. First
-tell the user what happened, what state the system is now in as far as you
-know, and what you have not verified. Then ask how to proceed.
+If an action you took, or a system you are changing, goes wrong or behaves
+unexpectedly (a crash, an error, a partial result, a service going down,
+output you cannot explain), stop at once. Do not investigate further, even
+read-only, and do not try to fix it. First tell the user what happened,
+what state the system is now in as far as you know, and what you have not
+verified. Then ask how to proceed.
+
+This does not cover odd but pre-existing state found during read-only
+inspection, such as an unexplained file timestamp or a config change made
+by someone else. Keep investigating that read-only, within the
+sensitive-data limits above, and report it. Stop only if the finding
+suggests something is actively going wrong, or the next step would change
+state.

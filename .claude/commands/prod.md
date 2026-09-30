@@ -4,8 +4,8 @@ argument-hint: "[system or task]"
 allowed-tools: Skill(production-operations), AskUserQuestion
 ---
 
-Use the `production-operations` skill for the rest of this session: I am
-working on a production system. Ask me before every state-changing action,
-and stop and report if anything unexpected happens.
+First invoke the `production-operations` skill with the Skill tool, before
+any other action, and follow it for the rest of this session. I am working
+on a production system.
 
 System or task: $ARGUMENTS

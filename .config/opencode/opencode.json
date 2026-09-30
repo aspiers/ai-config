@@ -219,7 +219,31 @@
       "yes *": "allow",
       "zgrep *": "allow",
       "~/bin/emacs-markdown-live-preview *": "allow",
-      "~/bin/open *": "allow"
+      "~/bin/open *": "allow",
+      "*parcellite*": "ask",
+      "*clipit*": "ask",
+      "*copyq*": "ask",
+      "*greenclip*": "ask",
+      "*cliphist*": "ask",
+      "*clipman*": "ask",
+      "*clipcat*": "ask",
+      "*gpaste*": "ask",
+      "*GPaste*": "ask",
+      "*klipper*": "ask",
+      "*diodon*": "ask"
+    },
+    "read": {
+      "*parcellite*": "ask",
+      "*clipit*": "ask",
+      "*copyq*": "ask",
+      "*greenclip*": "ask",
+      "*cliphist*": "ask",
+      "*clipman*": "ask",
+      "*clipcat*": "ask",
+      "*gpaste*": "ask",
+      "*GPaste*": "ask",
+      "*klipper*": "ask",
+      "*diodon*": "ask"
     }
   },
   "plugin": [

@@ -40,3 +40,16 @@ Reconsider whether you can do it yourself. In order:
 
 Only if all five turn up nothing should you ask the user to do it manually.
 Explain what you searched for and why none of the options fit.
+
+## Limits
+
+Doing it yourself means doing the task you were given, not finding another
+route to its answer. Never widen the task into the user's private data to
+make up for a check you could not complete, for example:
+
+- clipboard history or clipboard-manager databases (the current clipboard,
+  right after the task itself copied something, is fine);
+- browser or shell history, mail, chat logs, keyrings or password stores.
+
+If such access is the only way, ask for that specific access, naming the
+source and why, or hand the check back with what you did verify.

@@ -81,6 +81,13 @@
     fine — but think hard before deciding it's truly open-ended. Most
     "open-ended" questions actually have 2–4 obvious candidates.
 
+- **Never read the user's private data without explicit permission** for
+  that specific access: clipboard history or clipboard-manager databases,
+  browser or shell history, mail, chat logs, keyrings and password stores.
+  Reading the current clipboard right after the task copied something to it
+  is fine. Needing to verify something is not permission; hand the check back
+  instead.
+
 - Write clean, modular code with modern syntax and type annotations
 
 - Design for simplicity (simplest thing that could work, KISS)

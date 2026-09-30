@@ -17,6 +17,7 @@ without a Dolt server.
 """
 
 import os
+import re
 import shutil
 import subprocess
 import tempfile
@@ -302,6 +303,203 @@ class TestBeadsStateStaysLocal(BdEnrollSoloTestCase):
     def test_dry_run_plans_the_remote_removal(self):
         result = self.enroll("--local", "--dry-run", "--prefix", "testrepo")
         self.assertIn("bd dolt remote remove origin", result.stdout)
+
+    @unittest.skipUnless(bd_available(), "bd not installed")
+    def test_check_and_repair_remote_on_a_real_workspace(self):
+        """An enrollment predating remote removal must fail --check and be
+        repairable, as a workspace enrolled before d53bb45 would be."""
+        self.enroll_or_skip()
+        origin = Path(tempfile.mkdtemp(prefix="bd-enroll-dolt-origin-test-"))
+        self.addCleanup(shutil.rmtree, origin, ignore_errors=True)
+        added = subprocess.run(
+            ["bd", "dolt", "remote", "add", "origin", f"file://{origin}"],
+            capture_output=True,
+            text=True,
+            env=self.command_env,
+        )
+        if added.returncode != 0:
+            self.skipTest(f"cannot add a Dolt remote here:\n{added.stderr}")
+
+        result = self.enroll("--check", check=False)
+        self.assertEqual(result.returncode, 1, result.stderr)
+        self.assertIn(str(origin), result.stderr)
+        self.assertIn("--repair-remote", result.stderr)
+
+        self.enroll("--repair-remote", "--yes")
+
+        self.assertIn("No remotes configured", self.dolt_remotes())
+        config = Path(".beads/config.yaml").read_text()
+        self.assertNotRegex(config, r"(?m)^\s*sync\.remote:")
+        result = self.enroll("--check", check=False)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+
+# Stands in for bd so the migration gate, which cannot be provoked on demand
+# with a real workspace, can be tested. It records every call, and answers
+# the way bd 1.3.0 does on a gated remote-backed database when 'gated' exists
+# in its state directory: 'bd dolt remote list' works, everything that opens
+# the database is refused.
+FAKE_BD = """#!/bin/sh
+state=$FAKE_BD_STATE
+echo "$*" >>"$state/calls"
+refusal="refusing to auto-apply 3 pending schema migrations to a \
+remote-backed database (v12 -> v15): migrating clones independently \
+forks the schema (#4259)"
+case "$*" in
+    "dolt remote list")
+        if [ -f "$state/remote" ]; then
+            printf 'origin               %s\\n' "$(cat "$state/remote")"
+        else
+            echo "No remotes configured."
+        fi ;;
+    "dolt remote remove origin")
+        if [ -f "$state/gated" ]; then
+            echo "Error removing remote: $refusal" >&2
+            exit 1
+        fi
+        rm -f "$state/remote" ;;
+    "context --json")
+        [ -f "$state/gated" ] && { echo "Error: $refusal" >&2; exit 1; }
+        echo '{"dolt_mode": "server"}' ;;
+    "config get export.git-add")
+        [ -f "$state/gated" ] && { echo "Error: $refusal" >&2; exit 1; }
+        echo "export.git-add = false" ;;
+    "memories --json")
+        echo '[{"key": "beads-solo-policy"}]' ;;
+    *)
+        exit 1 ;;
+esac
+"""
+
+UPSTREAM_URL = "git+ssh://git@example.com/upstream/project.git"
+
+
+class TestRemoteRepair(BdEnrollSoloTestCase):
+    """--check and --repair-remote on an enrollment that kept its remote."""
+
+    def setUp(self):
+        super().setUp()
+        self.state = Path(self.test_dir, "fake-bd-state")
+        self.state.mkdir()
+        (self.state / "remote").write_text(UPSTREAM_URL)
+        fake_bin = Path(self.test_dir, "fake-bin")
+        fake_bin.mkdir()
+        (fake_bin / "bd").write_text(FAKE_BD)
+        (fake_bin / "bd").chmod(0o755)
+
+        home = Path(self.test_dir, "home")
+        (home / ".agents" / "skills").mkdir(parents=True)
+        (home / ".agents" / "skills" / "beads").symlink_to(self.skill_source)
+
+        self.command_env.update(
+            FAKE_BD_STATE=str(self.state),
+            HOME=str(home),
+            PATH=f"{fake_bin}{os.pathsep}{self.command_env['PATH']}",
+        )
+
+        # A local enrollment as bd-enroll-solo made it before d53bb45.
+        self.run_git("config", "--local", "beads.solo.local", "true")
+        self.run_git("config", "--local", "beads.role", "maintainer")
+        with Path(".git/info/exclude").open("a") as exclude:
+            exclude.write(".beads/\n.beads-solo\nfake-bd-state/\n")
+            exclude.write("fake-bin/\nhome/\n")
+        Path(".beads").mkdir()
+        self.config = Path(".beads/config.yaml")
+        self.config.write_text(
+            "issue-prefix: testrepo\n" f'sync.remote: "{UPSTREAM_URL}"\n'
+        )
+
+    def gate_migrations(self):
+        (self.state / "gated").touch()
+
+    def bd_calls(self):
+        calls = self.state / "calls"
+        return calls.read_text().splitlines() if calls.exists() else []
+
+    def assert_never_pushed_or_migrated(self):
+        forbidden = re.compile(r"\b(push|migrate|bootstrap)\b|^(export|dolt commit)")
+        for call in self.bd_calls():
+            self.assertNotRegex(call, forbidden)
+
+    def test_check_reports_remote_even_when_database_is_gated(self):
+        self.gate_migrations()
+
+        result = self.enroll("--check", check=False)
+
+        self.assertEqual(result.returncode, 1, result.stderr)
+        self.assertIn(
+            f"a Dolt remote 'origin' is still configured ({UPSTREAM_URL})",
+            result.stderr,
+        )
+        self.assertIn(
+            f'sync.remote is still set in .beads/config.yaml ("{UPSTREAM_URL}")',
+            result.stderr,
+        )
+        self.assertIn("bd-enroll-solo --repair-remote --yes", result.stderr)
+        self.assertNotIn("could not be validated", result.stderr)
+
+    def test_check_accepts_a_commented_out_sync_remote(self):
+        (self.state / "remote").unlink()
+        self.config.write_text(f'# sync.remote: "{UPSTREAM_URL}"\n')
+
+        result = self.enroll("--check", check=False)
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_repair_remote_removes_remote_and_disables_sync_remote(self):
+        result = self.enroll("--repair-remote", "--yes")
+
+        self.assertIn("dolt remote remove origin", self.bd_calls())
+        self.assertFalse((self.state / "remote").exists())
+        config = self.config.read_text()
+        self.assertNotRegex(config, r"(?m)^\s*sync\.remote:")
+        self.assertIn(f'# sync.remote: "{UPSTREAM_URL}"', config)
+        self.assertIn("profile: local", result.stdout)
+        self.assert_never_pushed_or_migrated()
+
+    def test_repair_remote_explains_the_migration_gate(self):
+        self.gate_migrations()
+
+        result = self.enroll("--repair-remote", "--yes", check=False)
+
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("refusing to auto-apply", result.stderr)
+        self.assertIn("schema migrations are pending", result.stderr)
+        self.assertIn(UPSTREAM_URL, result.stderr)
+        steps = [
+            "bd export --all -o .beads/backup/pre-migrate-",
+            "bd dolt commit",
+            "bd migrate --force",
+            "bd dolt remote remove origin",
+        ]
+        positions = [result.stderr.find(step) for step in steps]
+        self.assertNotIn(-1, positions, result.stderr)
+        self.assertEqual(positions, sorted(positions), "steps out of order")
+        self.assertIn("Do NOT run 'bd dolt push' or 'bd bootstrap'", result.stderr)
+        self.assert_never_pushed_or_migrated()
+        self.assertTrue((self.state / "remote").exists())
+
+    def test_repair_remote_dry_run_changes_nothing(self):
+        before = self.config.read_text()
+
+        result = self.enroll("--repair-remote", "--dry-run")
+
+        self.assertIn("bd dolt remote remove origin", result.stdout)
+        self.assertEqual(before, self.config.read_text())
+        self.assertNotIn("dolt remote remove origin", self.bd_calls())
+
+    def test_repair_remote_requires_yes(self):
+        result = self.enroll("--repair-remote", check=False)
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("--yes", result.stderr)
+        self.assertTrue((self.state / "remote").exists())
+
+    def test_repair_remote_cannot_be_combined_with_check(self):
+        result = self.enroll("--repair-remote", "--check", check=False)
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("cannot be combined", result.stderr)
 
 
 class TestLocalEnrollmentGuardrails(BdEnrollSoloTestCase):

@@ -29,6 +29,7 @@ DRY_RUN=false
 LOCAL_MODE=false
 CHECK_MODE=false
 REPAIR_SKILLS=false
+REPAIR_REMOTE=false
 PREFIX=""
 ROOT=""
 EXCLUDE_FILE=""
@@ -87,11 +88,18 @@ Options:
                     Prints "profile: tracked" or "profile: local" and exits 0
                     when valid; exits 1 when absent or malformed; exits 2
                     when bd cannot open the Beads database, so nothing could
-                    be validated. This is the only validation the beads-solo
-                    skill needs to run.
+                    be validated. A Dolt remote 'origin' or live sync.remote
+                    is checked first and exits 1 even then. This is the
+                    only validation the beads-solo skill needs to run.
   --repair-skills   Install or repair only the repository-local Beads skill
                     links and exclusions in an existing enrollment. Requires
                     --yes unless used with --dry-run.
+  --repair-remote   Remove the Dolt remote 'origin' and comment out any live
+                    sync.remote in .beads/config.yaml, for enrollments made
+                    before enrollment removed them. Never pushes and never
+                    migrates; if bd refuses because schema migrations are
+                    pending, prints the local-only sequence to run first.
+                    Requires --yes unless used with --dry-run.
   --yes             Actually perform the enrollment. Required unless --dry-run.
   --dry-run         Show the planned values and commands, then exit.
   --local           Enroll invisibly to Git: no tracked files are created or
@@ -166,6 +174,10 @@ parse_args() {
                 ;;
             --repair-skills)
                 REPAIR_SKILLS=true
+                shift
+                ;;
+            --repair-remote)
+                REPAIR_REMOTE=true
                 shift
                 ;;
             --prefix)
@@ -268,13 +280,15 @@ check_prerequisites() {
     fi
 }
 
-check_skill_repair_prerequisites() {
+check_repair_prerequisites() {
+    local what=$1
+
     require_command git
     require_command bd
     set_repository_context
 
     [[ -d "$ROOT/.beads" ]] ||
-        fail "cannot repair skills: no existing .beads workspace"
+        fail "cannot repair $what: no existing .beads workspace"
 
     local local_opt_in tracked_marker=false
     local_opt_in=$(git config --local --get beads.solo.local 2>/dev/null || true)
@@ -285,7 +299,7 @@ check_skill_repair_prerequisites() {
     elif [[ "$local_opt_in" == true ]]; then
         LOCAL_MODE=true
     elif [[ "$tracked_marker" != true ]]; then
-        fail "cannot repair skills: no beads-solo enrollment found"
+        fail "cannot repair $what: no beads-solo enrollment found"
     fi
 }
 
@@ -679,19 +693,112 @@ initialize_workspace() {
     fi
 }
 
-has_dolt_origin_remote() {
-    bd dolt remote list 2>/dev/null | grep -Eq '^origin[[:space:]]'
+# URL of the Dolt remote 'origin', or nothing. 'bd dolt remote list' still
+# answers while schema migrations are gated, so this works on exactly the
+# workspaces that need repair. Before 'bd init' (as in a dry run) there is
+# no workspace to list, which means no remote.
+dolt_origin_remote_url() {
+    { bd dolt remote list 2>/dev/null || true; } |
+        awk '$1 == "origin" { print $2; exit }'
+}
+
+# Value of an uncommented sync.remote in .beads/config.yaml, or nothing. bd
+# resolves its sync target from this key, so a live line keeps the workspace
+# pointed at the remote even after the Dolt remote itself is gone.
+live_sync_remote() {
+    sed -nE '/^[[:space:]]*sync\.remote:/ {
+        s/^[[:space:]]*sync\.remote:[[:space:]]*//
+        p
+        q
+    }' "$ROOT/.beads/config.yaml" 2>/dev/null || true
+}
+
+# Print one problem per line for any remote beads-solo must not have. Shared
+# by enrollment verification and --check. It never opens the Beads database,
+# so --check can run it before the checks that do.
+dolt_remote_problems() {
+    local url
+    url=$(dolt_origin_remote_url)
+    [[ -z "$url" ]] ||
+        echo "a Dolt remote 'origin' is still configured ($url); beads-solo keeps Beads state on this machine. Run 'bd-enroll-solo --repair-remote --yes'"
+    url=$(live_sync_remote)
+    [[ -z "$url" ]] ||
+        echo "sync.remote is still set in .beads/config.yaml ($url). Run 'bd-enroll-solo --repair-remote --yes'"
+}
+
+# Printed when bd refuses to remove the remote because its own presence makes
+# the database look shared. Everything here stays on this machine: the
+# refusal protects clones that do not exist, so migrating in place is safe.
+migration_gate_advice() {
+    local url=$1 backup
+    backup=".beads/backup/pre-migrate-$(date +%Y%m%d-%H%M%S).jsonl"
+    cat >&2 <<EOF
+Error: bd refused to remove the Dolt remote 'origin' ($url)
+       because schema migrations are pending, and bd will not migrate a
+       database it believes is remote-backed. That remote is an enrollment
+       defect -- bd init derived it from git origin -- not a sync setup.
+       Nothing was removed.
+
+Migrate locally, then remove the remote. None of these steps pushes:
+
+  bd export --all -o $backup
+  bd dolt commit
+  bd migrate --force
+  bd dolt remote remove origin
+
+or rerun 'bd-enroll-solo --repair-remote --yes' in place of the last step.
+
+Do NOT run 'bd dolt push' or 'bd bootstrap': the remote is $url,
+so either would publish or pull private Beads state through it.
+EOF
 }
 
 # 'bd init' wires git origin as the Dolt remote 'origin' (and persists
 # sync.remote), which in a third-party checkout is the upstream project.
 # beads-solo keeps Beads state on this machine, so undo it.
-remove_init_dolt_remote() {
-    if [[ "$DRY_RUN" != true ]] && ! has_dolt_origin_remote; then
+remove_dolt_origin_remote() {
+    local url output
+    url=$(dolt_origin_remote_url)
+    if [[ "$DRY_RUN" != true && -z "$url" ]]; then
+        info "No Dolt remote 'origin' is configured"
         return 0
     fi
-    info "Removing the Dolt remote 'bd init' derived from git origin"
-    run bd dolt remote remove origin
+
+    info "Removing the Dolt remote 'origin'${url:+ ($url)}"
+    echo "+ $(quote_cmd bd dolt remote remove origin)"
+    [[ "$DRY_RUN" == true ]] && return 0
+
+    if output=$(bd dolt remote remove origin 2>&1); then
+        [[ -z "$output" ]] || printf '%s\n' "$output"
+        return 0
+    fi
+
+    printf '%s\n' "$output" >&2
+    if grep -Eq 'refusing to (auto-apply|migrate)' <<<"$output"; then
+        migration_gate_advice "${url:-origin}"
+        exit 1
+    fi
+    fail "could not remove the Dolt remote 'origin'"
+}
+
+# Comment the key out rather than deleting it, as 'bd config unset' does, so
+# the old value stays visible for review. Doing this before removing the Dolt
+# remote also stops 'bd dolt remote remove' from staging and committing
+# config.yaml itself, which would sweep in whatever else is staged.
+disable_sync_remote() {
+    local url
+    url=$(live_sync_remote)
+    if [[ -z "$url" ]]; then
+        info "No live sync.remote in .beads/config.yaml"
+        return 0
+    fi
+
+    info "Commenting out sync.remote ($url) in .beads/config.yaml"
+    if [[ "$DRY_RUN" == true ]]; then
+        echo "+ # comment out sync.remote in .beads/config.yaml"
+        return 0
+    fi
+    sed -i -E 's/^([[:space:]]*)(sync\.remote:)/\1# \2/' "$ROOT/.beads/config.yaml"
 }
 
 # 'bd init' creates a root .gitignore holding its canonical ignore rules. In
@@ -788,8 +895,9 @@ verify_enrollment() {
     [[ "$(git config --local --get beads.role)" == maintainer ]] ||
         fail "beads.role is not pinned to maintainer"
 
-    ! has_dolt_origin_remote ||
-        fail "a Dolt remote 'origin' is still configured"
+    local remote_problems
+    remote_problems=$(dolt_remote_problems)
+    [[ -z "$remote_problems" ]] || fail "$remote_problems"
 
     if [[ "$LOCAL_MODE" == true ]]; then
         [[ "$(git config --local --get beads.solo.local)" == true ]] ||
@@ -833,7 +941,8 @@ ${status_after:-  (clean)}"
 #
 # Exit status:
 #   0  enrolled and valid; profile printed to stdout as "profile: tracked|local"
-#   1  not enrolled, or the enrollment is malformed
+#   1  not enrolled, or the enrollment is malformed (including a Dolt remote
+#      or sync.remote, which is reported even if the database is unopenable)
 #   2  indeterminate: bd could not open the Beads database, so the
 #      bd-backed settings were not validated and nothing should be changed
 run_check() {
@@ -862,6 +971,14 @@ run_check() {
     fi
 
     [[ -d "$ROOT/.beads" ]] || errors+=("no .beads workspace directory")
+
+    # First, and independent of the database: a remote derived from git
+    # origin is what makes bd gate schema migrations, and so what makes the
+    # database unopenable. Checking it later hid the cause behind exit 2.
+    local problem
+    while IFS= read -r problem; do
+        [[ -z "$problem" ]] || errors+=("$problem")
+    done < <(dolt_remote_problems)
 
     local mode
     mode=$(bd context --json 2>/dev/null |
@@ -1018,9 +1135,12 @@ EOF
 main() {
     parse_args "$@"
 
-    if [[ "$CHECK_MODE" == true && "$REPAIR_SKILLS" == true ]]; then
-        fail "--check and --repair-skills cannot be combined"
-    fi
+    local modes=0
+    [[ "$CHECK_MODE" == true ]] && modes=$((modes + 1))
+    [[ "$REPAIR_SKILLS" == true ]] && modes=$((modes + 1))
+    [[ "$REPAIR_REMOTE" == true ]] && modes=$((modes + 1))
+    [[ $modes -le 1 ]] ||
+        fail "--check, --repair-skills and --repair-remote cannot be combined"
     if [[ "$CHECK_MODE" == true ]]; then
         run_check
         return $?
@@ -1032,11 +1152,25 @@ main() {
     fi
 
     if [[ "$REPAIR_SKILLS" == true ]]; then
-        check_skill_repair_prerequisites
+        check_repair_prerequisites skills
         info "Repository: $ROOT"
         info "Repairing repository-local Beads skill links"
         prepare_beads_skill_links
         install_beads_skill_links
+        if [[ "$DRY_RUN" == true ]]; then
+            info "Dry run complete; no changes were made"
+        else
+            run_check
+        fi
+        return 0
+    fi
+
+    if [[ "$REPAIR_REMOTE" == true ]]; then
+        check_repair_prerequisites remote
+        info "Repository: $ROOT"
+        info "Removing the Dolt remote and sync target beads-solo must not have"
+        disable_sync_remote
+        remove_dolt_origin_remote
         if [[ "$DRY_RUN" == true ]]; then
             info "Dry run complete; no changes were made"
         else
@@ -1062,7 +1196,7 @@ main() {
     install_policy_declaration
     ensure_claude_md_symlink
     initialize_workspace
-    remove_init_dolt_remote
+    remove_dolt_origin_remote
     install_local_memory
     configure_workspace
     # After all bd commands, since 'bd hooks install' may also touch ignores.

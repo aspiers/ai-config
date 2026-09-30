@@ -1,14 +1,16 @@
 ---
 name: orca-cli-local
-description: Applies local lessons to every Orca worktree creation and agent handoff done through the orca CLI (orca-ide, orca-dev). Use alongside the upstream orca-cli skill whenever the user asks to start, do, or hand off work in a separate or new Orca worktree, spawn an agent in a worktree, or open a PR from one.
+description: Applies local lessons to every use of the Orca CLI (orca-ide, orca-dev), including worktree creation, agent handoffs, terminal input to agents, and inter-agent messaging. Use alongside the upstream orca-cli skill whenever creating Orca worktrees, spawning or handing off to agents, sending or typing into Orca terminals, messaging or briefing agents, or opening a PR from an Orca worktree.
 ---
 
 # Local orca-cli guidance
 
 Load the upstream `orca-cli` skill for the command surface, then apply these
-rules. They exist because the upstream defaults produced the wrong result on
-2026-09-17 (tacticalvote): a worktree with an idle shell instead of a working
-agent, branched from a stale base.
+rules to every Orca CLI command. Each one exists because the upstream
+defaults or an agent's assumptions produced the wrong result: on 2026-09-17
+(tacticalvote), a worktree with an idle shell instead of a working agent,
+branched from a stale base; later, a coordinator that denied having a
+message channel, and prompts typed into agents' dialogs.
 
 ## "Start this in a separate worktree" means an agent runs there
 
@@ -50,3 +52,35 @@ A `terminal wait` on the create-returned handle can report
 `terminal_handle_stale` within a minute while the agent is in fact running.
 Re-list terminals for the worktree and continue with the replacement handle;
 do not treat the stale error as a failed handoff.
+
+## Talking to agents you started
+
+Orca has inter-agent messaging (`orchestration --help`). Never tell the user
+that typing into a terminal is the only way to reach an agent.
+
+Messaging is pull-only for plain handoff agents: Orca's hooks inject no
+mail, so a recipient sees messages only when it runs
+`orca-ide orchestration check`. Set the channel up in the initial
+`--prompt` brief:
+
+- the coordinator's handle (`$ORCA_TERMINAL_HANDLE`);
+- "run `orca-ide orchestration check --terminal "$ORCA_TERMINAL_HANDLE"`
+  at each checkpoint"; and
+- "report with `orca-ide orchestration send --to <coordinator handle>
+  --type status|question|escalation`".
+
+Don't ask a plain handoff agent for `worker_done`; without a Dispatch it is
+rejected ("worker_done requires taskId"). When you want reports or
+supervision from the start, use supervised workers instead
+(`orchestration run-create`, then `worker-start`; see the `orchestration`
+skill).
+
+## Read the screen before every send
+
+Before any `terminal send` to an agent, `terminal read` it. Send only if it
+is idle at its normal input prompt: no dialog, menu, questionnaire,
+permission prompt, running turn, or startup screen. `tui-idle` alone is not
+enough; typed text and Enter can answer a dialog and change its settings.
+
+Otherwise skip that terminal and report it to the user. After sending,
+`terminal read` again to confirm the text arrived as a prompt.

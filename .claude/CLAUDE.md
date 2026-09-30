@@ -67,6 +67,13 @@
     decisions instead of asking one at a time.
   - If recommending an option, make it the first option and append
     "(Recommended)" to its label.
+  - A "next steps" list that offers alternatives, or asks me to pick,
+    confirm, or supply something, is a decision: end the turn with
+    AskUserQuestion carrying those options, not a numbered prose list.
+    State next steps in prose only when there is no choice to make.
+  - Each question must stand alone; I may not have read earlier
+    messages. Never name a bead, PR, commit or ticket by bare ID in a
+    question or option: write `ow-83i (Mailman runners die silently)`.
   - Plain prose is fine for follow-up clarifications that depend on a prior
     answer, for explaining findings, or for flagging risks. It is NOT
     appropriate as the primary mechanism for decision-gathering.

@@ -1,0 +1,127 @@
+#!/usr/bin/env python3
+"""Pick a token from an Orca terminal's output, extrakto-style.
+
+Orca has no extrakto equivalent and its plugin API cannot read terminals,
+so this reads the terminal through ``orca terminal read`` and opens the
+extract picker from herdr-copy-search in a split next to it. The picker
+copies via OSC 52, which Orca terminals honour.
+
+The picker is typed into the split's interactive shell with ``exec`` so the
+split closes as soon as the picker exits; without it the shell lingers.
+"""
+
+from __future__ import annotations
+
+import argparse
+import os
+import shlex
+import sys
+import tempfile
+from pathlib import Path
+
+from orca_cli import run_orca
+
+DEFAULT_PICKER = "herdr-copy-search"
+DEFAULT_LIMIT = 2000
+# herdr-copy-search reads key bindings from $HERDR_PLUGIN_CONFIG_DIR, and the
+# split's fresh shell would not otherwise inherit it from the caller.
+PASSTHROUGH_ENV = ("HERDR_PLUGIN_CONFIG_DIR",)
+
+
+def terminal_lines(handle: str, limit: int) -> list[str]:
+    """Scrollback of a shell pane, or only the rendered screen of a TUI pane."""
+    result = run_orca(["terminal", "read", "--terminal", handle, "--limit", str(limit)])
+    return result["terminal"]["tail"]
+
+
+def write_capture(lines: list[str]) -> Path:
+    fd, path = tempfile.mkstemp(prefix="orca-extract-", suffix=".txt")
+    with os.fdopen(fd, "w", encoding="utf-8") as stream:
+        stream.write("\n".join(lines) + "\n")
+    return Path(path)
+
+
+def picker_command(picker: str, capture: Path, environment: dict[str, str]) -> str:
+    """Shell line that runs the picker on ``capture``, then deletes it."""
+    assignments = " ".join(
+        f"{name}={shlex.quote(environment[name])}"
+        for name in PASSTHROUGH_ENV
+        if environment.get(name)
+    )
+    run = f"{shlex.quote(picker)} --mode extract --input {shlex.quote(str(capture))}"
+    script = f"{run}; rm -f {shlex.quote(str(capture))}"
+    prefix = f"{assignments} " if assignments else ""
+    # The leading space keeps the line out of history under HIST_IGNORE_SPACE.
+    return f" {prefix}exec sh -c {shlex.quote(script)}"
+
+
+def open_picker(
+    handle: str,
+    limit: int,
+    picker: str,
+    direction: str | None,
+    environment: dict[str, str],
+) -> str:
+    """Open the picker beside ``handle`` and return the split's handle."""
+    capture = write_capture(terminal_lines(handle, limit))
+    args = ["terminal", "split", "--terminal", handle]
+    if direction:
+        args += ["--direction", direction]
+    args += ["--command", picker_command(picker, capture, environment)]
+    try:
+        return run_orca(args)["split"]["handle"]
+    except Exception:
+        capture.unlink(missing_ok=True)
+        raise
+
+
+def parse_args(environment: dict[str, str]) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument(
+        "--terminal",
+        default=environment.get("ORCA_TERMINAL_HANDLE"),
+        help="terminal handle to extract from (default: $ORCA_TERMINAL_HANDLE, "
+        "i.e. the Orca pane this runs in)",
+    )
+    parser.add_argument(
+        "--limit",
+        type=int,
+        default=DEFAULT_LIMIT,
+        help=f"maximum lines of output to read (default: {DEFAULT_LIMIT})",
+    )
+    parser.add_argument(
+        "--direction",
+        choices=("horizontal", "vertical"),
+        help="split direction (default: Orca's)",
+    )
+    parser.add_argument(
+        "--picker",
+        default=environment.get("ORCA_EXTRACT_PICKER", DEFAULT_PICKER),
+        help="picker program accepting --mode extract --input FILE "
+        f"(default: $ORCA_EXTRACT_PICKER or {DEFAULT_PICKER})",
+    )
+    return parser.parse_args()
+
+
+def main() -> int:
+    environment = dict(os.environ)
+    args = parse_args(environment)
+    if not args.terminal:
+        print(
+            "orca-extract: no terminal; run inside an Orca pane or pass --terminal",
+            file=sys.stderr,
+        )
+        return 2
+    try:
+        split = open_picker(
+            args.terminal, args.limit, args.picker, args.direction, environment
+        )
+    except (KeyError, OSError, RuntimeError) as error:
+        print(f"orca-extract: {error}", file=sys.stderr)
+        return 1
+    print(split)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

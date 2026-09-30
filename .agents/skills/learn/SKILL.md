@@ -1,27 +1,34 @@
 ---
 name: learn
 description: >-
-  Pauses current work to root-cause one specific mistake the agent just made,
-  such as not committing despite instructions to, by checking it against the
-  loaded AGENTS.md, CLAUDE.md, skills, and Beads memories; proposes concrete
-  context improvements, and lets the user choose which to apply and how to
-  remediate. Use when the user invokes `/learn` or `$learn`, with or without
-  a description of the mistake. For a broad end-of-session documentation
-  sweep, use `documentation-updates` (`/reflect`) instead.
+  Root-causes one specific mistake the agent just made, such as not
+  committing despite instructions to, by checking it against the loaded
+  AGENTS.md, CLAUDE.md, skills, and Beads memories, delegating the
+  investigation to a background subagent where the harness supports one;
+  proposes concrete context improvements, and lets the user choose which to
+  apply and how to remediate. Use when the user invokes `/learn` or
+  `$learn`, with or without a description of the mistake. For a broad
+  end-of-session documentation sweep, use `documentation-updates`
+  (`/reflect`) instead.
 ---
 
 # Learn from a mistake
 
 The user has interrupted ongoing work because you just made a mistake. Treat
-this as an **interlude**: the only goal is to understand why the mistake
-happened and stop it recurring.
+this as an **interlude**: the goal is to understand why the mistake happened
+and stop it recurring, without derailing the task it interrupted any
+further.
 
 ## Boundary
 
-Until the interlude ends, do nothing except the steps below. Do not resume
-the paused task, and do not fix the mistake itself before the user has
-chosen a remediation. Acting early would pre-empt the user's decision and
-muddy the evidence you are examining.
+Until the user has chosen from your proposals:
+
+- do not fix the mistake itself, and do not edit instructions, skills, or
+  memories on the strength of the investigation. Acting early would pre-empt
+  the user's decision and muddy the evidence being examined;
+- do not resume the paused task on your own initiative. If the
+  investigation runs in a subagent, you may work on the paused task, but
+  only as the user directs.
 
 ## 1. Pin down the mistake
 
@@ -31,6 +38,33 @@ a rule in loaded instructions that was ignored, or a question asked in plain
 text instead of via the questionnaire tool. Confirm your guess with the
 questionnaire tool (in Claude Code, `AskUserQuestion`), offering the most
 likely candidates. If you cannot guess, ask the user what went wrong.
+
+## Delegate steps 2 and 3 where possible
+
+If the harness can run a subagent, preferably in the background, hand steps
+2 and 3 to one so the investigation does not fill your context or block the
+user. Otherwise do them inline.
+
+Prefer a subagent that inherits this conversation, such as Claude Code's
+`fork` subagent type, because the transcript is the main evidence. A fresh
+subagent sees nothing of this session, so its prompt must carry:
+
+- the mistake as confirmed in step 1, in the user's words where possible;
+- the transcript facts that matter: what was asked, what you did and when,
+  and the decisions or commands involved;
+- the instruction sources in play: `AGENTS.md` / `CLAUDE.md` paths,
+  skills loaded or skipped, and the text of any system reminders, hook
+  output, or other injected context that its tools cannot re-read;
+- the repository's content rules, e.g. that it is public.
+
+In either case, tell it to follow steps 2 and 3 of this skill read-only:
+no edits, commits, or questions to the user. It should report the cause
+with quoted evidence and the proposals with target files and exact wording.
+
+Then tell the user in one line that the investigation is running, and that
+meanwhile you can continue the paused task if they say so. When the report
+arrives, check that its quotes are real and its proposals follow step 3,
+then go to step 4.
 
 ## 2. Investigate the cause
 
@@ -80,7 +114,8 @@ receive private or author-specific material.
 
 ## 4. Ask the user
 
-Use the questionnaire tool. Improvements come first as a multi-select with a
+Present the proposals yourself, even when a subagent drafted them, and use
+the questionnaire tool. Improvements come first as a multi-select with a
 "none" option. Remediation comes last as a single choice listing the
 plausible fixes for this mistake (e.g. commit now, revert, redo the step)
 plus "no remediation". Both questions may go in one questionnaire call.
@@ -88,6 +123,7 @@ plus "no remediation". Both questions may go in one questionnaire call.
 ## 5. Apply and stop
 
 Apply only what the user chose, verify it, and handle commits according to
-the repository's policy. Report what changed, with a one-line reminder of
+the repository's policy. You may delegate the edits to a subagent, but
+verify the result yourself. Report what changed, with a one-line reminder of
 where the paused work stood. Then stop: resume the paused task only when the
 user says so.

@@ -572,7 +572,9 @@ class TestPrimeTemplate(FakeBdEnrollmentTestCase):
         self.assertNotIn("PRIME.md", result.stderr)
 
     def test_repair_prime_stages_file_in_tracked_profile(self):
-        self.make_tracked("Use the `beads-solo` skill for Beads setup.")
+        self.make_tracked(
+            "Before running any `bd` command, load the `beads-solo` (policy)"
+        )
 
         result = self.enroll("--repair-prime", "--yes")
 
@@ -583,6 +585,16 @@ class TestPrimeTemplate(FakeBdEnrollmentTestCase):
         )
         self.assertNotIn("PRIME.md", result.stderr)
         self.assertNotIn("warnings", result.stderr)
+
+    def test_check_warns_about_legacy_agents_md_declaration(self):
+        self.make_tracked("Use the `beads-solo` skill for Beads setup.")
+        self.enroll("--repair-prime", "--yes")
+
+        result = self.enroll("--check", check=False)
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("old beads-solo declaration", result.stderr)
+        self.assertIn("`beads-best-practices`", result.stderr)
 
     def test_repair_prime_dry_run_changes_nothing(self):
         result = self.enroll("--repair-prime", "--dry-run")
@@ -841,6 +853,7 @@ class TestCheckMode(BdEnrollSoloTestCase):
         self.assertIn(
             ".beads/PRIME.md", self.run_git("diff", "--cached", "--name-only")
         )
+        self.assertIn("`beads-best-practices`", Path("AGENTS.md").read_text())
         self.assertTrue(
             Path("CLAUDE.md").is_symlink(), "CLAUDE.md should symlink to AGENTS.md"
         )

@@ -228,8 +228,8 @@ policy_text() {
     cat <<'EOF'
 ## Beads Solo
 
-Use the `beads-solo` skill for Beads setup and maintainer policy in this
-repository. Use the `beads` skill for the standard Beads workflow.
+Before running any `bd` command, load the `beads-solo` (policy), `beads`
+(workflow) and `beads-best-practices` (issue writing and updates) skills.
 
 This repository opts into the Beads **team-maintainer** profile for issue
 management and commits. Unless a current user or orchestrator instruction
@@ -237,6 +237,18 @@ says otherwise, agents may manage issues and make atomic commits as work
 progresses. They must not push Git branches or sync or push Dolt state
 unless explicitly requested.
 EOF
+}
+
+# Literal Markdown markers; the backticks must not be evaluated by the shell.
+# shellcheck disable=SC2016
+POLICY_MARKER='load the `beads-solo` (policy)'
+# Declarations written before the block named all three skills.
+# shellcheck disable=SC2016
+LEGACY_POLICY_MARKER='Use the `beads-solo` skill'
+
+policy_declaration_present() {
+    grep -Fq -e "$POLICY_MARKER" -e "$LEGACY_POLICY_MARKER" \
+        "$ROOT/AGENTS.md" 2>/dev/null
 }
 
 # Local-mode policy declaration, compressed to a single line for storage as a
@@ -661,9 +673,7 @@ install_policy_declaration() {
         return 0
     fi
 
-    # Literal Markdown; the backticks must not be evaluated by the shell.
-    # shellcheck disable=SC2016
-    if grep -Fq 'Use the `beads-solo` skill' "$ROOT/AGENTS.md" 2>/dev/null; then
+    if policy_declaration_present; then
         info "Policy declaration already present in AGENTS.md"
         return 0
     fi
@@ -1156,10 +1166,11 @@ run_check() {
                ! -s "$ROOT/.beads-solo" ]] ||
             errors+=(".beads-solo must be a tracked, empty, regular file")
 
-        # Literal Markdown; the backticks must not be evaluated by the shell.
-        # shellcheck disable=SC2016
-        grep -Fq 'Use the `beads-solo` skill' "$ROOT/AGENTS.md" 2>/dev/null ||
+        if ! policy_declaration_present; then
             errors+=("AGENTS.md lacks the beads-solo policy declaration")
+        elif ! grep -Fq "$POLICY_MARKER" "$ROOT/AGENTS.md"; then
+            warnings+=("AGENTS.md has the old beads-solo declaration, which does not name beads-best-practices. Replace its first paragraph with: $(policy_text | sed -n 3,4p | paste -sd ' ')")
+        fi
 
         if instruction_files_diverged; then
             errors+=("tracked AGENTS.md and CLAUDE.md differ")

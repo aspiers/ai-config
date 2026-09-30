@@ -263,7 +263,8 @@ skill installation that exists is also checked for safe tracking and exclusion.
 In the local profile, it verifies that no Beads artifact is visible to Git.
 Exit 0 means valid and prints the profile; exit 1 lists every problem found on
 stderr. Either may also print warnings on stderr, for problems that leave the
-enrollment valid, such as a missing or outdated `.beads/PRIME.md`.
+enrollment valid: a missing or outdated `.beads/PRIME.md`, or an `AGENTS.md`
+declaration from before it named all three skills.
 
 Do not substitute a hand-run sequence of `bd doctor`, `bd config get`, and
 `git config` commands. The check exists so validation is identical every time.
@@ -293,6 +294,8 @@ Repair depends on what it reports:
   `bd-enroll-solo --repair-prime --dry-run`, then `--repair-prime --yes`. It
   replaces local edits to the file; in the tracked profile, commit the staged
   result.
+- **An old `AGENTS.md` declaration** (warning) — replace its first paragraph
+  with the text the warning quotes, then commit.
 - **A leaked local enrollment** — unstage the artifact and confirm
   `.git/info/exclude` still carries the exclusions, then rerun the check.
 - **Embedded Dolt mode** — see

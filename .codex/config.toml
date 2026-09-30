@@ -45,6 +45,10 @@ NODE_REPL_NODE_PATH = "/opt/codex-desktop/resources/node-runtime/bin/node"
 NODE_REPL_TRUSTED_BROWSER_CLIENT_SHA256S = "091a81603ff202a16ed56557709bf42d97caf8f0dd2e07ae9e26d7c014d71035"
 NODE_REPL_TRUSTED_CODE_PATHS = "/home/adam/.codex"
 
+[mcp_servers.d4d]
+enabled = true
+url = "https://d4d.forwarddemocracy.com/mcp"
+
 [projects."/home/adam/.GIT/3rd-party/ePDS"]
 trust_level = "trusted"
 

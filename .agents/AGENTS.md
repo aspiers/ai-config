@@ -8,6 +8,9 @@ this repository. Adapt them to your own preferences.
 - Don't guess. When unsure how something behaves, check official docs
   first, then the changelog, a web search, then the issue tracker; inspect
   a local install only as a last resort.
+- Tool warnings and error messages are claims about state, not facts: check
+  the state they describe (config, remotes, refs) before repeating them to
+  the user or building a question on them.
 - If you still can't verify something, say "I don't know" or state the
   assumption explicitly, and ask before building on it.
 - Before saying you can't do or see something, check every tool available,

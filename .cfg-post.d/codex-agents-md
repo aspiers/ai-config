@@ -1,0 +1,4 @@
+#!/bin/bash
+# Codex cannot include ~/.agents/AGENTS.md, so its global AGENTS.md is a
+# concatenated copy. Rebuild it whenever this repository is updated.
+exec "$HOME/bin/codex-global-agents-md"

@@ -27,6 +27,9 @@ bd-enroll-solo --check
 
 - **Exit 0** — the repository is enrolled and valid. The command prints
   `profile: tracked` or `profile: local`. Proceed under the policy below.
+  Warnings on stderr, such as a missing `.beads/PRIME.md`, leave the
+  enrollment valid: relay them with the repair command they name, and carry
+  on.
 - **Exit 1** — not enrolled, or the enrollment is malformed. The reason is on
   stderr. Stop and report it. Create an enrollment only when the user
   explicitly requests it; see [Setup and Repair](references/setup.md).

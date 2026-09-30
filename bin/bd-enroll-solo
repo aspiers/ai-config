@@ -30,6 +30,7 @@ LOCAL_MODE=false
 CHECK_MODE=false
 REPAIR_SKILLS=false
 REPAIR_REMOTE=false
+REPAIR_PRIME=false
 PREFIX=""
 ROOT=""
 EXCLUDE_FILE=""
@@ -61,6 +62,12 @@ BEADS_SKILL_LINKS=(
     '.claude/skills/beads'
 )
 
+# bd prime replaces its default workflow text with PRIME.md in the resolved
+# workspace. The beads-solo template states this policy and tells agents to
+# load the Beads skills before any bd command, which the default text never
+# does.
+PRIME_NAME="PRIME.md"
+
 # Whether the repository had its own root .gitignore before enrollment.
 # 'bd init' creates one; in --local mode that file is ours, not the
 # repository's, and must not become visible to Git.
@@ -81,7 +88,9 @@ The script:
   5. runs bd init --server --role maintainer, then removes the Dolt remote
      it derives from git origin, so Beads state stays on this machine
   6. pins beads.role, configures private JSONL export, installs hooks
-  7. verifies the resulting enrollment
+  7. installs the beads-solo .beads/PRIME.md, which replaces bd prime's
+     default workflow text
+  8. verifies the resulting enrollment
 
 Options:
   --check           Validate an existing enrollment instead of creating one.
@@ -100,6 +109,11 @@ Options:
                     migrates; if bd refuses because schema migrations are
                     pending, prints the local-only sequence to run first.
                     Requires --yes unless used with --dry-run.
+  --repair-prime    Install or refresh .beads/PRIME.md from the beads-solo
+                    template in an existing enrollment, replacing any local
+                    edits. Staged in the tracked profile; invisible to Git
+                    in the local profile. Requires --yes unless used with
+                    --dry-run.
   --yes             Actually perform the enrollment. Required unless --dry-run.
   --dry-run         Show the planned values and commands, then exit.
   --local           Enroll invisibly to Git: no tracked files are created or
@@ -117,7 +131,9 @@ exclude is never published, a clone of the repository sees no trace of it.
 Both profiles leave the JSONL export unstaged. They also exclude the local
 Beads skill links via .git/info/exclude, because the symlink targets are
 machine-specific. Set BEADS_SKILL_DIR to the upstream skill directory when it
-cannot be inferred from the local bd installation.
+cannot be inferred from the local bd installation. Set
+BEADS_SOLO_PRIME_TEMPLATE to the PRIME.md template when it is not found
+beside this script or in a global beads-solo skill.
 
 Push authorization comes from the installed policy; enrollment does not
 configure Beads' 'no-push' guard.
@@ -178,6 +194,10 @@ parse_args() {
                 ;;
             --repair-remote)
                 REPAIR_REMOTE=true
+                shift
+                ;;
+            --repair-prime)
+                REPAIR_PRIME=true
                 shift
                 ;;
             --prefix)
@@ -868,6 +888,77 @@ configure_workspace() {
     run bd hooks install
 }
 
+# The template ships in the beads-solo skill. Look beside this script first
+# (a repository checkout, or a stow tree of one), then in global skill
+# installations.
+prime_template() {
+    local script_dir candidate
+    local candidates=()
+
+    if [[ -n "${BEADS_SOLO_PRIME_TEMPLATE:-}" ]]; then
+        candidates+=("$BEADS_SOLO_PRIME_TEMPLATE")
+    else
+        script_dir=$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")
+        candidates+=("$script_dir/../.agents/skills/beads-solo/assets/PRIME.md")
+        if [[ -n "${HOME:-}" ]]; then
+            candidates+=(
+                "$HOME/.agents/skills/beads-solo/assets/PRIME.md"
+                "$HOME/.claude/skills/beads-solo/assets/PRIME.md"
+            )
+        fi
+    fi
+
+    for candidate in "${candidates[@]}"; do
+        if [[ -f "$candidate" ]]; then
+            printf '%s\n' "$candidate"
+            return 0
+        fi
+    done
+    return 1
+}
+
+# The workspace bd actually uses. In a linked worktree 'bd init' can resolve
+# to another checkout's .beads/, which is where bd prime then looks.
+beads_workspace() {
+    local path
+    path=$(bd where --json 2>/dev/null |
+               python3 -c 'import json,sys; print(json.load(sys.stdin).get("path",""))' \
+               2>/dev/null) || path=""
+    printf '%s\n' "${path:-$ROOT/.beads}"
+}
+
+# Print a problem with PRIME.md, or nothing when it matches the template.
+# Only ever a warning: bd works without it, and a stricter --check would
+# stop agents in every enrollment made before the file existed.
+prime_problem() {
+    local template prime
+    prime="$(beads_workspace)/$PRIME_NAME"
+    if ! template=$(prime_template); then
+        echo "beads-solo PRIME.md template not found, so $prime was not checked. Set BEADS_SOLO_PRIME_TEMPLATE"
+    elif [[ ! -f "$prime" ]]; then
+        echo "$prime is missing, so bd prime does not tell agents to load the Beads skills. Run 'bd-enroll-solo --repair-prime --yes'"
+    elif ! cmp -s "$template" "$prime"; then
+        echo "$prime differs from the beads-solo template. Run 'bd-enroll-solo --repair-prime --yes' to replace it"
+    fi
+}
+
+install_prime() {
+    local template prime
+    template=$(prime_template) ||
+        fail "beads-solo PRIME.md template not found. Set BEADS_SOLO_PRIME_TEMPLATE
+       to the assets/PRIME.md file of the beads-solo skill."
+    prime="$(beads_workspace)/$PRIME_NAME"
+
+    info "Installing $prime from $template"
+    run cp -- "$template" "$prime"
+
+    # In the local profile .beads/ is excluded, so the file stays invisible.
+    # A workspace in another checkout is that checkout's to commit.
+    if [[ "$LOCAL_MODE" != true && "$prime" == "$ROOT"/* ]]; then
+        run git add -- "$prime"
+    fi
+}
+
 verify_enrollment() {
     if [[ "$DRY_RUN" == true ]]; then
         info "Dry run complete; no changes were made"
@@ -947,6 +1038,7 @@ ${status_after:-  (clean)}"
 #      bd-backed settings were not validated and nothing should be changed
 run_check() {
     local errors=()
+    local warnings=()
     local profile=""
 
     require_command git
@@ -1034,6 +1126,11 @@ run_check() {
         errors+=("no valid Beads skill found in project or global skill locations")
     fi
 
+    if [[ -d "$ROOT/.beads" ]]; then
+        problem=$(prime_problem)
+        [[ -z "$problem" ]] || warnings+=("$problem")
+    fi
+
     if [[ "$profile" == local ]]; then
         # The defining invariant: no Beads artifact may be visible to Git.
         local visible
@@ -1067,6 +1164,11 @@ run_check() {
         if instruction_files_diverged; then
             errors+=("tracked AGENTS.md and CLAUDE.md differ")
         fi
+    fi
+
+    if [[ ${#warnings[@]} -gt 0 ]]; then
+        echo "beads-solo warnings ($profile profile):" >&2
+        printf '  - %s\n' "${warnings[@]}" >&2
     fi
 
     if [[ ${#errors[@]} -gt 0 ]]; then
@@ -1121,7 +1223,8 @@ Profile: tracked
 'bd init' committed the enrollment (.beads-solo, AGENTS.md, CLAUDE.md,
 .beads/ and agent integration files) as "bd init: initialize beads issue
 tracking"; it offers no way to skip that commit. The export settings applied
-afterwards are staged in .beads/config.yaml but NOT committed.
+afterwards (.beads/config.yaml) and .beads/PRIME.md are staged but NOT
+committed.
 
 Review AGENTS.md now, then amend or follow up that commit as you see fit.
 EOF
@@ -1139,8 +1242,9 @@ main() {
     [[ "$CHECK_MODE" == true ]] && modes=$((modes + 1))
     [[ "$REPAIR_SKILLS" == true ]] && modes=$((modes + 1))
     [[ "$REPAIR_REMOTE" == true ]] && modes=$((modes + 1))
+    [[ "$REPAIR_PRIME" == true ]] && modes=$((modes + 1))
     [[ $modes -le 1 ]] ||
-        fail "--check, --repair-skills and --repair-remote cannot be combined"
+        fail "--check, --repair-skills, --repair-remote and --repair-prime cannot be combined"
     if [[ "$CHECK_MODE" == true ]]; then
         run_check
         return $?
@@ -1179,6 +1283,18 @@ main() {
         return 0
     fi
 
+    if [[ "$REPAIR_PRIME" == true ]]; then
+        check_repair_prerequisites prime
+        info "Repository: $ROOT"
+        install_prime
+        if [[ "$DRY_RUN" == true ]]; then
+            info "Dry run complete; no changes were made"
+        else
+            run_check
+        fi
+        return 0
+    fi
+
     check_prerequisites
     check_instruction_files
 
@@ -1199,6 +1315,7 @@ main() {
     remove_dolt_origin_remote
     install_local_memory
     configure_workspace
+    install_prime
     # After all bd commands, since 'bd hooks install' may also touch ignores.
     absorb_bd_gitignore
     verify_enrollment

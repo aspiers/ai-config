@@ -11,11 +11,12 @@ Enrollment requires explicit user approval.
 `bd-enroll-solo` performs the entire enrollment. Do not carry out the steps by
 hand: it creates the opt-in, installs repository-local links to the upstream
 `beads` skill, installs the policy declaration, initializes Dolt server mode,
-applies the maintainer role, configures a private JSONL export, installs hooks,
-and verifies the result. The skill links live at `.agents/skills/beads` and
-`.claude/skills/beads`; both are added to `.git/info/exclude` so their
-machine-specific targets cannot enter the repository. Reassembling that from
-individual commands produces a different setup each time.
+applies the maintainer role, configures a private JSONL export, installs
+hooks, installs `.beads/PRIME.md`, and verifies the result. The skill links
+live at `.agents/skills/beads` and `.claude/skills/beads`; both are added to
+`.git/info/exclude` so their machine-specific targets cannot enter the
+repository. Reassembling that from individual commands produces a different
+setup each time.
 
 ### Choose the profile
 
@@ -74,6 +75,16 @@ In the tracked profile `bd init` commits the enrollment itself, as
 `CLAUDE.md`, `.beads/`, and the agent integration files. It offers no way to
 skip that commit. The export settings the script applies afterwards land in
 `.beads/config.yaml`, which is left modified and uncommitted.
+
+The script then copies the skill's [`assets/PRIME.md`](../assets/PRIME.md)
+to `.beads/PRIME.md`: staged but uncommitted in the tracked profile, excluded
+with the rest of `.beads/` in the local one. `bd prime` prints it in place of
+its default workflow text, still appending memories. The template tells
+agents to load `beads-solo`, `beads` and `beads-best-practices` before any
+`bd` command, logs progress with `bd comments add` instead of `--notes`, and
+states this policy in place of `bd`'s profile-dependent commit and push
+wording. Regenerate it from `bd prime --export` when `bd` changes its default
+text, dropping the memories section.
 
 When the repository had no `CLAUDE.md`, the script creates one as a symlink
 to `AGENTS.md` before `bd init` runs. Otherwise `bd init` would write a
@@ -251,7 +262,8 @@ supported project or global location. Any project-local
 skill installation that exists is also checked for safe tracking and exclusion.
 In the local profile, it verifies that no Beads artifact is visible to Git.
 Exit 0 means valid and prints the profile; exit 1 lists every problem found on
-stderr.
+stderr. Either may also print warnings on stderr, for problems that leave the
+enrollment valid, such as a missing or outdated `.beads/PRIME.md`.
 
 Do not substitute a hand-run sequence of `bd doctor`, `bd config get`, and
 `git config` commands. The check exists so validation is identical every time.
@@ -277,6 +289,10 @@ Repair depends on what it reports:
 - **A Dolt remote `origin` or live `sync.remote`** — left by an enrollment
   made before enrollment removed it. Run
   `bd-enroll-solo --repair-remote --dry-run`, then `--repair-remote --yes`.
+- **A missing or outdated `.beads/PRIME.md`** (warning) — run
+  `bd-enroll-solo --repair-prime --dry-run`, then `--repair-prime --yes`. It
+  replaces local edits to the file; in the tracked profile, commit the staged
+  result.
 - **A leaked local enrollment** — unstage the artifact and confirm
   `.git/info/exclude` still carries the exclusions, then rerun the check.
 - **Embedded Dolt mode** — see

@@ -26,6 +26,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).parent.parent
 BD_ENROLL_SOLO = REPO_ROOT / "bin" / "bd-enroll-solo"
+PRIME_TEMPLATE = REPO_ROOT / ".agents" / "skills" / "beads-solo" / "assets" / "PRIME.md"
 
 # Paths the --local profile must keep out of Git entirely.
 BEADS_ARTIFACTS = (
@@ -374,14 +375,13 @@ esac
 UPSTREAM_URL = "git+ssh://git@example.com/upstream/project.git"
 
 
-class TestRemoteRepair(BdEnrollSoloTestCase):
-    """--check and --repair-remote on an enrollment that kept its remote."""
+class FakeBdEnrollmentTestCase(BdEnrollSoloTestCase):
+    """A local enrollment backed by FAKE_BD instead of a Dolt server."""
 
     def setUp(self):
         super().setUp()
         self.state = Path(self.test_dir, "fake-bd-state")
         self.state.mkdir()
-        (self.state / "remote").write_text(UPSTREAM_URL)
         fake_bin = Path(self.test_dir, "fake-bin")
         fake_bin.mkdir()
         (fake_bin / "bd").write_text(FAKE_BD)
@@ -397,7 +397,6 @@ class TestRemoteRepair(BdEnrollSoloTestCase):
             PATH=f"{fake_bin}{os.pathsep}{self.command_env['PATH']}",
         )
 
-        # A local enrollment as bd-enroll-solo made it before d53bb45.
         self.run_git("config", "--local", "beads.solo.local", "true")
         self.run_git("config", "--local", "beads.role", "maintainer")
         with Path(".git/info/exclude").open("a") as exclude:
@@ -405,16 +404,26 @@ class TestRemoteRepair(BdEnrollSoloTestCase):
             exclude.write("fake-bin/\nhome/\n")
         Path(".beads").mkdir()
         self.config = Path(".beads/config.yaml")
+        self.config.write_text("issue-prefix: testrepo\n")
+
+    def bd_calls(self):
+        calls = self.state / "calls"
+        return calls.read_text().splitlines() if calls.exists() else []
+
+
+class TestRemoteRepair(FakeBdEnrollmentTestCase):
+    """--check and --repair-remote on an enrollment that kept its remote."""
+
+    def setUp(self):
+        super().setUp()
+        # A local enrollment as bd-enroll-solo made it before d53bb45.
+        (self.state / "remote").write_text(UPSTREAM_URL)
         self.config.write_text(
             "issue-prefix: testrepo\n" f'sync.remote: "{UPSTREAM_URL}"\n'
         )
 
     def gate_migrations(self):
         (self.state / "gated").touch()
-
-    def bd_calls(self):
-        calls = self.state / "calls"
-        return calls.read_text().splitlines() if calls.exists() else []
 
     def assert_never_pushed_or_migrated(self):
         forbidden = re.compile(r"\b(push|migrate|bootstrap)\b|^(export|dolt commit)")
@@ -500,6 +509,114 @@ class TestRemoteRepair(BdEnrollSoloTestCase):
 
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("cannot be combined", result.stderr)
+
+
+class TestPrimeTemplate(FakeBdEnrollmentTestCase):
+    """.beads/PRIME.md replaces bd prime's default text with the beads-solo one.
+
+    Missing or stale files are warnings, never failures: enrollments made
+    before the template existed must keep passing --check.
+    """
+
+    prime = Path(".beads/PRIME.md")
+
+    def make_tracked(self, declaration):
+        self.run_git("config", "--local", "--unset", "beads.solo.local")
+        exclude = Path(".git/info/exclude")
+        exclude.write_text(
+            "".join(
+                line
+                for line in exclude.read_text().splitlines(keepends=True)
+                if line.strip() not in (".beads/", ".beads-solo")
+            )
+        )
+        self.run_git("add", ".beads/config.yaml")
+        Path(".beads-solo").touch()
+        Path("AGENTS.md").write_text(f"# AGENTS.md\n\n{declaration}\n")
+        self.run_git("add", "-f", ".beads-solo", "AGENTS.md")
+        self.run_git("commit", "-m", "tracked enrollment")
+
+    def test_template_tells_agents_to_load_all_three_skills(self):
+        template = PRIME_TEMPLATE.read_text()
+        for skill in ("`beads-solo`", "`beads`", "`beads-best-practices`"):
+            self.assertIn(skill, template)
+        self.assertIn("reads included", template)
+        self.assertIn("bd comments add", template)
+        self.assertNotRegex(template, r"bd (create|update)[^\n]*--notes")
+        self.assertNotRegex(template, r"(?m)^git push")
+
+    def test_check_warns_but_passes_when_prime_is_missing(self):
+        result = self.enroll("--check", check=False)
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("profile: local", result.stdout)
+        self.assertIn(".beads/PRIME.md is missing", result.stderr)
+        self.assertIn("bd-enroll-solo --repair-prime --yes", result.stderr)
+
+    def test_check_warns_when_prime_differs_from_template(self):
+        self.prime.write_text("custom\n")
+
+        result = self.enroll("--check", check=False)
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("differs from the beads-solo template", result.stderr)
+
+    def test_repair_prime_installs_template_invisibly_in_local_profile(self):
+        before = self.git_status()
+
+        result = self.enroll("--repair-prime", "--yes")
+
+        self.assertEqual(self.prime.read_text(), PRIME_TEMPLATE.read_text())
+        self.assertEqual(before, self.git_status())
+        self.assertIn("profile: local", result.stdout)
+        self.assertNotIn("PRIME.md", result.stderr)
+
+    def test_repair_prime_stages_file_in_tracked_profile(self):
+        self.make_tracked("Use the `beads-solo` skill for Beads setup.")
+
+        result = self.enroll("--repair-prime", "--yes")
+
+        self.assertIn("profile: tracked", result.stdout)
+        self.assertEqual(
+            self.run_git("diff", "--cached", "--name-only").split(),
+            [".beads/PRIME.md"],
+        )
+        self.assertNotIn("PRIME.md", result.stderr)
+        self.assertNotIn("warnings", result.stderr)
+
+    def test_repair_prime_dry_run_changes_nothing(self):
+        result = self.enroll("--repair-prime", "--dry-run")
+
+        self.assertIn(".beads/PRIME.md", result.stdout)
+        self.assertFalse(self.prime.exists())
+
+    def test_repair_prime_requires_yes(self):
+        result = self.enroll("--repair-prime", check=False)
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("--yes", result.stderr)
+        self.assertFalse(self.prime.exists())
+
+    def test_template_override_and_missing_template(self):
+        custom = Path(self.test_dir, "home", "PRIME.md")
+        custom.write_text("override\n")
+        env = dict(self.command_env, BEADS_SOLO_PRIME_TEMPLATE=str(custom))
+        self.enroll("--repair-prime", "--yes", env=env)
+        self.assertEqual(self.prime.read_text(), "override\n")
+
+        env["BEADS_SOLO_PRIME_TEMPLATE"] = str(custom.with_name("missing.md"))
+        result = self.enroll("--repair-prime", "--yes", check=False, env=env)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("template not found", result.stderr)
+
+    def test_enrollment_dry_run_plans_prime_install(self):
+        self.run_git("config", "--local", "--unset", "beads.solo.local")
+        shutil.rmtree(".beads")
+
+        result = self.enroll("--local", "--dry-run", "--prefix", "testrepo")
+
+        self.assertRegex(result.stdout, r"Installing \S*\.beads/PRIME\.md")
+        self.assertFalse(self.prime.exists())
 
 
 class TestLocalEnrollmentGuardrails(BdEnrollSoloTestCase):
@@ -682,6 +799,25 @@ class TestCheckMode(BdEnrollSoloTestCase):
             result.returncode, 0, f"check failed:\n{result.stdout}\n{result.stderr}"
         )
         self.assertIn("profile: local", result.stdout)
+        self.assertNotIn("warnings", result.stderr)
+
+    @unittest.skipUnless(bd_available(), "bd not installed")
+    def test_bd_prime_uses_the_installed_template(self):
+        self.enroll_or_skip()
+        self.assertEqual(
+            Path(".beads/PRIME.md").read_text(), PRIME_TEMPLATE.read_text()
+        )
+
+        prime = subprocess.run(
+            ["bd", "prime"],
+            capture_output=True,
+            text=True,
+            env=self.command_env,
+            check=True,
+        ).stdout
+
+        self.assertIn("## Before Any bd Command", prime)
+        self.assertIn("`beads-best-practices`", prime)
 
     @unittest.skipUnless(bd_available(), "bd not installed")
     def test_reports_tracked_profile_after_tracked_enrollment(self):
@@ -701,6 +837,10 @@ class TestCheckMode(BdEnrollSoloTestCase):
             result.returncode, 0, f"check failed:\n{result.stdout}\n{result.stderr}"
         )
         self.assertIn("profile: tracked", result.stdout)
+        self.assertNotIn("warnings", result.stderr)
+        self.assertIn(
+            ".beads/PRIME.md", self.run_git("diff", "--cached", "--name-only")
+        )
         self.assertTrue(
             Path("CLAUDE.md").is_symlink(), "CLAUDE.md should symlink to AGENTS.md"
         )

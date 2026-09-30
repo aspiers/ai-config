@@ -110,7 +110,10 @@ proposed wording or diff, and say why it addresses the cause found. Prefer:
 
 Follow `documentation-updates` for choosing where a lesson belongs, and
 respect repository rules about content, e.g. public repositories must not
-receive private or author-specific material.
+receive private or author-specific material. Lessons are agent-agnostic by
+default: target sources every agent reads, such as `AGENTS.md`, the shared
+global rules file, or a skill. Name an agent-specific file, such as
+`CLAUDE.md`, only for that agent's own features, and say why.
 
 ## 4. Ask the user
 

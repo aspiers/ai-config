@@ -244,9 +244,10 @@ Run the check:
 bd-enroll-solo --check
 ```
 
-It validates the opt-in, Dolt server mode, the maintainer role, the export
-policy, the policy declaration, and that a valid `beads` skill is available
-from at least one supported project or global location. Any project-local
+It validates the opt-in, the absence of a Dolt remote or live `sync.remote`,
+Dolt server mode, the maintainer role, the export policy, the policy
+declaration, and that a valid `beads` skill is available from at least one
+supported project or global location. Any project-local
 skill installation that exists is also checked for safe tracking and exclusion.
 In the local profile, it verifies that no Beads artifact is visible to Git.
 Exit 0 means valid and prints the profile; exit 1 lists every problem found on
@@ -273,6 +274,9 @@ Repair depends on what it reports:
   first. Never ignore the whole `.beads/` directory in the tracked profile,
   and never add negation rules to `.beads/.gitignore`, because they can defeat
   contributor and fork exclusions.
+- **A Dolt remote `origin` or live `sync.remote`** — left by an enrollment
+  made before enrollment removed it. Run
+  `bd-enroll-solo --repair-remote --dry-run`, then `--repair-remote --yes`.
 - **A leaked local enrollment** — unstage the artifact and confirm
   `.git/info/exclude` still carries the exclusions, then rerun the check.
 - **Embedded Dolt mode** — see

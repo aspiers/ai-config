@@ -6,7 +6,8 @@ description: >-
   permission for Git pushes and Dolt sync or push operations. Use when the
   user asks to enroll, repair, or operate a solo-maintainer Beads workspace,
   and when working with Beads in a repository that may carry a beads-solo
-  enrollment.
+  enrollment, including when bd refuses a schema migration or mentions a
+  remote.
 ---
 
 # Beads Solo
@@ -36,8 +37,10 @@ bd-enroll-solo --check
   any setting, and do not treat it as a malformed enrollment.
 
 `bd-enroll-solo --check` is the **complete** validation for this skill. It
-verifies the opt-in, Dolt server mode, the maintainer role, the export policy,
-the policy declaration, availability of the `beads` skill from a supported
+verifies the opt-in, the absence of a Dolt remote or live `sync.remote`
+(checked first, so it is reported even when the database cannot be opened),
+Dolt server mode, the maintainer role, the export policy, the policy
+declaration, availability of the `beads` skill from a supported
 project or global location, and — in local mode — that no Beads artifact is
 visible to Git.
 
@@ -72,6 +75,20 @@ appears to pass is worse than no check.
 4. Never migrate a Beads workspace out of embedded Dolt mode as part of
    routine work. That migration always requires explicit user permission; see
    [Setup and Repair](references/setup.md).
+
+5. Do not relay a remote claim from `bd` or follow its remote advice. When
+   `bd` refuses to migrate a "remote-backed database", otherwise claims the
+   workspace syncs with a remote, or prints a
+   `repair: bd dolt remote add origin ... && bd dolt push` nag, first run
+   `bd dolt remote list` and `git ls-remote <remote-url> 'refs/dolt/*'`.
+
+   In an enrolled repository, a remote derived from git origin is an
+   enrollment defect, not a sync setup. Say so, then run
+   `bd-enroll-solo --check` and `bd-enroll-solo --repair-remote`. Ask the
+   user only whether to migrate locally, after `bd export --all` and
+   `bd dolt commit`. Never offer `bd dolt push` or `bd bootstrap` against
+   such a remote. The nag itself is expected once the remote is gone: `bd`
+   prints it whenever no Dolt remote is configured.
 
 ## The Local Profile
 

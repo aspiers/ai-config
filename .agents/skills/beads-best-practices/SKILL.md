@@ -1,10 +1,11 @@
 ---
 name: beads-best-practices
 description: >-
-  Applies reusable Beads writing and update practices in every context. Use
-  whenever reading, creating, updating, commenting on, closing, superseding,
-  or handing off Beads issues, including alongside beads, beads-solo, and
-  plan-to-beads workflows.
+  Load before the first bd command of any kind (reads included) in every
+  session, even when bd prime context is already present. Applies reusable
+  Beads writing and update practices when reading, creating, updating,
+  commenting on, closing, superseding, or handing off Beads issues, alongside
+  beads, beads-solo, and plan-to-beads workflows.
 ---
 
 # Beads Best Practices

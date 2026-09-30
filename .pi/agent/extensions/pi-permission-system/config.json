@@ -12,6 +12,32 @@
     "auto-review"
   ],
   "permission": {
-    "skill": "allow"
+    "skill": "allow",
+    "bash": {
+      "*parcellite*": "deny",
+      "*clipit*": "deny",
+      "*copyq*": "deny",
+      "*greenclip*": "deny",
+      "*cliphist*": "deny",
+      "*clipman*": "deny",
+      "*clipcat*": "deny",
+      "*gpaste*": "deny",
+      "*GPaste*": "deny",
+      "*klipper*": "deny",
+      "*diodon*": "deny"
+    },
+    "path": {
+      "*parcellite*": "deny",
+      "*clipit*": "deny",
+      "*copyq*": "deny",
+      "*greenclip*": "deny",
+      "*cliphist*": "deny",
+      "*clipman*": "deny",
+      "*clipcat*": "deny",
+      "*gpaste*": "deny",
+      "*GPaste*": "deny",
+      "*klipper*": "deny",
+      "*diodon*": "deny"
+    }
   }
 }

@@ -34,6 +34,14 @@ this repository. Adapt them to your own preferences.
   nothing remains, say so. A list of findings or open problems alone is not
   an ending.
 
+## Privacy
+
+- Never read the user's private data without explicit permission for that
+  specific access: clipboard history or clipboard-manager databases, browser
+  or shell history, mail, chat logs, keyrings and password stores. Reading
+  the current clipboard right after the task copied something to it is fine.
+  Needing to verify something is not permission; hand the check back instead.
+
 ## Code
 
 - Prefer the simplest design that works: small, single-purpose functions,

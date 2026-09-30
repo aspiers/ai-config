@@ -100,6 +100,16 @@ frontmatter without platform-specific tool names or shell expansion.
 python3 tests/test_agent_command_parity.py
 ```
 
+## Global Rules Parity Tests
+
+`test_global_rules_parity.py` verifies that Claude Code, Pi, OpenCode, and
+Codex are each wired to load `.agents/AGENTS.md`, and that the file stays
+small and free of trailing whitespace.
+
+```bash
+python3 tests/test_global_rules_parity.py
+```
+
 ## Beads Blocker-Review Tests
 
 `test_beads_blocker_review.py` verifies that `/blockers` separates actionable

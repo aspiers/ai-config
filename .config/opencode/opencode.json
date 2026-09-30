@@ -251,5 +251,8 @@
     "opencode-claude-auth",
     "opencode-gemini-auth",
     "opencode-pty"
+  ],
+  "instructions": [
+    "~/.agents/AGENTS.md"
   ]
 }

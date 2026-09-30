@@ -89,14 +89,10 @@ else
     note "skipped, no $oc_dir"
 fi
 
-# Codex: ~/.codex/AGENTS.md is merged with project AGENTS.md files.
+# Codex: ~/.codex/AGENTS.md is merged with project AGENTS.md files, but it is
+# the only global file Codex reads, so it also has to carry the shared rules.
 echo "Codex:"
-if [ -d "$HOME/.codex" ]; then
-    ln -sfn "$BODIES/$STYLE.md" "$HOME/.codex/AGENTS.md"
-    note "~/.codex/AGENTS.md -> $STYLE"
-else
-    note "skipped, no ~/.codex"
-fi
+"${BASH_SOURCE[0]%/*}/codex-global-agents-md" "$BODIES/$STYLE.md"
 
 cat <<EOF
 

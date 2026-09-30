@@ -19,6 +19,9 @@ with AI tools and configurations.
   comparison](docs/foss-git-branch-worktree-management-comparison-2026-08-11.html) —
   the earlier six-project comparison retained as the original research
   snapshot.
+- [Global rules audit](docs/research/global-rules-audit-2026-09-30.md) —
+  keep, generalise or drop verdicts for the old Claude-only `CLAUDE.md`
+  rules when they became the shared `.agents/AGENTS.md`.
 
 ## Installation
 
@@ -49,7 +52,8 @@ license information when redistributing or modifying the code.
 
 Claude Code configuration containing:
 
-- `CLAUDE.md` - Global instructions and coding rules
+- `CLAUDE.md` - Imports the shared global rules (see
+  [Global rules](#global-rules))
 - `settings.json` - Permission configuration for allowed bash commands
 - `commands/` - Custom slash commands:
   - `commit` - Intelligent git commit workflow
@@ -186,6 +190,34 @@ usage and session data, and browser caches. The known paths are named
 explicitly in `.gitignore` so that a stray `git add -A` cannot commit a
 credential to this public repository's permanent history.
 
+#### Global rules
+
+`.agents/AGENTS.md` holds the global rules every agent here follows, whatever
+the project. Stow deploys it as `~/.agents/AGENTS.md`. Keep it short and
+harness-neutral: it is loaded into every session of every agent. Put a rule
+in one agent's own file only when it concerns that agent's features.
+
+| Agent | Mechanism | Docs |
+| ----- | --------- | ---- |
+| Claude Code | `.claude/CLAUDE.md` is `@../.agents/AGENTS.md`, resolved relative to the importing file | [memory: imports](https://code.claude.com/docs/en/memory#import-additional-files) |
+| Pi | `.pi/agent/AGENTS.md` symlinks to the rules; Pi loads one context file from its agent directory | [configuration](https://github.com/earendil-works/pi/blob/v0.99.1/packages/coding-agent/docs/configuration.md) |
+| OpenCode | `"instructions": ["~/.agents/AGENTS.md"]` in `opencode.json`, added to the `AGENTS.md` files | [rules](https://opencode.ai/docs/rules/) |
+| Codex | `bin/codex-global-agents-md` writes `~/.codex/AGENTS.md` as the style body followed by the rules | [AGENTS.md](https://learn.chatgpt.com/docs/agent-configuration/agents-md) |
+
+Codex reads only one global file and has no include syntax, so it gets a
+copy of the rules. That copy goes stale when `.agents/AGENTS.md` changes,
+until `codex-global-agents-md` runs again. `.cfg-post.d/codex-agents-md`
+re-runs it whenever `mr` updates this repository, and
+`bin/attention-span-install` runs it when the style changes. Run it by hand
+after editing the rules locally.
+
+In Pi, an `AGENTS.override.md` in `~/.pi/agent/` would win over the
+`AGENTS.md` link, so don't create one.
+
+[docs/research/global-rules-audit-2026-09-30.md](docs/research/global-rules-audit-2026-09-30.md)
+records why each rule of the old Claude-only `CLAUDE.md` was kept, merged or
+dropped.
+
 #### Response output styles
 
 The agents here share a single response style, sourced from
@@ -201,7 +233,7 @@ instead, using whichever mechanism that agent actually supports:
 | Claude Code | native output styles | `~/.claude/output-styles/` |
 | Pi | appended system prompt | `~/.pi/agent/APPEND_SYSTEM.md` |
 | OpenCode | global instructions | `~/.config/opencode/AGENTS.md` |
-| Codex | global instructions | `~/.codex/AGENTS.md` |
+| Codex | global instructions, with the [global rules](#global-rules) appended | `~/.codex/AGENTS.md` |
 
 Only Claude Code has a real output-style feature, including a `/style` picker
 for switching between the bundled styles. Installing the files does not
@@ -214,9 +246,12 @@ For OpenCode and Codex the style is the *weakest* layer: it is merged ahead of
 this repository's own `AGENTS.md`, so project instructions win on conflict.
 
 > **Codex budget:** Codex reads at most `project_doc_max_bytes` (32 KiB by
-> default) across all `AGENTS.md` files combined, skipping the remainder once
-> that is exhausted. The style file plus this repository's `AGENTS.md` come to
-> roughly 24 KiB, so keep an eye on the headroom before adding much more.
+> default) of `AGENTS.md` content and truncates the rest. Its
+> [docs](https://learn.chatgpt.com/docs/agent-configuration/agents-md) call
+> this a combined limit; the Codex 0.159.2 source (`codex-rs/core/src/agents_md.rs`)
+> applies it to project files only, leaving `~/.codex/AGENTS.md` uncounted.
+> Assume the stricter reading: the global file (style plus rules, about
+> 10 KiB) and this repository's `AGENTS.md` (about 16 KiB) must fit together.
 
 The installer strips the Claude-Code-specific YAML frontmatter for the other
 agents, since feeding them a `name:`/`keep-coding-instructions:` block would
@@ -252,6 +287,9 @@ See [AGENTS.md](AGENTS.md) for the detailed delegation pattern.
 - **`attention-span-install`** - Deploys the shared response output style to
   Claude Code, Pi, OpenCode, and Codex from a local attention-span clone. See
   "Response output styles" above.
+- **`codex-global-agents-md`** - Builds `~/.codex/AGENTS.md` from the output
+  style body and the shared global rules, since Codex cannot include files.
+  See "Global rules" above.
 - **`audit-npm-packages`** - Downloads npm tarballs with `npm pack --ignore-scripts`
   and emits a JSON security-audit summary covering npm metadata, lifecycle
   scripts, Pi extension metadata, dependency names, and simple risky source
@@ -341,6 +379,8 @@ Shell configuration fragments loaded by
   `orca-cycle-attention-agent` script
 - `test_orca_attention_plugin.py` - Tests for the `attention-cycling` Orca
   plugin manifest and worker entry
+- `test_global_rules_parity.py` - Checks that every agent loads the shared
+  global rules
 
 ### Other files
 

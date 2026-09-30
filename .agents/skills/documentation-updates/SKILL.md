@@ -24,7 +24,10 @@ location specified by the user, the repository, or a focused workflow.
 1. Identify the durable lesson and who needs it.
 2. Find the authoritative home: nearby code or tests, project documentation,
    an applicable agent rule, a focused skill, or the project's task/memory
-   system.
+   system. For agent rules, prefer `AGENTS.md` over `CLAUDE.md`, and the
+   shared global rules file (e.g. `~/.agents/AGENTS.md`) over any single
+   agent's global file, so all agents stay in parity. Use an agent-specific
+   file only for that agent's own features.
 3. Update the smallest relevant source. Link to existing detail rather than
    duplicating it.
 4. Check for conflicting or stale guidance and update it in the same scope.

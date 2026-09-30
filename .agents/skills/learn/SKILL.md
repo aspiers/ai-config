@@ -4,7 +4,7 @@ description: >-
   Root-causes one specific mistake the agent just made, such as not
   committing despite instructions to, by checking it against the loaded
   AGENTS.md, CLAUDE.md, skills, and Beads memories, delegating the
-  investigation to a background subagent where the harness supports one;
+  investigation to a separate agent where the harness supports one;
   proposes concrete context improvements, and lets the user choose which to
   apply and how to remediate. Use when the user invokes `/learn` or
   `$learn`, with or without a description of the mistake, including
@@ -28,8 +28,8 @@ Until the user has chosen from your proposals:
   memories on the strength of the investigation. Acting early would pre-empt
   the user's decision and muddy the evidence being examined;
 - do not resume the paused task on your own initiative. If the
-  investigation runs in a subagent, you may work on the paused task, but
-  only as the user directs.
+  investigation runs in a separate agent, you may work on the paused
+  task, but only as the user directs.
 
 ## 1. Pin down the mistake
 
@@ -48,13 +48,34 @@ for this again.
 
 ## Delegate steps 2 and 3 where possible
 
-If the harness can run a subagent, preferably in the background, hand steps
-2 and 3 to one so the investigation does not fill your context or block the
-user. Otherwise do them inline.
+Hand steps 2 and 3 to a separate agent so the investigation does not fill
+your context or block the user. Otherwise do them inline.
 
-Prefer a subagent that inherits this conversation, such as Claude Code's
-`fork` subagent type, because the transcript is the main evidence. A fresh
-subagent sees nothing of this session, so its prompt must carry:
+**Under Orca** (`ORCA_TERMINAL_HANDLE` is set), do not use a harness
+subagent. Start a supervised Orca worker in a fresh tab instead, following
+the `orchestration` skill and resolving the CLI as it says (on Linux,
+`orca-ide`, never bare `orca`):
+
+1. Pick the repository that owns the instruction files most likely at
+   fault, e.g. the repo a skill resolves into (`realpath` its directory).
+   Find its id and path with `repo list --json`. Use that main checkout,
+   not a new worktree: steps 2 and 3 are read-only.
+2. `orchestration run-create --objective "learn: <mistake>" --json`, then
+   `orchestration worker-start --spec "<brief>" --worktree
+   id:<repoId>::<path> --agent <your agent> --json`. Orca opens the tab,
+   waits for the agent to be ready, and injects the brief along with the
+   exact `worker_done` command to report back with.
+3. Wait for the report with `orchestration check --wait --types
+   worker_done,escalation,question --timeout-ms 900000 --json`, in the
+   background where the harness allows. Then ack the delivery and
+   `worker-release` the dispatch.
+
+**Otherwise**, use a harness subagent, preferably in the background.
+Prefer one that inherits this conversation, such as Claude Code's `fork`
+subagent type, because the transcript is the main evidence.
+
+An Orca worker or a fresh subagent sees nothing of this session, so its
+brief must carry:
 
 - the mistake as confirmed in step 1, in the user's words where possible;
 - the transcript facts that matter: what was asked, what you did and when,
@@ -64,9 +85,11 @@ subagent sees nothing of this session, so its prompt must carry:
   output, or other injected context that its tools cannot re-read;
 - the repository's content rules, e.g. that it is public.
 
-In either case, tell it to follow steps 2 and 3 of this skill read-only:
+In every case, tell it to follow steps 2 and 3 of this skill read-only:
 no edits, commits, or questions to the user. It should report the cause
-with quoted evidence and the proposals with target files and exact wording.
+with quoted evidence and the proposals with target files and exact wording;
+an Orca worker writes the report to a file and passes it as
+`--report-path`.
 
 Then tell the user in one line that the investigation is running, and that
 meanwhile you can continue the paused task if they say so. When the report

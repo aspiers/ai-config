@@ -19,6 +19,9 @@ with AI tools and configurations.
   comparison](docs/foss-git-branch-worktree-management-comparison-2026-08-11.html) —
   the earlier six-project comparison retained as the original research
   snapshot.
+- [Global rules audit](docs/research/global-rules-audit-2026-09-30.md) —
+  keep, generalise or drop verdicts for the old Claude-only `CLAUDE.md`
+  rules when they became the shared `.agents/AGENTS.md`.
 
 ## Installation
 
@@ -49,7 +52,8 @@ license information when redistributing or modifying the code.
 
 Claude Code configuration containing:
 
-- `CLAUDE.md` - Global instructions and coding rules
+- `CLAUDE.md` - Imports the shared global rules (see
+  [Global rules](#global-rules))
 - `settings.json` - Permission configuration for allowed bash commands
 - `commands/` - Custom slash commands:
   - `commit` - Intelligent git commit workflow
@@ -185,6 +189,21 @@ token, an E2EE keypair, a session authority key), account identity, rolling
 usage and session data, and browser caches. The known paths are named
 explicitly in `.gitignore` so that a stray `git add -A` cannot commit a
 credential to this public repository's permanent history.
+
+#### Global rules
+
+`.agents/AGENTS.md` holds the global rules every agent here follows, whatever
+the project. Stow deploys it as `~/.agents/AGENTS.md`. Keep it short and
+harness-neutral: it is loaded into every session of every agent. Put a rule
+in one agent's own file only when it concerns that agent's features.
+
+| Agent | Mechanism | Docs |
+| ----- | --------- | ---- |
+| Claude Code | `.claude/CLAUDE.md` is `@../.agents/AGENTS.md`, resolved relative to the importing file | [memory: imports](https://code.claude.com/docs/en/memory#import-additional-files) |
+
+[docs/research/global-rules-audit-2026-09-30.md](docs/research/global-rules-audit-2026-09-30.md)
+records why each rule of the old Claude-only `CLAUDE.md` was kept, merged or
+dropped.
 
 #### Response output styles
 

@@ -83,10 +83,12 @@
 
 - **Never read the user's private data without explicit permission** for
   that specific access: clipboard history or clipboard-manager databases,
-  browser or shell history, mail, chat logs, keyrings and password stores.
+  browser or shell history, mail, personal chat logs, keyrings and password
+  stores. Agent session transcripts (e.g. via agentsview) are work records,
+  not chat logs: search them freely to coordinate work across sessions.
   Reading the current clipboard right after the task copied something to it
-  is fine. Needing to verify something is not permission; hand the check back
-  instead.
+  is fine. Needing to verify something is not permission; ask, naming the
+  tool you would use, or hand the check back.
 
 - Write clean, modular code with modern syntax and type annotations
 

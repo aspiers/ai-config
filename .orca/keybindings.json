@@ -6,10 +6,10 @@
     "linux": {
       "worktree.quickOpen": [],
       "sidebar.left.toggle": [
-        "Mod+Backquote"
+        "Mod+BracketLeft"
       ],
       "sidebar.right.toggle": [
-        "Mod+Shift+Backquote"
+        "Mod+BracketRight"
       ],
       "voice.dictation": [
         "Mod+Alt+E"
@@ -38,6 +38,17 @@
       ],
       "workspace.create": [
         "Mod+Alt+N"
+      ],
+      "workspace.openBoard": [
+        "Mod+Alt+W"
+      ],
+      "terminal.focusNextPane": [],
+      "terminal.focusPreviousPane": [],
+      "floatingTerminal.toggle": [
+        "Mod+Backquote"
+      ],
+      "dashboard.toggle": [
+        "Mod+Alt+D"
       ]
     },
     "win32": {}

@@ -467,8 +467,22 @@
     }
   },
   "outputStyle": "Attention-kind",
+  "feedbackDrafts": "notify",
   "alwaysThinkingEnabled": false,
   "effortLevel": "high",
+  "modelSettings": {
+    "claude-fable-5-1": {
+      "effortLevel": "medium"
+    }
+  },
+  "dialogExpiry": "never",
+  "pluginConfigs": {
+    "agents-md@builtin": {
+      "options": {
+        "instructionFiles": "claude-md-or-agents-md"
+      }
+    }
+  },
   "tui": "fullscreen",
   "voice": {
     "enabled": true,
@@ -477,7 +491,7 @@
   "autoMemoryEnabled": false,
   "skipWorkflowUsageWarning": true,
   "theme": "auto",
-  "verbose": true,
+  "verbose": false,
   "preferredNotifChannel": "notifications_disabled",
   "autoCompactEnabled": true,
   "remoteControlAtStartup": false,
@@ -486,6 +500,5 @@
   "voiceEnabled": true,
   "feedbackSurveyState": {
     "lastShownTime": 1754076415986
-  },
-  "autoMemoryEnabled": false
+  }
 }

@@ -1,0 +1,21 @@
+# Clipboard-manager history can hold anything the user ever copied, so
+# require approval before an agent touches it. Codex rules only match a
+# command's leading words, so this covers the managers' CLIs, not reads of
+# their history files by path. The current clipboard (xclip -o, xsel -o,
+# wl-paste) is deliberately not matched.
+prefix_rule(
+    pattern = [["parcellite", "clipit", "copyq", "greenclip", "cliphist",
+                "clipman", "clipcat", "clipcatctl", "clipcat-menu", "clipcatd",
+                "gpaste-client", "gpaste", "klipper", "diodon"]],
+    decision = "prompt",
+    justification = "Clipboard-manager history is private; ask first.",
+    match = ["copyq read 0", "cliphist list", "greenclip print"],
+    not_match = ["xclip -o", "xsel -o", "wl-paste"],
+)
+
+prefix_rule(
+    pattern = [["qdbus", "qdbus6", "qdbus-qt5"], "org.kde.klipper"],
+    decision = "prompt",
+    justification = "Klipper history is private; ask first.",
+    match = ["qdbus org.kde.klipper /klipper getClipboardHistoryMenu"],
+)

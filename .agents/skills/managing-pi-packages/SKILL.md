@@ -217,13 +217,16 @@ do not guess a target or install a duplicate package as a substitute.
 
 > **⚠️ AUTHOR-SPECIFIC:** In the author's setup,
 > `@mzwing/pi-permission-auto-review` resolves the separately configured local
-> `@gotgenes/pi-permission-system` through
-> `${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}/npm/node_modules/@gotgenes/pi-permission-system`.
-> Before and after every Pi npm package mutation, check whether this entry is
-> the expected compatibility symlink. If npm prunes it, restore its exact
-> pre-mutation target and require a clean `pi list` stderr. Derive the target
-> from the existing link/configured local package; never hard-code another
-> user's checkout path or activate a second permission-system copy.
+> `@gotgenes/pi-permission-system` fork through a compatibility symlink at
+> `${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}/node_modules/@gotgenes/pi-permission-system`.
+> It deliberately lives one level above Pi's `npm/` prefix: Node's parent
+> directory lookup still finds it, but npm reconciliation cannot prune it (a
+> link inside `npm/node_modules` was pruned repeatedly). Do not recreate the
+> link inside `npm/node_modules`. After every Pi npm package mutation, confirm
+> the link still exists with its target unchanged and require a clean
+> `pi list` stderr. Derive the target from the existing link/configured local
+> package; never hard-code another user's checkout path or activate a second
+> permission-system copy.
 
 ### 5. Remove or roll back safely
 

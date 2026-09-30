@@ -49,6 +49,14 @@
       ],
       "dashboard.toggle": [
         "Mod+Alt+D"
+      ],
+      "tab.nextTerminal": [],
+      "tab.nextAllTypes": [
+        "Mod+PageDown"
+      ],
+      "tab.previousTerminal": [],
+      "tab.previousAllTypes": [
+        "Mod+PageUp"
       ]
     },
     "win32": {}

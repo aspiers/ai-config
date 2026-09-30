@@ -19,6 +19,66 @@ trusted_hash = "sha256:edd0a09b40313f50debeb523322158f76306ef9c01be74af714f9aa94
 trusted_hash = "sha256:fc87dbee1cb8a9be4f78ba094c4fa8d5e2fd38cb800854e3717f9b6a52fe2a47"
 enabled = true
 
+[hooks.state."/home/adam/.codex/hooks.json:post_tool_use:0:0"]
+trusted_hash = "sha256:ac371f260e4b23ba1d1b7a4ad68a44a323a8470b61f38471a47aceac1b7a5a7c"
+
+[hooks.state."/home/adam/.GIT/adamspiers.org/ai-config/.codex/hooks.json:pre_tool_use:0:0"]
+trusted_hash = "sha256:fc87dbee1cb8a9be4f78ba094c4fa8d5e2fd38cb800854e3717f9b6a52fe2a47"
+
+[hooks.state."/home/adam/.GIT/adamspiers.org/ai-config/.codex/hooks.json:pre_tool_use:1:0"]
+trusted_hash = "sha256:17ffe939b991b68edfc450faba2620150018768f47f75dac2130be01409b0508"
+
+[hooks.state."/home/adam/.GIT/adamspiers.org/ai-config/.codex/hooks.json:permission_request:0:0"]
+trusted_hash = "sha256:d127c2a740a1b5890355c549e54ce08ba17528d7027d58c36dc4e174d9219e07"
+
+[hooks.state."/home/adam/.GIT/adamspiers.org/ai-config/.codex/hooks.json:post_tool_use:0:0"]
+trusted_hash = "sha256:ac371f260e4b23ba1d1b7a4ad68a44a323a8470b61f38471a47aceac1b7a5a7c"
+
+[hooks.state."/home/adam/.GIT/adamspiers.org/ai-config/.codex/hooks.json:post_tool_use:1:0"]
+trusted_hash = "sha256:4068318a0e7ca8b996657a69a6d8f66d2ce1c371247d1c70155fd7c37af125e5"
+
+[hooks.state."/home/adam/.GIT/adamspiers.org/ai-config/.codex/hooks.json:session_start:0:0"]
+trusted_hash = "sha256:edd0a09b40313f50debeb523322158f76306ef9c01be74af714f9aa94f3fe11c"
+
+[hooks.state."/home/adam/.GIT/adamspiers.org/ai-config/.codex/hooks.json:session_start:1:0"]
+trusted_hash = "sha256:80742952b119d0cff668ab970c29c92e88e225f4dd8b5a73127d4b5952706c4b"
+
+[hooks.state."/home/adam/.GIT/adamspiers.org/ai-config/.codex/hooks.json:user_prompt_submit:0:0"]
+trusted_hash = "sha256:192b3b146ed8d3be388f25a3dc4250c274803134f101f0b9f1a473b457be437b"
+
+[hooks.state."/home/adam/.GIT/adamspiers.org/ai-config/.codex/hooks.json:subagent_start:0:0"]
+trusted_hash = "sha256:3095e15ce6d8128044eda8eb3811a5f09c5b4fc30cd9282b834db0c032c037bb"
+
+[hooks.state."/home/adam/.GIT/adamspiers.org/ai-config/.codex/hooks.json:subagent_stop:0:0"]
+trusted_hash = "sha256:708e5d674608928ce8ae4a2727b78d8f18fea7f9a6c9657fd922750304bb5beb"
+
+[hooks.state."/home/adam/.GIT/adamspiers.org/ai-config/.codex/hooks.json:stop:0:0"]
+trusted_hash = "sha256:c11b4e9bdcd3cde3405ff5d2066e18b069072160671f20ff02973d2c5bb0c2ac"
+
+[hooks.state."/home/adam/.codex/hooks.json:pre_tool_use:1:0"]
+trusted_hash = "sha256:17ffe939b991b68edfc450faba2620150018768f47f75dac2130be01409b0508"
+
+[hooks.state."/home/adam/.codex/hooks.json:permission_request:0:0"]
+trusted_hash = "sha256:d127c2a740a1b5890355c549e54ce08ba17528d7027d58c36dc4e174d9219e07"
+
+[hooks.state."/home/adam/.codex/hooks.json:post_tool_use:1:0"]
+trusted_hash = "sha256:4068318a0e7ca8b996657a69a6d8f66d2ce1c371247d1c70155fd7c37af125e5"
+
+[hooks.state."/home/adam/.codex/hooks.json:session_start:1:0"]
+trusted_hash = "sha256:80742952b119d0cff668ab970c29c92e88e225f4dd8b5a73127d4b5952706c4b"
+
+[hooks.state."/home/adam/.codex/hooks.json:user_prompt_submit:0:0"]
+trusted_hash = "sha256:192b3b146ed8d3be388f25a3dc4250c274803134f101f0b9f1a473b457be437b"
+
+[hooks.state."/home/adam/.codex/hooks.json:subagent_start:0:0"]
+trusted_hash = "sha256:3095e15ce6d8128044eda8eb3811a5f09c5b4fc30cd9282b834db0c032c037bb"
+
+[hooks.state."/home/adam/.codex/hooks.json:subagent_stop:0:0"]
+trusted_hash = "sha256:708e5d674608928ce8ae4a2727b78d8f18fea7f9a6c9657fd922750304bb5beb"
+
+[hooks.state."/home/adam/.codex/hooks.json:stop:0:0"]
+trusted_hash = "sha256:c11b4e9bdcd3cde3405ff5d2066e18b069072160671f20ff02973d2c5bb0c2ac"
+
 [mcp_servers.railway]
 command = "railway"
 args = ["mcp"]
@@ -28,22 +88,23 @@ command = "agentsview"
 args = ["mcp"]
 
 [mcp_servers.node_repl]
+args = []
 command = "/opt/codex-desktop/resources/node_repl"
-startup_timeout_sec = 120.0
+startup_timeout_sec = 120
 
 [mcp_servers.node_repl.env]
-BROWSER_USE_AVAILABLE_BACKENDS = "chrome,iab"
-BROWSER_USE_CODEX_APP_BUILD_FLAVOR = "prod"
-BROWSER_USE_CODEX_APP_VERSION = "26.730.61639"
-CODEX_CLI_PATH = "/home/adam/.codex/packages/standalone/releases/0.153.2-x86_64-unknown-linux-musl/bin/codex"
-CODEX_HOME = "/home/adam/.codex"
-NODE_REPL_INSTRUCTIONS_USE_CASE_BROWSER = "Control the in-app browser in conjunction with the Browser Plugin."
-NODE_REPL_INSTRUCTIONS_USE_CASE_CHROME = "Control the Chrome browser in conjunction with the Chrome Plugin. Prefer this method of controlling Chrome over alternatives (such as Computer Use) unless the user explicitly mentions an alternative."
 NODE_REPL_NATIVE_PIPE_CONNECT_TIMEOUT_MS = "1000"
 NODE_REPL_NODE_MODULE_DIRS = ""
 NODE_REPL_NODE_PATH = "/opt/codex-desktop/resources/node-runtime/bin/node"
-NODE_REPL_TRUSTED_BROWSER_CLIENT_SHA256S = "091a81603ff202a16ed56557709bf42d97caf8f0dd2e07ae9e26d7c014d71035"
 NODE_REPL_TRUSTED_CODE_PATHS = "/home/adam/.codex"
+CODEX_HOME = "/home/adam/.codex"
+NODE_REPL_TRUSTED_BROWSER_CLIENT_SHA256S = "091a81603ff202a16ed56557709bf42d97caf8f0dd2e07ae9e26d7c014d71035"
+BROWSER_USE_AVAILABLE_BACKENDS = "chrome,iab"
+NODE_REPL_INSTRUCTIONS_USE_CASE_BROWSER = "Control the in-app browser in conjunction with the Browser Plugin."
+NODE_REPL_INSTRUCTIONS_USE_CASE_CHROME = "Control the Chrome browser in conjunction with the Chrome Plugin. Prefer this method of controlling Chrome over alternatives (such as Computer Use) unless the user explicitly mentions an alternative."
+BROWSER_USE_CODEX_APP_BUILD_FLAVOR = "prod"
+BROWSER_USE_CODEX_APP_VERSION = "26.730.61639"
+CODEX_CLI_PATH = "/home/adam/.codex/packages/standalone/releases/0.157.1-x86_64-unknown-linux-musl/bin/codex"
 
 [mcp_servers.d4d]
 enabled = true
@@ -61,6 +122,9 @@ trust_level = "trusted"
 [projects."/home/adam/software/AI/t3code"]
 trust_level = "trusted"
 
+[projects."/home/adam/.GIT/adamspiers.org/ai-config"]
+trust_level = "trusted"
+
 [tui]
 status_line = [
   "model-with-reasoning",
@@ -73,10 +137,11 @@ status_line = [
 ]
 status_line_use_colors = true
 terminal_title = ["thread-title"]
+screen_reader_detection_done = true
 
 [tui.model_availability_nux]
 "gpt-5.6-sol" = 4
-gpt-6-astra = 1
+gpt-6-astra = 4
 
 [marketplaces.agentbox]
 last_updated = "2026-08-11T18:10:40Z"
@@ -132,7 +197,7 @@ enabled = true
 enabled = true
 
 [desktop]
-conversationDetailMode = "STEPS_COMMANDS"
+conversationDetailMode = "STEPS_PROSE"
 ambient-suggestions-enabled = true
 followUpQueueMode = "queue"
 keepRemoteControlAwakeWhilePluggedIn = true

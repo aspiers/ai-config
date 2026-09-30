@@ -1,6 +1,6 @@
 ---
 name: incremental-commits
-description: Plan dependency-aware atomic commits for changes that span multiple logical concerns. Use when a refactor, feature, or API change would benefit from reviewable, independently meaningful commit boundaries.
+description: Plan dependency-aware atomic commits for changes that span multiple logical concerns. Use when a refactor, feature, or API change would benefit from reviewable, independently meaningful commit boundaries. To triage an already-dirty working tree and propose commits for existing uncommitted changes, use `planning-commits` instead.
 ---
 
 # Incremental Commits

@@ -61,6 +61,7 @@ Claude Code configuration containing:
   - `iter` - Iterative development workflow
   - `lint` - Code linting
   - `obs` - Obsidian integration
+  - `pc` - Break down uncommitted changes and propose commits
   - `reflect` - Self-reflection prompt
   - `review` - Code review
   - `small` - Small change workflow

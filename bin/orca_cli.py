@@ -6,8 +6,14 @@ import json
 import os
 import shutil
 import subprocess
+import sys
+import time
 from pathlib import Path
 from typing import Any
+
+# Orca pages its listings (default 200 worktrees); ask for far more than any
+# real session holds so a busy host cannot hide a terminal behind the cap.
+LISTING_LIMIT = "10000"
 
 
 def orca_cli(environment: dict[str, str]) -> str:
@@ -53,3 +59,69 @@ def run_orca(args: list[str]) -> dict[str, Any]:
             f"{error.get('code', 'unknown')}: {error.get('message', 'no message')}"
         )
     return response["result"]
+
+
+def terminal_handles(terminals: list[dict[str, Any]]) -> dict[str, str]:
+    """Map each live terminal's pane key (``tabId:leafId``) to its handle."""
+    return {
+        f"{terminal['tabId']}:{terminal['leafId']}": terminal["handle"]
+        for terminal in terminals
+        if terminal.get("connected", True)
+        and terminal.get("tabId")
+        and terminal.get("leafId")
+        and terminal.get("handle")
+    }
+
+
+def active_pane_keys(node: dict[str, Any]) -> set[str]:
+    """Pane keys of the active leaf in every group's active tab under ``node``."""
+    if node.get("type") == "split":
+        return active_pane_keys(node["first"]) | active_pane_keys(node["second"])
+    active_tab_id = node.get("activeTabId")
+    for tab in node.get("tabs", []):
+        if tab.get("tabId") == active_tab_id and tab.get("activeLeafId"):
+            return {f"{active_tab_id}:{tab['activeLeafId']}"}
+    return set()
+
+
+def focused_pane_keys(
+    worktrees: list[dict[str, Any]], layouts: list[dict[str, Any]]
+) -> set[str]:
+    """Pane keys that may currently hold focus.
+
+    The layout snapshot marks the active tab per group but not the active
+    group, so a worktree split into several groups yields several keys.
+    """
+    active_ids = {wt["worktreeId"] for wt in worktrees if wt.get("isActive")}
+    keys: set[str] = set()
+    for layout in layouts:
+        if layout.get("worktreeId") in active_ids:
+            keys |= active_pane_keys(layout.get("root", {}))
+    return keys
+
+
+def focused_terminal_handles() -> list[str]:
+    """Handles of the terminals that may hold focus, in a stable order.
+
+    Orca exposes no focused terminal directly, so this joins the active
+    worktree with each tab group's active leaf; see focused_pane_keys for
+    why more than one handle can come back.
+    """
+    ps = run_orca(["worktree", "ps", "--limit", LISTING_LIMIT])
+    listing = run_orca(
+        ["terminal", "list", "--include-visual-layouts", "--limit", LISTING_LIMIT]
+    )
+    handles = terminal_handles(listing.get("terminals", []))
+    keys = focused_pane_keys(ps.get("worktrees", []), listing.get("visualLayouts", []))
+    return sorted(handles[key] for key in keys if key in handles)
+
+
+def log_line(client: str, message: str, path: Path | None) -> None:
+    """Report to stderr and optionally a file, for hotkey runs whose stdio
+    is discarded."""
+    line = f"{time.strftime('%Y-%m-%d %H:%M:%S')} {client}: {message}"
+    print(line, file=sys.stderr)
+    if path is not None:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("a", encoding="utf-8") as stream:
+            stream.write(line + "\n")

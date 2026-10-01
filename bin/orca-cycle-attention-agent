@@ -18,21 +18,23 @@ from __future__ import annotations
 
 import argparse
 import json
-import sys
 import time
 from pathlib import Path
 from typing import Any
 
-from orca_cli import run_orca
+from orca_cli import (
+    LISTING_LIMIT,
+    focused_pane_keys,
+    log_line,
+    run_orca,
+    terminal_handles,
+)
 
 CLIENT = "orca-cycle-attention-agent"
 ATTENTION_PRIORITY = {"blocked": 2, "waiting": 2, "done": 1}
 # Mirrors Orca's AGENT_STATUS_STALE_AFTER_MS: a completion older than this
 # has aged out of the sidebar's "done" class, so it stops being attention.
 DONE_STALE_AFTER_MS = 30 * 60 * 1000
-# Orca pages both listings (default 200 worktrees); ask for far more than any
-# real session holds so a busy host cannot hide an agent behind the cap.
-LISTING_LIMIT = "10000"
 
 
 def needs_attention(agent: dict[str, Any], now_ms: int) -> bool:
@@ -65,45 +67,6 @@ def attention_agents(
             -agent.get("stateStartedAt", 0),
         ),
     )
-
-
-def terminal_handles(terminals: list[dict[str, Any]]) -> dict[str, str]:
-    """Map each live terminal's pane key (``tabId:leafId``) to its handle."""
-    return {
-        f"{terminal['tabId']}:{terminal['leafId']}": terminal["handle"]
-        for terminal in terminals
-        if terminal.get("connected", True)
-        and terminal.get("tabId")
-        and terminal.get("leafId")
-        and terminal.get("handle")
-    }
-
-
-def active_pane_keys(node: dict[str, Any]) -> set[str]:
-    """Pane keys of the active leaf in every group's active tab under ``node``."""
-    if node.get("type") == "split":
-        return active_pane_keys(node["first"]) | active_pane_keys(node["second"])
-    active_tab_id = node.get("activeTabId")
-    for tab in node.get("tabs", []):
-        if tab.get("tabId") == active_tab_id and tab.get("activeLeafId"):
-            return {f"{active_tab_id}:{tab['activeLeafId']}"}
-    return set()
-
-
-def focused_pane_keys(
-    worktrees: list[dict[str, Any]], layouts: list[dict[str, Any]]
-) -> set[str]:
-    """Pane keys that may currently hold focus.
-
-    The layout snapshot marks the active tab per group but not the active
-    group, so a worktree split into several groups yields several keys.
-    """
-    active_ids = {wt["worktreeId"] for wt in worktrees if wt.get("isActive")}
-    keys: set[str] = set()
-    for layout in layouts:
-        if layout.get("worktreeId") in active_ids:
-            keys |= active_pane_keys(layout.get("root", {}))
-    return keys
 
 
 def target_agent(
@@ -168,12 +131,7 @@ LOG_PATH: Path | None = None
 
 
 def log(message: str) -> None:
-    line = f"{time.strftime('%Y-%m-%d %H:%M:%S')} {CLIENT}: {message}"
-    print(line, file=sys.stderr)
-    if LOG_PATH is not None:
-        LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
-        with LOG_PATH.open("a", encoding="utf-8") as stream:
-            stream.write(line + "\n")
+    log_line(CLIENT, message, LOG_PATH)
 
 
 def parse_args() -> argparse.Namespace:

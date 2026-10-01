@@ -60,5 +60,47 @@ class RunOrcaTests(unittest.TestCase):
                 orca_cli.run_orca(["terminal", "switch", "--terminal", "x"])
 
 
+class FocusedTerminalHandlesTests(unittest.TestCase):
+    def test_returns_the_active_worktrees_focused_live_terminals(self) -> None:
+        ps = {
+            "worktrees": [
+                {"worktreeId": "wt1", "isActive": True},
+                {"worktreeId": "wt2"},
+            ]
+        }
+
+        def leaf(tab: str, leaf_id: str) -> dict:
+            return {
+                "activeTabId": tab,
+                "tabs": [{"tabId": tab, "activeLeafId": leaf_id}],
+            }
+
+        listing = {
+            "terminals": [
+                {"handle": "term_b", "tabId": "t2", "leafId": "l2"},
+                {"handle": "term_a", "tabId": "t1", "leafId": "l1"},
+                {"handle": "term_c", "tabId": "t3", "leafId": "l3"},
+            ],
+            "visualLayouts": [
+                {
+                    "worktreeId": "wt1",
+                    "root": {
+                        "type": "split",
+                        "first": leaf("t1", "l1"),
+                        "second": leaf("t2", "l2"),
+                    },
+                },
+                {"worktreeId": "wt2", "root": leaf("t3", "l3")},
+            ],
+        }
+        with patch.object(orca_cli, "run_orca", side_effect=(ps, listing)) as run:
+            self.assertEqual(orca_cli.focused_terminal_handles(), ["term_a", "term_b"])
+
+        self.assertEqual(
+            [c.args[0][:2] for c in run.call_args_list],
+            [["worktree", "ps"], ["terminal", "list"]],
+        )
+
+
 if __name__ == "__main__":
     unittest.main()

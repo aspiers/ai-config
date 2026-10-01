@@ -106,6 +106,22 @@ relationship is explicit rather than implied by history.
 A local checkout's base branch is not always named `main`; confirm what the
 remote actually uses before branching.
 
+### Integration fixes are real dependencies
+
+When combining two branches needs more than a textual conflict resolution
+(branch B moves code that branch A changes, so A's change must also be
+applied in B's new location, or tests from both need reconciling), that is
+a real dependency, not a mixdown concern. Stack the branch that needs
+adapting on the other, record it in machete, and commit the fix on the
+child branch. Do this without asking: it is this section's rule, not a
+judgement call.
+
+Never commit such a fix on `working` or hide it inside a merge commit.
+Rerere replays only conflict hunks, so edits made inside a merge, and
+commits made only on `working`, vanish at the next full rebuild. Before
+rebuilding, check for both: commits on `working` that are on no source
+branch, and differences between the old and rebuilt `working`.
+
 The cost of separation is that no single branch contains everything, so a
 build from one branch lacks the others' features. That is what mixdowns
 resolve — they are the reason separation stays practical rather than merely

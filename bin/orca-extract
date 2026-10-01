@@ -104,7 +104,10 @@ def rofi_pick(items: list[str], mode: str) -> tuple[int, str]:
         text=True,
         check=False,
     )
-    if completed.returncode not in (COPY, CANCEL, INSERT, TOGGLE):
+    # rofi also exits 1 when it cannot start (no display, keyboard grab
+    # refused), which would otherwise be logged as a plain cancel.
+    failed = completed.returncode == CANCEL and completed.stderr.strip()
+    if failed or completed.returncode not in (COPY, CANCEL, INSERT, TOGGLE):
         raise RuntimeError(
             f"rofi exited {completed.returncode}: {completed.stderr.strip()}"
         )

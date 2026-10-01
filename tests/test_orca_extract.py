@@ -125,6 +125,26 @@ class ExtractLoopTests(unittest.TestCase):
         insert.assert_not_called()
 
 
+class RofiPickTests(unittest.TestCase):
+    def run_pick(self, returncode: int, stdout: str = "", stderr: str = ""):
+        completed = Mock(returncode=returncode, stdout=stdout, stderr=stderr)
+        with patch.object(MODULE.subprocess, "run", return_value=completed) as run:
+            return MODULE.rofi_pick(["a1", "b2"], "word"), run
+
+    def test_returns_the_exit_code_and_choice(self) -> None:
+        (code, choice), run = self.run_pick(MODULE.INSERT, "b2\n")
+        self.assertEqual((code, choice), (MODULE.INSERT, "b2"))
+        self.assertEqual(run.call_args.kwargs["input"], "a1\nb2")
+
+    def test_plain_escape_is_a_cancel(self) -> None:
+        (code, _), _ = self.run_pick(MODULE.CANCEL)
+        self.assertEqual(code, MODULE.CANCEL)
+
+    def test_rofi_failure_is_not_mistaken_for_a_cancel(self) -> None:
+        with self.assertRaisesRegex(RuntimeError, "cannot open display"):
+            self.run_pick(MODULE.CANCEL, stderr="cannot open display\n")
+
+
 class InsertTests(unittest.TestCase):
     def test_types_the_text_without_pressing_enter(self) -> None:
         with patch.object(MODULE, "run_orca", return_value={}) as run_orca:
@@ -164,9 +184,11 @@ class ClipboardTests(unittest.TestCase):
             )
 
     def test_fails_clearly_without_a_clipboard_tool(self) -> None:
-        with patch.object(MODULE.shutil, "which", return_value=None):
-            with self.assertRaisesRegex(RuntimeError, "no clipboard tool"):
-                MODULE.clipboard_command({})
+        with (
+            patch.object(MODULE.shutil, "which", return_value=None),
+            self.assertRaisesRegex(RuntimeError, "no clipboard tool"),
+        ):
+            MODULE.clipboard_command({})
 
 
 if __name__ == "__main__":

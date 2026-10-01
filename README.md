@@ -313,21 +313,19 @@ See [AGENTS.md](AGENTS.md) for the detailed delegation pattern.
   the `orca-plugins/attention-cycling` plugin binds it inside Orca. Finds
   Orca's CLI via its Linux shim or `orca-ide` rather than bare `orca`, which
   on Linux is the GNOME screen reader; set `ORCA_CLI` to override
-- **`orca-extract`** - extrakto-style token picker for Orca terminals. Reads
-  a terminal's output with `orca terminal read` (default: the pane it runs
-  in, via `$ORCA_TERMINAL_HANDLE`; or `--terminal <handle>`) and opens the
-  extract picker from [herdr-copy-search][herdr-copy-search] in a split
-  beside it, which closes when the picker exits. Picking copies via OSC 52.
-  The picker must be on `PATH` in Orca's shells, or set
-  `ORCA_EXTRACT_PICKER`; `HERDR_PLUGIN_CONFIG_DIR` is passed through for its
-  key bindings. Agent TUI panes only expose their visible screen, not
-  scrollback. Insert-into-pane is not supported yet, and the capture file is
-  written locally, so remote (SSH) terminals are not supported. See the
+- **`orca-extract`** - extrakto-style token picker for Orca terminals.
+  Reads a terminal with `orca terminal read`, extracts tokens itself (URLs,
+  paths, quoted strings, words) and shows them in a `rofi` popup over Orca:
+  Enter copies (via `wl-copy`, `xclip` or `xsel`), Tab types the token into
+  the terminal, Ctrl+T switches to whole lines. Targets the pane it runs in,
+  `--terminal <handle>`, or, outside Orca or with `--focused`, the terminal
+  focused in Orca. Meant for a desktop hotkey scoped to Orca's window, since
+  Orca has no overlay surface and plugin keys don't fire inside terminals;
+  `--log FILE` records outcomes for such runs. Agent TUI panes only expose
+  their visible screen, not scrollback. See the
   [research notes](docs/research/orca-extrakto-2026-09-30.md)
 - **`llm-setup`** - Installs/upgrades [llm](https://llm.datasette.io/) with common plugins
   (gpt4all, anthropic, gemini, openrouter, deepseek)
-
-[herdr-copy-search]: https://github.com/qq88976321/herdr-copy-search
 
 ### Orca plugins (`orca-plugins/`)
 

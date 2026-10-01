@@ -2,22 +2,18 @@
 """
 Test suite for the orca-extract script.
 
-Pins the exact `orca` CLI calls, that the capture file holds the terminal's
-lines and is removed when the split fails, and that the generated shell line
-runs the picker on the capture, passes config through, and deletes it after.
+Pins token and line extraction, the picker loop's copy, insert, toggle and
+cancel handling, which terminal is targeted, and the exact `orca` CLI calls.
 """
 
 from __future__ import annotations
 
 import importlib.util
-import os
-import subprocess
 import sys
-import tempfile
 import unittest
 from importlib.machinery import SourceFileLoader
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 BIN_DIR = Path(__file__).parents[1] / "bin"
 SCRIPT = BIN_DIR / "orca-extract"
@@ -31,120 +27,146 @@ MODULE = importlib.util.module_from_spec(SPEC)
 sys.modules[SPEC.name] = MODULE
 SPEC.loader.exec_module(MODULE)
 
-LINES = ["$ ls", "src/main.rs  https://example.com/a b"]
+LINES = [
+    "See https://github.com/o/r/issues/1, then edit ~/.config/app.conf.",
+    'Run "git log --oneline" in src/main/ (commit 4930f47abc).',
+    "━━━━━━━━━━ │ ❯",
+]
 
 
 def read_result(lines: list[str]) -> dict:
     return {"terminal": {"tail": lines}}
 
 
-class OpenPickerTests(unittest.TestCase):
-    def test_reads_then_splits_beside_the_source_terminal(self) -> None:
-        split = {"split": {"handle": "term_new"}}
-        with patch.object(
-            MODULE, "run_orca", side_effect=(read_result(LINES), split)
-        ) as run_orca:
-            handle = MODULE.open_picker("term_src", 500, "pick", "vertical", {})
-
-        self.assertEqual(handle, "term_new")
-        read_call, split_call = (c.args[0] for c in run_orca.call_args_list)
+class ExtractionTests(unittest.TestCase):
+    def test_tokens_are_newest_first_and_cover_each_kind(self) -> None:
         self.assertEqual(
-            read_call, ["terminal", "read", "--terminal", "term_src", "--limit", "500"]
+            MODULE.tokens(LINES),
+            [
+                "git log --oneline",
+                "src/main/",
+                "--oneline",
+                "commit",
+                "4930f47abc",
+                "https://github.com/o/r/issues/1",
+                "~/.config/app.conf",
+            ],
         )
+
+    def test_url_paths_and_trailing_punctuation_are_not_separate_tokens(self) -> None:
+        tokens = MODULE.tokens(["see https://example.com/a/b, ok"])
+        self.assertIn("https://example.com/a/b", tokens)
+        self.assertNotIn("/example.com/a/b", tokens)
+        self.assertNotIn("https://example.com/a/b,", tokens)
+
+    def test_tokens_deduplicate_keeping_the_newest(self) -> None:
         self.assertEqual(
-            split_call[:6],
-            ["terminal", "split", "--terminal", "term_src", "--direction", "vertical"],
+            MODULE.tokens(["alpha12", "beta123", "alpha12"]),
+            [
+                "alpha12",
+                "beta123",
+            ],
         )
-        self.assertEqual(split_call[6], "--command")
-        capture = Path(split_call[7].split("--input ")[1].split(";")[0])
-        self.assertEqual(capture.read_text(encoding="utf-8"), "\n".join(LINES) + "\n")
-        capture.unlink()
 
-    def test_omits_direction_when_not_given(self) -> None:
-        split = {"split": {"handle": "term_new"}}
+    def test_whole_lines_skip_borders_and_blanks(self) -> None:
+        self.assertEqual(
+            MODULE.whole_lines(["first line", "", "━━━ │", "  second line  "]),
+            ["second line", "first line"],
+        )
+
+
+class ExtractLoopTests(unittest.TestCase):
+    def run_extract(self, picks: list[tuple[int, str]], handles=("term_a",)):
+        pick = Mock(side_effect=picks)
+        copy, insert = Mock(), Mock()
         with patch.object(
-            MODULE, "run_orca", side_effect=(read_result(LINES), split)
+            MODULE, "run_orca", return_value=read_result(LINES)
         ) as run_orca:
-            MODULE.open_picker("term_src", 500, "pick", None, {})
+            outcome = MODULE.extract(list(handles), 500, pick, copy, insert)
+        return outcome, pick, copy, insert, run_orca
 
-        split_call = run_orca.call_args_list[1].args[0]
-        self.assertNotIn("--direction", split_call)
-        Path(split_call[-1].split("--input ")[1].split(";")[0]).unlink()
+    def test_enter_copies_the_choice(self) -> None:
+        outcome, pick, copy, insert, run_orca = self.run_extract([(MODULE.COPY, "x1")])
+        self.assertEqual(outcome, "copied")
+        copy.assert_called_once_with("x1")
+        insert.assert_not_called()
+        run_orca.assert_called_once_with(
+            ["terminal", "read", "--terminal", "term_a", "--limit", "500"]
+        )
+        self.assertEqual(pick.call_args.args[1], "word")
 
-    def test_removes_the_capture_when_the_split_fails(self) -> None:
-        created: list[Path] = []
-        real_write = MODULE.write_capture
+    def test_tab_inserts_into_the_single_target(self) -> None:
+        outcome, _, copy, insert, _ = self.run_extract([(MODULE.INSERT, "x1")])
+        self.assertEqual(outcome, "inserted into term_a")
+        insert.assert_called_once_with("term_a", "x1")
+        copy.assert_not_called()
 
-        def recording_write(lines: list[str]) -> Path:
-            created.append(real_write(lines))
-            return created[-1]
+    def test_tab_copies_when_the_target_is_ambiguous(self) -> None:
+        outcome, _, copy, insert, _ = self.run_extract(
+            [(MODULE.INSERT, "x1")], handles=("term_a", "term_b")
+        )
+        self.assertIn("ambiguous", outcome)
+        copy.assert_called_once_with("x1")
+        insert.assert_not_called()
 
-        with (
-            patch.object(MODULE, "write_capture", side_effect=recording_write),
-            patch.object(
-                MODULE,
-                "run_orca",
-                side_effect=(read_result(LINES), RuntimeError("split failed")),
-            ),
-            self.assertRaises(RuntimeError),
-        ):
-            MODULE.open_picker("term_src", 500, "pick", None, {})
+    def test_ctrl_t_toggles_to_lines_and_back(self) -> None:
+        _, pick, copy, _, _ = self.run_extract(
+            [(MODULE.TOGGLE, ""), (MODULE.TOGGLE, ""), (MODULE.COPY, "x1")]
+        )
+        modes = [c.args[1] for c in pick.call_args_list]
+        self.assertEqual(modes, ["word", "line", "word"])
+        self.assertEqual(pick.call_args_list[1].args[0], MODULE.whole_lines(LINES))
+        copy.assert_called_once_with("x1")
 
-        self.assertEqual(len(created), 1)
-        self.assertFalse(created[0].exists())
+    def test_escape_does_nothing(self) -> None:
+        outcome, _, copy, insert, _ = self.run_extract([(MODULE.CANCEL, "")])
+        self.assertEqual(outcome, "cancelled")
+        copy.assert_not_called()
+        insert.assert_not_called()
 
 
-class PickerCommandTests(unittest.TestCase):
-    def run_line(self, environment: dict[str, str]) -> tuple[str, Path]:
-        """Run the generated line with a fake picker; return what it saw."""
-        with tempfile.TemporaryDirectory() as tmp:
-            record = Path(tmp) / "record"
-            picker = Path(tmp) / "fake picker"
-            picker.write_text(
-                "#!/bin/sh\n"
-                f'{{ printf "%s\\n" "$@"; cat "$4"; '
-                f'echo "cfg=$HERDR_PLUGIN_CONFIG_DIR"; }} > "{record}"\n',
-                encoding="utf-8",
+class InsertTests(unittest.TestCase):
+    def test_types_the_text_without_pressing_enter(self) -> None:
+        with patch.object(MODULE, "run_orca", return_value={}) as run_orca:
+            MODULE.insert_into("term_a", "x1")
+        run_orca.assert_called_once_with(
+            ["terminal", "send", "--terminal", "term_a", "--text", "x1"]
+        )
+
+
+class TargetTests(unittest.TestCase):
+    def test_explicit_terminal_wins(self) -> None:
+        env = {"ORCA_TERMINAL_HANDLE": "term_own"}
+        self.assertEqual(MODULE.target_handles("term_x", False, env), ["term_x"])
+
+    def test_defaults_to_own_pane_inside_orca(self) -> None:
+        env = {"ORCA_TERMINAL_HANDLE": "term_own"}
+        self.assertEqual(MODULE.target_handles(None, False, env), ["term_own"])
+
+    def test_uses_focused_terminal_outside_orca_or_when_asked(self) -> None:
+        with patch.object(MODULE, "focused_terminal_handles", return_value=["term_f"]):
+            self.assertEqual(MODULE.target_handles(None, False, {}), ["term_f"])
+            self.assertEqual(
+                MODULE.target_handles(None, True, {"ORCA_TERMINAL_HANDLE": "term_own"}),
+                ["term_f"],
             )
-            picker.chmod(0o755)
-            capture = MODULE.write_capture(LINES)
-            line = MODULE.picker_command(str(picker), capture, environment)
-            env = {
-                k: v for k, v in os.environ.items() if k != "HERDR_PLUGIN_CONFIG_DIR"
-            }
-            # Run as an interactive shell would: the line is the whole command.
-            subprocess.run(["sh", "-c", line], check=True, env=env)
-            return record.read_text(encoding="utf-8"), capture
-
-    def test_runs_picker_on_capture_then_deletes_it(self) -> None:
-        seen, capture = self.run_line({})
-        self.assertEqual(
-            seen,
-            f"--mode\nextract\n--input\n{capture}\n" + "\n".join(LINES) + "\ncfg=\n",
-        )
-        self.assertFalse(capture.exists())
-
-    def test_passes_picker_config_dir_through(self) -> None:
-        seen, _ = self.run_line({"HERDR_PLUGIN_CONFIG_DIR": "/cfg dir"})
-        self.assertTrue(seen.endswith("cfg=/cfg dir\n"))
-
-    def test_line_starts_with_space_and_execs(self) -> None:
-        line = MODULE.picker_command("pick", Path("/tmp/x"), {})
-        self.assertTrue(line.startswith(" exec sh -c "))
 
 
-class MainTests(unittest.TestCase):
-    def test_fails_without_a_terminal(self) -> None:
-        env = {k: v for k, v in os.environ.items() if k != "ORCA_TERMINAL_HANDLE"}
-        completed = subprocess.run(
-            [sys.executable, str(SCRIPT)],
-            capture_output=True,
-            text=True,
-            env=env,
-            check=False,
-        )
-        self.assertEqual(completed.returncode, 2)
-        self.assertIn("no terminal", completed.stderr)
+class ClipboardTests(unittest.TestCase):
+    def test_prefers_wl_copy_under_wayland_then_xclip(self) -> None:
+        with patch.object(MODULE.shutil, "which", return_value="/usr/bin/x"):
+            self.assertEqual(
+                MODULE.clipboard_command({"WAYLAND_DISPLAY": "wayland-0"}),
+                ["wl-copy"],
+            )
+            self.assertEqual(
+                MODULE.clipboard_command({}), ["xclip", "-selection", "clipboard"]
+            )
+
+    def test_fails_clearly_without_a_clipboard_tool(self) -> None:
+        with patch.object(MODULE.shutil, "which", return_value=None):
+            with self.assertRaisesRegex(RuntimeError, "no clipboard tool"):
+                MODULE.clipboard_command({})
 
 
 if __name__ == "__main__":

@@ -17,10 +17,10 @@ python3 tests/test_orca_cycle_attention_agent.py
 
 ## Orca Extract Tests
 
-`test_orca_extract.py` pins the `orca terminal read` and `orca terminal split`
-calls made by `orca-extract`, checks the capture file is removed when the
-split fails, and runs the generated shell line with a fake picker to confirm
-quoting, config passthrough, and capture cleanup.
+`test_orca_extract.py` pins token and whole-line extraction, the picker
+loop's copy, insert, toggle and cancel handling, which terminal is targeted,
+clipboard tool selection, and the exact `orca` CLI calls made by
+`orca-extract`.
 
 ```bash
 python3 tests/test_orca_extract.py

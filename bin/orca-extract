@@ -1,31 +1,78 @@
 #!/usr/bin/env python3
 """Pick a token from an Orca terminal's output, extrakto-style.
 
-Orca has no extrakto equivalent and its plugin API cannot read terminals,
-so this reads the terminal through ``orca terminal read`` and opens the
-extract picker from herdr-copy-search in a split next to it. The picker
-copies via OSC 52, which Orca terminals honour.
-
-The picker is typed into the split's interactive shell with ``exec`` so the
-split closes as soon as the picker exits; without it the shell lingers.
+Orca has no extrakto equivalent and no overlay surface, and plugin keys
+never fire inside its terminals, so this is meant for a desktop hotkey
+(e.g. keyd scoped to Orca's window). It reads the terminal with
+``orca terminal read``, extracts tokens itself, and shows them in a rofi
+popup over Orca: Enter copies, Tab types the token into the terminal,
+Ctrl+T switches between tokens and whole lines.
 """
 
 from __future__ import annotations
 
 import argparse
 import os
-import shlex
-import sys
-import tempfile
+import re
+import shutil
+import subprocess
+from collections.abc import Callable, Iterable
 from pathlib import Path
 
-from orca_cli import run_orca
+from orca_cli import focused_terminal_handles, log_line, run_orca
 
-DEFAULT_PICKER = "herdr-copy-search"
+CLIENT = "orca-extract"
 DEFAULT_LIMIT = 2000
-# herdr-copy-search reads key bindings from $HERDR_PLUGIN_CONFIG_DIR, and the
-# split's fresh shell would not otherwise inherit it from the caller.
-PASSTHROUGH_ENV = ("HERDR_PLUGIN_CONFIG_DIR",)
+# extrakto's default: shorter words are rarely worth picking.
+MIN_WORD_LENGTH = 5
+
+# rofi -dmenu exit codes: accept, cancel, then kb-custom-N as 9 + N.
+COPY, CANCEL, INSERT, TOGGLE = 0, 1, 10, 11
+HELP = "Enter copy · Tab insert · Ctrl+t word/line"
+
+URL_RE = re.compile(r"(?:https?|ftp|file)://[^\s<>\"'`]+")
+QUOTED_RE = re.compile(r"\"([^\"\n]{2,})\"|'([^'\n]{2,})'|`([^`\n]{2,})`")
+PATH_RE = re.compile(
+    r"(?:~|\.{1,2})?(?:/[\w.@%+=:,~-]+)+/?|[\w.@~-]+(?:/[\w.@%+=:,~-]+)+/?"
+)
+TRAILING_PUNCTUATION = ".,;:!?)]}'\""
+WORD_TRIM = "()[]{}<>,;:'\"`.!?"
+
+
+def unique(items: Iterable[str]) -> list[str]:
+    return list(dict.fromkeys(item for item in items if item))
+
+
+def line_tokens(line: str) -> list[str]:
+    url_matches = list(URL_RE.finditer(line))
+    urls = [m.group(0).rstrip(TRAILING_PUNCTUATION) for m in url_matches]
+    quoted = [next(g for g in m.groups() if g) for m in QUOTED_RE.finditer(line)]
+    # A URL's own path would otherwise come back as a separate token.
+    paths = [
+        m.group(0).rstrip(TRAILING_PUNCTUATION)
+        for m in PATH_RE.finditer(line)
+        if not any(u.start() <= m.start() < u.end() for u in url_matches)
+    ]
+    words = [
+        word
+        for word in (raw.strip(WORD_TRIM) for raw in line.split())
+        if len(word) >= MIN_WORD_LENGTH
+    ]
+    return [t for t in urls + quoted + paths + words if has_text(t)]
+
+
+def has_text(text: str) -> bool:
+    # TUI borders and rules (━━━, │) are not worth offering.
+    return any(c.isalnum() for c in text)
+
+
+def tokens(lines: list[str]) -> list[str]:
+    """Tokens from ``lines``, newest first, without duplicates."""
+    return unique(token for line in reversed(lines) for token in line_tokens(line))
+
+
+def whole_lines(lines: list[str]) -> list[str]:
+    return unique(line.strip() for line in reversed(lines) if has_text(line))
 
 
 def terminal_lines(handle: str, limit: int) -> list[str]:
@@ -34,54 +81,110 @@ def terminal_lines(handle: str, limit: int) -> list[str]:
     return result["terminal"]["tail"]
 
 
-def write_capture(lines: list[str]) -> Path:
-    fd, path = tempfile.mkstemp(prefix="orca-extract-", suffix=".txt")
-    with os.fdopen(fd, "w", encoding="utf-8") as stream:
-        stream.write("\n".join(lines) + "\n")
-    return Path(path)
-
-
-def picker_command(picker: str, capture: Path, environment: dict[str, str]) -> str:
-    """Shell line that runs the picker on ``capture``, then deletes it."""
-    assignments = " ".join(
-        f"{name}={shlex.quote(environment[name])}"
-        for name in PASSTHROUGH_ENV
-        if environment.get(name)
+def rofi_pick(items: list[str], mode: str) -> tuple[int, str]:
+    completed = subprocess.run(
+        [
+            "rofi",
+            "-dmenu",
+            "-i",
+            "-p",
+            f"extract ({mode})",
+            "-mesg",
+            HELP,
+            # Tab normally moves the selection; free it for insert.
+            "-kb-element-next",
+            "",
+            "-kb-custom-1",
+            "Tab",
+            "-kb-custom-2",
+            "Control+t",
+        ],
+        input="\n".join(items),
+        capture_output=True,
+        text=True,
+        check=False,
     )
-    run = f"{shlex.quote(picker)} --mode extract --input {shlex.quote(str(capture))}"
-    script = f"{run}; rm -f {shlex.quote(str(capture))}"
-    prefix = f"{assignments} " if assignments else ""
-    # The leading space keeps the line out of history under HIST_IGNORE_SPACE.
-    return f" {prefix}exec sh -c {shlex.quote(script)}"
+    if completed.returncode not in (COPY, CANCEL, INSERT, TOGGLE):
+        raise RuntimeError(
+            f"rofi exited {completed.returncode}: {completed.stderr.strip()}"
+        )
+    return completed.returncode, completed.stdout.rstrip("\n")
 
 
-def open_picker(
-    handle: str,
+def clipboard_command(environment: dict[str, str]) -> list[str]:
+    if environment.get("WAYLAND_DISPLAY") and shutil.which("wl-copy"):
+        return ["wl-copy"]
+    if shutil.which("xclip"):
+        return ["xclip", "-selection", "clipboard"]
+    if shutil.which("xsel"):
+        return ["xsel", "--clipboard", "--input"]
+    raise RuntimeError("no clipboard tool found (wl-copy, xclip or xsel)")
+
+
+def copy_to_clipboard(text: str) -> None:
+    # xclip forks a child that keeps serving the selection, so its output
+    # must not be piped back or run() would wait for that child.
+    subprocess.run(
+        clipboard_command(dict(os.environ)),
+        input=text,
+        text=True,
+        check=True,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+
+
+def insert_into(handle: str, text: str) -> None:
+    run_orca(["terminal", "send", "--terminal", handle, "--text", text])
+
+
+def extract(
+    handles: list[str],
     limit: int,
-    picker: str,
-    direction: str | None,
-    environment: dict[str, str],
+    pick: Callable[[list[str], str], tuple[int, str]] = rofi_pick,
+    copy: Callable[[str], None] = copy_to_clipboard,
+    insert: Callable[[str, str], None] = insert_into,
 ) -> str:
-    """Open the picker beside ``handle`` and return the split's handle."""
-    capture = write_capture(terminal_lines(handle, limit))
-    args = ["terminal", "split", "--terminal", handle]
-    if direction:
-        args += ["--direction", direction]
-    args += ["--command", picker_command(picker, capture, environment)]
-    try:
-        return run_orca(args)["split"]["handle"]
-    except Exception:
-        capture.unlink(missing_ok=True)
-        raise
+    """Run the picker over ``handles``' output and return what happened."""
+    lines = [line for handle in handles for line in terminal_lines(handle, limit)]
+    mode = "word"
+    while True:
+        items = tokens(lines) if mode == "word" else whole_lines(lines)
+        code, choice = pick(items, mode)
+        if code == TOGGLE:
+            mode = "line" if mode == "word" else "word"
+            continue
+        if code == CANCEL or not choice:
+            return "cancelled"
+        if code == INSERT and len(handles) == 1:
+            insert(handles[0], choice)
+            return f"inserted into {handles[0]}"
+        copy(choice)
+        if code == INSERT:
+            return f"copied: insert target ambiguous among {len(handles)} panes"
+        return "copied"
 
 
-def parse_args(environment: dict[str, str]) -> argparse.Namespace:
+def target_handles(
+    terminal: str | None, focused: bool, environment: dict[str, str]
+) -> list[str]:
+    if terminal:
+        return [terminal]
+    own = environment.get("ORCA_TERMINAL_HANDLE")
+    if own and not focused:
+        return [own]
+    return focused_terminal_handles()
+
+
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument(
-        "--terminal",
-        default=environment.get("ORCA_TERMINAL_HANDLE"),
-        help="terminal handle to extract from (default: $ORCA_TERMINAL_HANDLE, "
-        "i.e. the Orca pane this runs in)",
+    target = parser.add_mutually_exclusive_group()
+    target.add_argument("--terminal", help="terminal handle to extract from")
+    target.add_argument(
+        "--focused",
+        action="store_true",
+        help="use the terminal focused in Orca (the default outside Orca panes; "
+        "inside one, the default is that pane)",
     )
     parser.add_argument(
         "--limit",
@@ -90,36 +193,27 @@ def parse_args(environment: dict[str, str]) -> argparse.Namespace:
         help=f"maximum lines of output to read (default: {DEFAULT_LIMIT})",
     )
     parser.add_argument(
-        "--direction",
-        choices=("horizontal", "vertical"),
-        help="split direction (default: Orca's)",
-    )
-    parser.add_argument(
-        "--picker",
-        default=environment.get("ORCA_EXTRACT_PICKER", DEFAULT_PICKER),
-        help="picker program accepting --mode extract --input FILE "
-        f"(default: $ORCA_EXTRACT_PICKER or {DEFAULT_PICKER})",
+        "--log",
+        type=Path,
+        metavar="FILE",
+        help="also append each run's outcome to FILE (for hotkey runs whose "
+        "stderr is discarded)",
     )
     return parser.parse_args()
 
 
 def main() -> int:
-    environment = dict(os.environ)
-    args = parse_args(environment)
-    if not args.terminal:
-        print(
-            "orca-extract: no terminal; run inside an Orca pane or pass --terminal",
-            file=sys.stderr,
-        )
-        return 2
+    args = parse_args()
     try:
-        split = open_picker(
-            args.terminal, args.limit, args.picker, args.direction, environment
-        )
-    except (KeyError, OSError, RuntimeError) as error:
-        print(f"orca-extract: {error}", file=sys.stderr)
+        handles = target_handles(args.terminal, args.focused, dict(os.environ))
+        if not handles:
+            log_line(CLIENT, "no focused Orca terminal found", args.log)
+            return 1
+        outcome = extract(handles, args.limit)
+    except (KeyError, OSError, RuntimeError, subprocess.CalledProcessError) as error:
+        log_line(CLIENT, str(error), args.log)
         return 1
-    print(split)
+    log_line(CLIENT, outcome, args.log)
     return 0
 
 

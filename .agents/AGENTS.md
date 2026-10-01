@@ -19,6 +19,9 @@ this repository. Adapt them to your own preferences.
 - Re-pick your approach when new information arrives; an announced plan is
   not a commitment.
 - Never claim something works or is fixed until you have run it.
+- When something fails or behaves unexpectedly, recommend finding its root
+  cause first. Offer a workaround, labelled as one, only when asked, when
+  the cause is out of reach (say why), or to mitigate something urgent.
 
 ## Communication
 

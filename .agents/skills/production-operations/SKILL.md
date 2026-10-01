@@ -84,7 +84,9 @@ unexpectedly (a crash, an error, a partial result, a service going down,
 output you cannot explain), stop at once. Do not investigate further, even
 read-only, and do not try to fix it. First tell the user what happened,
 what state the system is now in as far as you know, and what you have not
-verified. Then ask how to proceed.
+verified. Then ask how to proceed. When asking, lead with read-only
+root-cause investigation as the recommended option; offer workarounds only
+as labelled alternatives.
 
 This does not cover odd but pre-existing state found during read-only
 inspection, such as an unexplained file timestamp or a config change made

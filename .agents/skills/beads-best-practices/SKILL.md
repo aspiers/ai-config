@@ -201,6 +201,27 @@ Split the verification into the person's own bead and let them do it. An
 agent closing its own unverifiable work is how a bug gets marked fixed several
 times while the user keeps hitting it.
 
+## Waiting on Someone Else
+
+The same split applies when a bead's closing criterion waits on an outside
+party (a vendor, a support ticket, CI on another system) or on another bead's
+result. Do not express the wait only as prose such as "close once X reports
+Y". Create a bead for the awaited event and make the waiting bead depend on
+it:
+
+```bash
+conf=$(bd create --title="Confirm: <event> (<who>)" --type=task \
+                 --description="<what proves it, where to look>" \
+                 --json | jq -r .id)
+bd dep add "$waiting" "$conf"
+```
+
+Whoever observes the event closes that bead with
+`bd close "$conf" --suggest-next`. That releases the waiting bead into
+`bd ready` and names it, so the release no longer depends on anyone
+remembering to pass the news on. Add the `human` label only when a person
+must do the observing.
+
 ## Pair IDs with Human-Readable Titles
 
 Never refer to a bead in human-facing prose solely by its opaque ID. Pair the

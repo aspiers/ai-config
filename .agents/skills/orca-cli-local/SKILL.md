@@ -23,7 +23,9 @@ the failure to avoid.
   call. Default to `claude` unless the user names another agent.
 - The brief must be self-contained: the original request verbatim, the PR
   target branch, and any repo constraints the current session already
-  learned (test commands, hosting, files to look at).
+  learned (test commands, hosting, files to look at). If the user tests
+  through a `working` mixdown branch in that repo, say so and tell the
+  worker to load `git-branch-management` before its first commit.
 - After create, `terminal read` the returned agent handle and confirm the
   brief is visible before reporting the handoff as started.
 - Only work in the new checkout from the current session if the user

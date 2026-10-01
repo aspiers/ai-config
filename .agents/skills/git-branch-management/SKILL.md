@@ -8,8 +8,9 @@ description: >-
   party checkout; when choosing what a new branch should be based on; when a
   branch is growing a second unrelated concern; when deciding whether to stack
   branches or keep them independent; when preparing a change for a pull
-  request or patch submission; or when a local build needs several in-progress
-  branches combined.
+  request or patch submission; when handed an existing worktree or branch to
+  implement and commit in a fork; or when a local build needs several
+  in-progress branches combined.
 ---
 
 # Git Branch Management
@@ -175,11 +176,28 @@ best-of-breed combination for day-to-day use and testing.
 Never develop or commit new source work on `working`. Make and commit every
 source change on its narrowly scoped source branch in that branch's worktree.
 
-Immediately after any configured source branch changes, including a new
-commit, amend, or rebase, regenerate `working` from all configured source
-branches. Do not leave `working` stale or update it from only the branch that
-changed. The target is disposable and always rebuilt from the full configured
-set.
+This applies only where the user tests through a `working` mixdown: a fork
+of an upstream they do not own, with an existing `working` branch built from
+`mixdown.working` config (`git config --get-all mixdown.working`), that the
+user actually runs, for example checked out in the main checkout and served
+from there. Mix config alone is not enough. Where it applies, without
+asking:
+
+- on the first commit to a new source branch, add it to the mix
+  (`git mix +<branch>`) and to the machete layout (`git machete add`);
+- after that, and after any commit, amend, or rebase of a configured source
+  branch, regenerate `working` from the full configured set in the main
+  checkout (`git mixdown -c`);
+- then rebuild and restart whatever serves the main checkout, so the user's
+  own instance runs the new `working`. Look for it in user service units
+  whose working directory is the main checkout, and in the project's README
+  or agent instructions; ask if nothing turns up. A dev server you started in
+  a feature worktree does not count.
+
+Do not leave `working` stale or update it from only the branch that changed.
+Stop and ask only if the mixdown conflicts or would touch uncommitted changes
+in the main checkout. Never submit a branch upstream until the user has had
+the chance to test it in their rebuilt instance.
 
 `working` is a local scratch branch. Never push it or open a PR from it;
 publish the independent source branches instead. This boundary keeps the

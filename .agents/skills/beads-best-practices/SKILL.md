@@ -466,6 +466,25 @@ Reserve it, if used at all, for timeless supplementary information that
 represents the issue's current state and is safe to replace as a whole. When
 in doubt, post a comment.
 
+### Put a Finding on Every Bead It Affects
+
+A comment reaches only people reading that bead. When a finding unblocks
+another bead, satisfies one of its acceptance or closing criteria, or changes
+its scope or plan:
+
+1. Comment on that bead as well, with the finding, its evidence, and the bead
+   it came from.
+2. If no blocking dependency links the two, add one with `bd dep add`. A
+   `related` edge alone releases nothing.
+3. If someone is actively working that bead, notify them directly too. In
+   Orca, use `orchestration send` (see `orca-cli-local`). Nobody re-reads a
+   bead they are waiting on.
+
+When you agree to report something to another bead, record that promise in a
+comment on **your own** bead, so whoever resumes it sees the promise. Before
+closing or pausing, check `bd show` for related and dependent beads and decide
+whether anything you learned belongs on them.
+
 ## Keep Updates Useful
 
 - State what changed, why it matters, and what happens next.

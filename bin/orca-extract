@@ -14,6 +14,7 @@ from __future__ import annotations
 import argparse
 import os
 import re
+import shlex
 import shutil
 import subprocess
 from collections.abc import Callable, Iterable
@@ -81,10 +82,16 @@ def terminal_lines(handle: str, limit: int) -> list[str]:
     return result["terminal"]["tail"]
 
 
+def rofi_command(environment: dict[str, str]) -> list[str]:
+    """rofi, or a themed wrapper such as ``my-rofi -F large`` from
+    $ORCA_EXTRACT_ROFI, so the popup matches the user's other menus."""
+    return shlex.split(environment.get("ORCA_EXTRACT_ROFI") or "rofi")
+
+
 def rofi_pick(items: list[str], mode: str) -> tuple[int, str]:
     completed = subprocess.run(
         [
-            "rofi",
+            *rofi_command(dict(os.environ)),
             "-dmenu",
             "-i",
             "-p",

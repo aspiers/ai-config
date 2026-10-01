@@ -321,8 +321,9 @@ See [AGENTS.md](AGENTS.md) for the detailed delegation pattern.
   `--terminal <handle>`, or, outside Orca or with `--focused`, the terminal
   focused in Orca. Meant for a desktop hotkey scoped to Orca's window, since
   Orca has no overlay surface and plugin keys don't fire inside terminals;
-  `--log FILE` records outcomes for such runs. Agent TUI panes only expose
-  their visible screen, not scrollback. See the
+  `--log FILE` records outcomes for such runs. Set `ORCA_EXTRACT_ROFI` to a
+  themed rofi wrapper (arguments allowed) to match your other menus. Agent
+  TUI panes only expose their visible screen, not scrollback. See the
   [research notes](docs/research/orca-extrakto-2026-09-30.md)
 - **`llm-setup`** - Installs/upgrades [llm](https://llm.datasette.io/) with common plugins
   (gpt4all, anthropic, gemini, openrouter, deepseek)

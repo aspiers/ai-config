@@ -136,6 +136,13 @@ class RofiPickTests(unittest.TestCase):
         self.assertEqual((code, choice), (MODULE.INSERT, "b2"))
         self.assertEqual(run.call_args.kwargs["input"], "a1\nb2")
 
+    def test_uses_the_configured_rofi_wrapper_with_its_arguments(self) -> None:
+        self.assertEqual(MODULE.rofi_command({}), ["rofi"])
+        self.assertEqual(
+            MODULE.rofi_command({"ORCA_EXTRACT_ROFI": "my-rofi -F 'x l'"}),
+            ["my-rofi", "-F", "x l"],
+        )
+
     def test_plain_escape_is_a_cancel(self) -> None:
         (code, _), _ = self.run_pick(MODULE.CANCEL)
         self.assertEqual(code, MODULE.CANCEL)

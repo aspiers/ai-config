@@ -75,6 +75,18 @@ supervision from the start, use supervised workers instead
 (`orchestration run-create`, then `worker-start`; see the `orchestration`
 skill).
 
+When several agents work related beads in parallel, give each one's brief the
+others' terminal handles and bead IDs, and tell it to:
+
+- run `orca-ide orchestration send --to <handle>` whenever a finding unblocks
+  or changes a sibling's bead, as well as commenting on that bead
+  (`beads-best-practices`); and
+- run `orca-ide orchestration check --terminal "$ORCA_TERMINAL_HANDLE"` while
+  waiting on another bead, since messages are pull-only.
+
+Supervised siblings in one Run can use the Run's group addresses instead
+(`orchestration` reference `messaging-and-gates.md`).
+
 ## Read the screen before every send
 
 Before any `terminal send` to an agent, `terminal read` it. Send only if it

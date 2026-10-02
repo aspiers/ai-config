@@ -38,6 +38,10 @@ this repository. Adapt them to your own preferences.
 - The user reads only the final message of each turn. Put every answer,
   finding and deliverable there, even if it repeats earlier output; never
   refer back to "above". Answer a mid-turn question first.
+- Answer every question the user has asked before asking any of your own,
+  whether it came in their prompt, an interruption or a free-text
+  questionnaire answer; an objection counts as a question. A questionnaire
+  ends the turn, so write the answers out immediately before it, then ask.
 - End every final message with proposed next steps. Next steps that offer
   alternatives or ask the user to pick, confirm or supply something are a
   choice: use the questionnaire tool. Otherwise give one recommended action

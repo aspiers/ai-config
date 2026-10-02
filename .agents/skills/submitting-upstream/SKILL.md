@@ -127,10 +127,15 @@ acceptance cannot be waived or fabricated.
 
 ## Approval boundary
 
-Creating an issue or discussion, commenting publicly, pushing a branch,
-opening a change request, or sending patches is outward-facing. Prepare the
-exact title and body, patch, or branch first, then stop for explicit approval
-before the first publication action.
+Creating an issue or discussion, commenting publicly, opening a change
+request, or sending patches is outward-facing. Prepare the exact title and
+body, or patch, first, then stop for explicit approval before the first
+publication action.
+
+Pushing a source branch to the user's own fork is not a submission and needs
+no approval, unless the branch holds sensitive, confidential, or personal
+content, which should not be in a public fork anyway. Approval is for what
+reaches the upstream project.
 
 Present:
 
@@ -143,8 +148,8 @@ Present:
 
 Once the user approves that prepared artefact, perform only the approved
 publication action and return its URL or delivery result. Do not turn approval
-to file an issue into permission to push code, or approval to push a branch
-into permission to open a change request.
+to file an issue into permission to open a change request, or approval of one
+change request into permission for another.
 
 ## Who publishes it
 

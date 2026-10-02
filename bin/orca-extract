@@ -20,7 +20,7 @@ import subprocess
 from collections.abc import Callable, Iterable
 from pathlib import Path
 
-from orca_cli import focused_terminal_handles, log_line, run_orca
+from orca_cli import focused_terminal_handles, log_line, run_orca, terminal_labels
 
 CLIENT = "orca-extract"
 DEFAULT_LIMIT = 2000
@@ -88,14 +88,15 @@ def rofi_command(environment: dict[str, str]) -> list[str]:
     return shlex.split(environment.get("ORCA_EXTRACT_ROFI") or "rofi")
 
 
-def rofi_pick(items: list[str], mode: str) -> tuple[int, str]:
+def rofi_pick(items: list[str], mode: str, source: str) -> tuple[int, str]:
     completed = subprocess.run(
         [
             *rofi_command(dict(os.environ)),
             "-dmenu",
             "-i",
             "-p",
-            f"extract ({mode})",
+            # Naming the source makes a wrong focus guess obvious at a glance.
+            f"extract ({mode}) from {source}",
             "-mesg",
             HELP,
             # Tab normally moves the selection; free it for insert.
@@ -151,7 +152,8 @@ def insert_into(handle: str, text: str) -> None:
 def extract(
     handles: list[str],
     limit: int,
-    pick: Callable[[list[str], str], tuple[int, str]] = rofi_pick,
+    source: str = "",
+    pick: Callable[[list[str], str, str], tuple[int, str]] = rofi_pick,
     copy: Callable[[str], None] = copy_to_clipboard,
     insert: Callable[[str, str], None] = insert_into,
 ) -> str:
@@ -160,7 +162,7 @@ def extract(
     mode = "word"
     while True:
         items = tokens(lines) if mode == "word" else whole_lines(lines)
-        code, choice = pick(items, mode)
+        code, choice = pick(items, mode, source)
         if code == TOGGLE:
             mode = "line" if mode == "word" else "word"
             continue
@@ -214,16 +216,22 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
+    source = "?"
     try:
         handles = target_handles(args.terminal, args.focused, dict(os.environ))
         if not handles:
             log_line(CLIENT, "no focused Orca terminal found", args.log)
             return 1
-        outcome = extract(handles, args.limit)
+        labels = terminal_labels(handles)
+        label = " + ".join(labels[handle] for handle in handles)
+        # Record which terminal was read, so a wrong focus guess can be
+        # diagnosed after the fact.
+        source = f"{label} ({', '.join(handles)})"
+        outcome = extract(handles, args.limit, label)
     except (KeyError, OSError, RuntimeError, subprocess.CalledProcessError) as error:
-        log_line(CLIENT, str(error), args.log)
+        log_line(CLIENT, f"{error} [from {source}]", args.log)
         return 1
-    log_line(CLIENT, outcome, args.log)
+    log_line(CLIENT, f"{outcome} [from {source}]", args.log)
     return 0
 
 

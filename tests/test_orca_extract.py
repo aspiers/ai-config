@@ -82,7 +82,7 @@ class ExtractLoopTests(unittest.TestCase):
         with patch.object(
             MODULE, "run_orca", return_value=read_result(LINES)
         ) as run_orca:
-            outcome = MODULE.extract(list(handles), 500, pick, copy, insert)
+            outcome = MODULE.extract(list(handles), 500, "wt: tab", pick, copy, insert)
         return outcome, pick, copy, insert, run_orca
 
     def test_enter_copies_the_choice(self) -> None:
@@ -93,7 +93,7 @@ class ExtractLoopTests(unittest.TestCase):
         run_orca.assert_called_once_with(
             ["terminal", "read", "--terminal", "term_a", "--limit", "500"]
         )
-        self.assertEqual(pick.call_args.args[1], "word")
+        self.assertEqual(pick.call_args.args[1:], ("word", "wt: tab"))
 
     def test_tab_inserts_into_the_single_target(self) -> None:
         outcome, _, copy, insert, _ = self.run_extract([(MODULE.INSERT, "x1")])
@@ -129,12 +129,13 @@ class RofiPickTests(unittest.TestCase):
     def run_pick(self, returncode: int, stdout: str = "", stderr: str = ""):
         completed = Mock(returncode=returncode, stdout=stdout, stderr=stderr)
         with patch.object(MODULE.subprocess, "run", return_value=completed) as run:
-            return MODULE.rofi_pick(["a1", "b2"], "word"), run
+            return MODULE.rofi_pick(["a1", "b2"], "word", "wt: tab"), run
 
     def test_returns_the_exit_code_and_choice(self) -> None:
         (code, choice), run = self.run_pick(MODULE.INSERT, "b2\n")
         self.assertEqual((code, choice), (MODULE.INSERT, "b2"))
         self.assertEqual(run.call_args.kwargs["input"], "a1\nb2")
+        self.assertIn("extract (word) from wt: tab", run.call_args.args[0])
 
     def test_uses_the_configured_rofi_wrapper_with_its_arguments(self) -> None:
         self.assertEqual(MODULE.rofi_command({}), ["rofi"])

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -114,6 +115,26 @@ def focused_terminal_handles() -> list[str]:
     handles = terminal_handles(listing.get("terminals", []))
     keys = focused_pane_keys(ps.get("worktrees", []), listing.get("visualLayouts", []))
     return sorted(handles[key] for key in keys if key in handles)
+
+
+# Agent tab titles start with spinner or status glyphs that change constantly.
+LEADING_GLYPHS = re.compile(r"^[^\w]+")
+
+
+def terminal_labels(handles: list[str]) -> dict[str, str]:
+    """Readable ``worktree: title`` labels for ``handles``, so a hotkey run
+    can show and log which terminal it actually used."""
+    terminals = run_orca(["terminal", "list", "--limit", LISTING_LIMIT])["terminals"]
+    by_handle = {t["handle"]: t for t in terminals}
+    labels = {}
+    for handle in handles:
+        terminal = by_handle.get(handle, {})
+        worktree = Path(
+            terminal.get("worktreePath") or terminal.get("worktreeId", "?")
+        ).name
+        title = LEADING_GLYPHS.sub("", terminal.get("title", "")).strip()
+        labels[handle] = f"{worktree}: {title}" if title else worktree
+    return labels
 
 
 def log_line(client: str, message: str, path: Path | None) -> None:

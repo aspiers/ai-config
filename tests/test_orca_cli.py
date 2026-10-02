@@ -102,5 +102,20 @@ class FocusedTerminalHandlesTests(unittest.TestCase):
         )
 
 
+class TerminalLabelsTests(unittest.TestCase):
+    def test_labels_name_the_worktree_and_strip_status_glyphs(self) -> None:
+        listing = {
+            "terminals": [
+                {"handle": "term_a", "worktreePath": "/w/proj", "title": "⠋ Fix bug"},
+                {"handle": "term_b", "worktreePath": "", "worktreeId": "floating", "title": ""},
+            ]
+        }
+        with patch.object(orca_cli, "run_orca", return_value=listing):
+            self.assertEqual(
+                orca_cli.terminal_labels(["term_a", "term_b", "term_gone"]),
+                {"term_a": "proj: Fix bug", "term_b": "floating", "term_gone": "?"},
+            )
+
+
 if __name__ == "__main__":
     unittest.main()

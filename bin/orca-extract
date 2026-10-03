@@ -76,10 +76,30 @@ def whole_lines(lines: list[str]) -> list[str]:
     return unique(line.strip() for line in reversed(lines) if has_text(line))
 
 
+def read_tail(handle: str, limit: int, *extra: str) -> list[str]:
+    command = ["terminal", "read", "--terminal", handle, "--limit", str(limit)]
+    return run_orca([*command, *extra])["terminal"]["tail"]
+
+
+def squeeze(text: str) -> str:
+    return "".join(text.split())
+
+
 def terminal_lines(handle: str, limit: int) -> list[str]:
-    """Scrollback of a shell pane, or only the rendered screen of a TUI pane."""
-    result = run_orca(["terminal", "read", "--terminal", handle, "--limit", str(limit)])
-    return result["terminal"]["tail"]
+    """Older output followed by the rendered screen.
+
+    The default read is the raw output stream, which loses the spaces a
+    prompt draws by moving the cursor (``pass mv x`` reads as ``passmvx``);
+    ``--screen`` renders correctly but has no scrollback. So take visible
+    rows from the screen, and drop stream lines that are a mangled copy of
+    them. Comparing against the screen joined up also catches lines the
+    screen soft-wrapped across rows.
+    """
+    stream = read_tail(handle, limit)
+    screen = read_tail(handle, limit, "--screen")
+    rendered = squeeze("".join(screen))
+    older = [line for line in stream if squeeze(line) not in rendered]
+    return older + screen
 
 
 def rofi_command(environment: dict[str, str]) -> list[str]:

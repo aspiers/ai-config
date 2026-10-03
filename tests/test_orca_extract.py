@@ -75,6 +75,25 @@ class ExtractionTests(unittest.TestCase):
         )
 
 
+class TerminalLinesTests(unittest.TestCase):
+    def lines(self, stream: list[str], screen: list[str]) -> list[str]:
+        reads = [read_result(stream), read_result(screen)]
+        with patch.object(MODULE, "run_orca", side_effect=reads):
+            return MODULE.terminal_lines("term_a", 500)
+
+    def test_screen_replaces_stream_lines_that_lost_their_spaces(self) -> None:
+        lines = self.lines(
+            ["older output here", "❯ passmvclient_secret.json"],
+            ["❯ pass mv client_secret.json"],
+        )
+        self.assertEqual(lines, ["older output here", "❯ pass mv client_secret.json"])
+        self.assertNotIn("passmvclient_secret.json", MODULE.tokens(lines))
+
+    def test_a_line_the_screen_soft_wrapped_is_not_kept_twice(self) -> None:
+        lines = self.lines(["❯ echoaverylongword"], ["❯ echo a very", "long word"])
+        self.assertEqual(lines, ["❯ echo a very", "long word"])
+
+
 class ExtractLoopTests(unittest.TestCase):
     def run_extract(self, picks: list[tuple[int, str]], handles=("term_a",)):
         pick = Mock(side_effect=picks)
@@ -90,8 +109,10 @@ class ExtractLoopTests(unittest.TestCase):
         self.assertEqual(outcome, "copied")
         copy.assert_called_once_with("x1")
         insert.assert_not_called()
-        run_orca.assert_called_once_with(
-            ["terminal", "read", "--terminal", "term_a", "--limit", "500"]
+        read = ["terminal", "read", "--terminal", "term_a", "--limit", "500"]
+        self.assertEqual(
+            [c.args[0] for c in run_orca.call_args_list],
+            [read, [*read, "--screen"]],
         )
         self.assertEqual(pick.call_args.args[1:], ("word", "wt: tab"))
 

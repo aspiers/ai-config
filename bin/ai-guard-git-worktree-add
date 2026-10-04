@@ -1,0 +1,111 @@
+#!/usr/bin/env python3
+"""ai-guard-git-worktree-add - deny raw `git worktree add` from agents
+
+Usage: PreToolUse hook. Reads the tool call as JSON on stdin and, for a
+shell command that runs `git worktree add`, prints a deny decision as JSON
+on stdout. Prints nothing for any other command.
+
+A worktree made with raw `git worktree add` gets none of the repository's
+setup (dependency install, env files, generated code), because only `wt`
+and Orca run setup hooks. Agents that use it end up editing code they
+cannot build or test. The deny reason points them at the skill that says
+which tool to use instead.
+
+Claude Code and Codex call this directly; they share the protocol. The
+OpenCode plugin and the Pi extension in this repository adapt it.
+
+For a deliberate throwaway checkout, prefix the command with
+AI_ALLOW_GIT_WORKTREE_ADD=1, or set that variable in the hook's environment.
+"""
+
+import json
+import os
+import shlex
+import sys
+
+OVERRIDE = "AI_ALLOW_GIT_WORKTREE_ADD"
+
+REASON = (
+    "Raw `git worktree add` runs none of the repository's setup. Load the "
+    "git-branch-management skill: create the worktree with Orca's "
+    "`worktree create` if the repository has an orca.yaml or is registered "
+    "in Orca, otherwise with `wt switch --create`. For a deliberate "
+    f"throwaway checkout, prefix the command with {OVERRIDE}=1."
+)
+
+# Commands that run their arguments as another command.
+WRAPPERS = {"command", "env", "exec", "nice", "nohup", "sudo", "time"}
+
+# git options that take a separate value argument.
+GIT_OPTS_WITH_VALUE = {"-C", "-c", "--git-dir", "--work-tree", "--namespace"}
+
+
+def segments(command: str) -> list[list[str]]:
+    """Split a shell command line into simple commands, as token lists."""
+    lexer = shlex.shlex(command, posix=True, punctuation_chars=";&|()\n")
+    lexer.whitespace = " \t\r"
+    lexer.whitespace_split = True
+    result: list[list[str]] = [[]]
+    for token in lexer:
+        if set(token) <= set(";&|()\n"):
+            result.append([])
+        else:
+            result[-1].append(token)
+    return [seg for seg in result if seg]
+
+
+def is_worktree_add(tokens: list[str]) -> bool:
+    i = 0
+    # Leading VAR=value assignments, which may carry the override.
+    while i < len(tokens) and "=" in tokens[i] and not tokens[i].startswith("-"):
+        if tokens[i] == f"{OVERRIDE}=1":
+            return False
+        i += 1
+    while i < len(tokens) and tokens[i] in WRAPPERS:
+        i += 1
+        while i < len(tokens) and (tokens[i].startswith("-") or "=" in tokens[i]):
+            if tokens[i] == f"{OVERRIDE}=1":
+                return False
+            i += 1
+    if i >= len(tokens) or os.path.basename(tokens[i]) != "git":
+        return False
+    i += 1
+    while i < len(tokens) and tokens[i].startswith("-"):
+        i += 2 if tokens[i] in GIT_OPTS_WITH_VALUE else 1
+    return tokens[i : i + 2] == ["worktree", "add"]
+
+
+def runs_worktree_add(command: str) -> bool:
+    try:
+        return any(is_worktree_add(seg) for seg in segments(command))
+    except ValueError:
+        # Unbalanced quotes: the shell will reject it anyway.
+        return False
+
+
+def main() -> int:
+    if os.environ.get(OVERRIDE) == "1":
+        return 0
+    try:
+        call = json.load(sys.stdin)
+    except json.JSONDecodeError:
+        return 0
+    command = (call.get("tool_input") or {}).get("command")
+    if not isinstance(command, str) or not runs_worktree_add(command):
+        return 0
+    json.dump(
+        {
+            "hookSpecificOutput": {
+                "hookEventName": "PreToolUse",
+                "permissionDecision": "deny",
+                "permissionDecisionReason": REASON,
+            }
+        },
+        sys.stdout,
+    )
+    print()
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

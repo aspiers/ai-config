@@ -3,6 +3,18 @@
 This directory contains test suites for the AI configuration scripts and
 deployment contracts.
 
+## Git Worktree Guard Tests
+
+`test_ai_guard_git_worktree_add.py` checks that the
+`ai-guard-git-worktree-add` PreToolUse hook denies raw `git worktree add` in
+the shapes agents write it (chained, with git options, after wrappers), and
+allows mentions inside arguments, other `git worktree` subcommands, and the
+`AI_ALLOW_GIT_WORKTREE_ADD=1` override.
+
+```bash
+python3 tests/test_ai_guard_git_worktree_add.py
+```
+
 ## Orca Attention-Agent Cycling Tests
 
 `test_orca_cycle_attention_agent.py` verifies that

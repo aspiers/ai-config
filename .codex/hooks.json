@@ -49,6 +49,15 @@
             "timeout": 10
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "command": "ai-guard-git-worktree-add",
+            "type": "command"
+          }
+        ],
+        "matcher": "^Bash$"
       }
     ],
     "SessionStart": [

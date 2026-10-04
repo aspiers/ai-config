@@ -82,10 +82,13 @@ setup:
   (`scripts.setup`) or from Orca's settings for that repository;
 - raw `git worktree add` runs neither, so never use it to start work.
 
-Choose the tool whose setup the repository defines. If it has an
-`orca.yaml`, or is registered in Orca (`repo list --json`) with a setup
-script, create the worktree with Orca as the `orca-cli-local` skill
-describes. Otherwise use `wt`:
+Orca can only create a worktree when you are running inside it, which its
+terminals signal by setting `ORCA_PANE_KEY`. So:
+
+- inside Orca, in a repository with an `orca.yaml` or registered in Orca
+  (`repo list --json`) with a setup script, create the worktree with Orca
+  as the `orca-cli-local` skill describes;
+- otherwise use `wt`, even when the repository has an `orca.yaml`:
 
 ```bash
 wt switch --create <branch> --base <upstream-base>
@@ -96,8 +99,10 @@ which is usually right, but an explicitly named base makes the intended
 starting point unambiguous. See the `worktrunk` skill for configuration and
 hooks.
 
-If setup did not run, run it before editing. Never borrow another
-checkout's dependencies or build output.
+If setup did not run, run it before editing: for a `wt` worktree in a
+repository whose setup lives only in `orca.yaml`, run its `scripts.setup`
+from the new worktree, with `ORCA_ROOT_PATH` set to the main checkout.
+Never borrow another checkout's dependencies or build output.
 
 Reserve the main checkout for mixdowns and combined testing, matching the
 default that `git-branch-mixer` describes.

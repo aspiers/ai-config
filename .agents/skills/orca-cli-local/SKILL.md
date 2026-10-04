@@ -1,6 +1,6 @@
 ---
 name: orca-cli-local
-description: Applies local lessons to every use of the Orca CLI (orca-ide, orca-dev), including worktree creation, agent handoffs, terminal input to agents, and inter-agent messaging. Use alongside the upstream orca-cli skill any time the Orca CLI is needed, including before creating any branch worktree in a repository that has an orca.yaml or is registered in Orca, since git worktree add and wt switch --create skip Orca's setup; also when spawning or handing off to agents, sending or typing into Orca terminals, messaging or briefing agents, or opening a PR from an Orca worktree.
+description: Applies local lessons to every use of the Orca CLI (orca-ide, orca-dev), including worktree creation, agent handoffs, terminal input to agents, and inter-agent messaging. Use alongside the upstream orca-cli skill any time the Orca CLI is needed, including before creating any branch worktree while running inside Orca in a repository that has an orca.yaml or is registered in Orca, since git worktree add and wt switch --create skip Orca's setup; also when spawning or handing off to agents, sending or typing into Orca terminals, messaging or briefing agents, or opening a PR from an Orca worktree.
 ---
 
 # Local orca-cli guidance
@@ -50,8 +50,10 @@ tacticalvote it still pointed at `origin/locals-2025`, 211 commits behind
 
 ## A worktree for your own change
 
-In a repository with an `orca.yaml`, or registered in Orca, create every new
-worktree with `worktree create`, including one for your own next change.
+When running inside Orca (`ORCA_PANE_KEY` is set) in a repository with an
+`orca.yaml`, or registered in Orca, create every new worktree with
+`worktree create`, including one for your own next change. Outside Orca the
+CLI cannot create one; follow `git-branch-management` instead.
 `git worktree add` and `wt switch --create` skip Orca's setup, leaving no
 dependencies or env files. Pass `--no-parent`, `--base-branch
 origin/<target>` (see above), and `--setup run` unless the repository's

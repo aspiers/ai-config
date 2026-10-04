@@ -27,9 +27,9 @@ OVERRIDE = "AI_ALLOW_GIT_WORKTREE_ADD"
 
 REASON = (
     "Raw `git worktree add` runs none of the repository's setup. Load the "
-    "git-branch-management skill: create the worktree with Orca's "
-    "`worktree create` if the repository has an orca.yaml or is registered "
-    "in Orca, otherwise with `wt switch --create`. For a deliberate "
+    "git-branch-management skill: when running inside Orca in a repository "
+    "with Orca setup, create the worktree with Orca's `worktree create`, "
+    "otherwise with `wt switch --create`. For a deliberate "
     f"throwaway checkout, prefix the command with {OVERRIDE}=1."
 )
 

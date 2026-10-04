@@ -1,16 +1,20 @@
 ---
 name: git-branch-management
 description: >-
-  Structures git branches for upstream submission — keeps unrelated changes on
-  separate branches, isolates each in its own worktrunk worktree, records
-  dependencies with git-machete, and recombines them into a temporary mixdown
-  branch for local testing. Use when starting work in a fork, clone, or third-
-  party checkout; when choosing what a new branch should be based on; when a
-  branch is growing a second unrelated concern; when deciding whether to stack
-  branches or keep them independent; when preparing a change for a pull
-  request or patch submission; when handed an existing worktree or branch to
-  implement and commit in a fork; or when a local build needs several
-  in-progress branches combined.
+  Structures git branches and worktrees: keeps unrelated changes on separate
+  branches, isolates each in its own worktree created so the repository's
+  setup runs, records dependencies with git-machete, and recombines them into
+  a temporary mixdown branch for local testing. Use before creating any
+  branch or worktree in a codebase that works on more than one branch,
+  including branching off the default branch to start a change; when starting
+  work in a fork, clone, or third-party checkout; when choosing what a new
+  branch should be based on; when a branch is growing a second unrelated
+  concern; when deciding whether to stack branches or keep them independent;
+  when preparing a change for a pull request or patch submission; when handed
+  an existing worktree or branch to implement and commit in a fork; or when a
+  local build needs several in-progress branches combined. Not needed where
+  the repository clearly commits everything to the trunk, or holds notes or
+  personal data rather than code.
 ---
 
 # Git Branch Management
@@ -61,11 +65,27 @@ depend on branch A even when the two changes are unrelated, so B cannot be
 submitted until A lands. Stack only where a real dependency exists; combine
 independent branches with a mixdown instead.
 
-## Isolate each branch in a worktrunk worktree
+## Isolate each branch in its own worktree
 
-Develop each independent branch in its own worktree, created and managed with
-the `wt` CLI, so branches do not contend for a single checkout and each keeps
-its own build state.
+Develop each independent branch in its own worktree, so branches do not
+contend for a single checkout and each keeps its own build state.
+
+### Let the repository's own setup run
+
+A new worktree is only usable once the repository's setup has run:
+dependency install, env files, generated code. Each tool runs only its own
+setup:
+
+- `wt switch --create` runs hooks from `.config/wt.toml` and the user's
+  worktrunk config, nothing else;
+- Orca's `worktree create` runs the setup from the repository's `orca.yaml`
+  (`scripts.setup`) or from Orca's settings for that repository;
+- raw `git worktree add` runs neither, so never use it to start work.
+
+Choose the tool whose setup the repository defines. If it has an
+`orca.yaml`, or is registered in Orca (`repo list --json`) with a setup
+script, create the worktree with Orca as the `orca-cli-local` skill
+describes. Otherwise use `wt`:
 
 ```bash
 wt switch --create <branch> --base <upstream-base>
@@ -75,6 +95,9 @@ wt switch --create <branch> --base <upstream-base>
 which is usually right, but an explicitly named base makes the intended
 starting point unambiguous. See the `worktrunk` skill for configuration and
 hooks.
+
+If setup did not run, run it before editing. Never borrow another
+checkout's dependencies or build output.
 
 Reserve the main checkout for mixdowns and combined testing, matching the
 default that `git-branch-mixer` describes.

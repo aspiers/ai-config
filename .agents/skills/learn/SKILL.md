@@ -74,9 +74,16 @@ the `orchestration` skill and resolving the CLI as it says (on Linux,
 Prefer one that inherits this conversation, such as Claude Code's `fork`
 subagent type, because the transcript is the main evidence.
 
+Before dispatching, write two one-line summaries: what `/learn` is meant to
+address, and the task that was paused to invoke it. The report may arrive
+long after the user has moved on, possibly after compaction, so these must
+be captured now rather than reconstructed when it lands.
+
 An Orca worker or a fresh subagent sees nothing of this session, so its
 brief must carry:
 
+- both summaries, with an instruction to restate them at the top of its
+  report;
 - the mistake as confirmed in step 1, in the user's words where possible;
 - the transcript facts that matter: what was asked, what you did and when,
   and the decisions or commands involved;
@@ -147,11 +154,19 @@ global rules file, or a skill. Name an agent-specific file, such as
 
 ## 4. Ask the user
 
-Present the proposals yourself, even when a subagent drafted them, and use
-the questionnaire tool. Improvements come first as a multi-select with a
-"none" option. Remediation comes last as a single choice listing the
-plausible fixes for this mistake (e.g. commit now, revert, redo the step)
-plus "no remediation". Both questions may go in one questionnaire call.
+When the investigation was delegated, the user has probably lost track of
+why it started. Open the findings by re-anchoring them, using the two
+summaries from dispatch:
+
+> Here are the findings from `/learn` on [what it was meant to address],
+> which you invoked while working on [the paused task]:
+
+Then give the cause and evidence. Present the proposals yourself, even when
+a subagent drafted them, and use the questionnaire tool. Improvements come
+first as a multi-select with a "none" option. Remediation comes last as a
+single choice listing the plausible fixes for this mistake (e.g. commit now,
+revert, redo the step) plus "no remediation". Both questions may go in one
+questionnaire call.
 
 ## 5. Apply and stop
 

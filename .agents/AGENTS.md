@@ -11,6 +11,11 @@ this repository. Adapt them to your own preferences.
 - Tool warnings and error messages are claims about state, not facts: check
   the state they describe (config, remotes, refs) before repeating them to
   the user or building a question on them.
+- Silence is not evidence of absence. Before saying something does not
+  exist, make sure your check could have found it: don't discard its
+  errors (`2>/dev/null`), and resolve a relative path a tool prints, such
+  as from `git rev-parse --git-common-dir`, against the directory it ran
+  in.
 - If you still can't verify something, say "I don't know" or state the
   assumption explicitly, and ask before building on it.
 - Before saying you can't do or see something, check every tool available,

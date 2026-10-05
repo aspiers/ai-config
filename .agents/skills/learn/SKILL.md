@@ -85,15 +85,12 @@ present or ask the proposals in your own session, even if the user raises
 them there. Pass anything they tell you on to the delegate instead of
 starting another agent.
 
-Wait for it where the environment allows. Under Orca, run `orchestration
-check --wait` in the background, and wait again on a timeout, since the
-worker is waiting on the user. Under Herdr, use `herdr agent wait`. Under
-tmux, wait until the user says it has finished.
-
-Then read its final message (the `worker_done` body, `herdr agent read`, or
-`tmux capture-pane`), relay the outcome in a line or two, and carry out the
-remediation the user chose on the paused task only if they direct you to.
-Under Orca, also ack the delivery and `worker-release` the dispatch.
+Do not wait for it or relay its outcome: the user sees the questions and
+results first-hand in the delegate's pane. Carry out the remediation the
+user chose on the paused task only if they direct you to. Under Orca, the
+next time you check messages after its `worker_done`, ack that delivery
+(`orchestration check --ack <deliveryId>`; until then `check` keeps
+returning the same oldest batch) and `worker-release` the dispatch.
 
 ### Otherwise, a subagent investigates and you ask
 

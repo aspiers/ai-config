@@ -17,6 +17,10 @@ change branches while generating the report.
 
 ## Gather the evidence
 
+0. Check for a pre-existing report in `tmp/upstreaming-status.json`.  If it
+   exists, use the `open-in-user-browser` to immediately open it so that the
+   user can refresh their memory on the previous status while the following
+   steps prepare an updated report ready to reload.
 1. Identify the canonical upstream remote and its default integration branch.
    Inspect remote URLs and remote `HEAD`; do not assume a remote named `origin`
    is canonical. If ownership or the canonical tracker is unclear, use the

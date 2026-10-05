@@ -171,6 +171,14 @@ git machete add <branch>    # place a branch in the tree
 git machete traverse        # walk the tree, syncing each branch to its parent
 ```
 
+Every worktree shares one layout file, by default in the main checkout's
+git directory (`.git/machete`), unless
+`machete.worktree.useTopLevelMacheteFile` is false. Get its path from
+`git machete file` rather than building it yourself. If
+`git machete status` prints a tree, a layout exists; with none it says "No
+branches listed" and exits non-zero. Its yellow-edge warning means only
+that a fork point was inferred, not the layout.
+
 Roots sit unindented; each level of indentation marks a child of the branch
 above. Independent features are siblings under the same root, never nested
 inside one another:

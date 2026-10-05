@@ -48,7 +48,7 @@ tacticalvote it still pointed at `origin/locals-2025`, 211 commits behind
 - When the configured base is stale, fix it once with
   `repo set-base-ref --ref origin/<target>` and tell the user.
 
-## A worktree for your own change
+## Every new worktree gets its own agent
 
 When running inside Orca (`ORCA_PANE_KEY` is set) in a repository with an
 `orca.yaml`, or registered in Orca, create every new worktree with
@@ -59,15 +59,20 @@ dependencies or env files. Pass `--no-parent`, `--base-branch
 origin/<target>` (see above), and `--setup run` unless the repository's
 setup policy already runs it.
 
-Setup runs in its own terminal. Before editing, find it with `terminal list
---worktree <selector>` and `terminal read` it to confirm it finished without
-errors. If you cannot tell, hand the change to an `--agent` worker instead:
-its start waits for setup when the repository sets `setupAgentStartupPolicy:
-wait-for-setup`.
+A new worktree exists so that a new agent can work in it, even when the
+user only asked for the change and never mentioned a worktree, and even
+when you are already an agent in another worktree. Pass `--agent` and a
+self-contained `--prompt` in the same `worktree create` call, following the
+handoff rules above, and do not edit, build or test in that worktree from
+the current session. If you need its result, start a supervised worker
+instead (see "Talking to agents you started"). The agent's start waits for
+setup only when the repository sets `setupAgentStartupPolicy:
+wait-for-setup`; otherwise tell it in the brief to check that setup has
+finished first.
 
-The rule above about working in a new checkout only when the user says so
-covers handoffs the user asked for. A worktree you create for your own
-change is yours to work in once its setup has finished.
+Work in the new worktree yourself only when the user explicitly says so.
+Then, before editing, `terminal list --worktree <selector>` and `terminal
+read` the setup terminal to confirm setup finished without errors.
 
 ## Handles go stale quickly
 

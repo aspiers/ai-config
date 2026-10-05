@@ -87,7 +87,8 @@ terminals signal by setting `ORCA_PANE_KEY`. So:
 
 - inside Orca, in a repository with an `orca.yaml` or registered in Orca
   (`repo list --json`) with a setup script, create the worktree with Orca
-  as the `orca-cli-local` skill describes;
+  and start an agent in it, as the `orca-cli-local` skill describes; do
+  not work in it from the current session unless the user says so;
 - otherwise use `wt`, even when the repository has an `orca.yaml`:
 
 ```bash

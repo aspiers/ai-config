@@ -79,3 +79,6 @@ this repository. Adapt them to your own preferences.
 - Write `git diff --no-ext-diff`; the flag goes after the subcommand.
 - After pushing a branch that a PR builds from, watch CI to completion
   unprompted, report the result, and investigate failures.
+- When one step of a procedure is blocked or must wait for the user, still
+  do the independent steps that are not, and report the blocked one as
+  pending rather than skipping the whole procedure.

@@ -46,44 +46,76 @@ If the argument names a slash command or skill (e.g. `/learn /qs` or
 skip confirming. The aim is that the user never needs to type that command
 for this again.
 
-## Delegate steps 2 and 3 where possible
+## Delegate where possible
 
-Hand steps 2 and 3 to a separate agent so the investigation does not fill
-your context or block the user. Otherwise do them inline.
-
-**Under Orca** (`ORCA_TERMINAL_HANDLE` is set), do not use a harness
-subagent. Start a supervised Orca worker in a fresh tab instead, following
-the `orchestration` skill and resolving the CLI as it says (on Linux,
-`orca-ide`, never bare `orca`):
-
-1. Pick the repository that owns the instruction files most likely at
-   fault, e.g. the repo a skill resolves into (`realpath` its directory).
-   Find its id and path with `repo list --json`. Use that main checkout,
-   not a new worktree: steps 2 and 3 are read-only.
-2. `orchestration run-create --objective "learn: <mistake>" --json`, then
-   `orchestration worker-start --spec "<brief>" --worktree
-   id:<repoId>::<path> --agent <your agent> --json`. Orca opens the tab,
-   waits for the agent to be ready, and injects the brief along with the
-   exact `worker_done` command to report back with.
-3. Wait for the report with `orchestration check --wait --types
-   worker_done,escalation,question --timeout-ms 900000 --json`, in the
-   background where the harness allows. Then ack the delivery and
-   `worker-release` the dispatch.
-
-**Otherwise**, use a harness subagent, preferably in the background.
-Prefer one that inherits this conversation, such as Claude Code's `fork`
-subagent type, because the transcript is the main evidence.
+Hand the rest of the interlude to a separate agent so the investigation does
+not fill your context or block the user. Otherwise do steps 2 to 5 inline.
+Exactly one session asks the user the step 4 questions; asking them in two
+places wastes the user's attention.
 
 Before dispatching, write two one-line summaries: what `/learn` is meant to
-address, and the task that was paused to invoke it. The report may arrive
-long after the user has moved on, possibly after compaction, so these must
-be captured now rather than reconstructed when it lands.
+address, and the task that was paused to invoke it. The outcome may arrive
+long after the user has moved on, possibly after compaction, so capture them
+now rather than reconstructing them later.
 
-An Orca worker or a fresh subagent sees nothing of this session, so its
-brief must carry:
+### In a visible pane, the delegate asks the user itself
 
-- both summaries, with an instruction to restate them at the top of its
-  report;
+If you are running inside an environment that can open a tab or pane and
+start an agent in it, start the delegate there. The user can see it, so it
+runs steps 2 to 5 itself, asking in its own pane and applying what they
+choose. Use the first of these that applies:
+
+- **Orca** (`ORCA_TERMINAL_HANDLE` is set): a supervised worker, started
+  with `orchestration run-create` and `orchestration worker-start` as the
+  `orchestration` skill describes. On Linux the CLI is `orca-ide`, never
+  bare `orca`. Do not use a harness subagent.
+- **Herdr** (`HERDR_ENV=1`): a new pane with an agent started in it, as the
+  `herdr` skill describes.
+- **tmux** (`TMUX` is set): a new window running your agent's CLI, with the
+  brief as its initial prompt.
+
+Start it in the main checkout of the repository that owns the instruction
+files most likely at fault, e.g. the one a skill resolves into (`realpath`
+its directory; under Orca, `repo list --json` gives its id). Follow that
+repository's rules on where commits go.
+
+Then tell the user in one line where the `/learn` questions will appear, and
+that meanwhile you can continue the paused task if they say so. Do not
+present or ask the proposals in your own session, even if the user raises
+them there. Pass anything they tell you on to the delegate instead of
+starting another agent.
+
+Wait for it where the environment allows. Under Orca, run `orchestration
+check --wait` in the background, and wait again on a timeout, since the
+worker is waiting on the user. Under Herdr, use `herdr agent wait`. Under
+tmux, wait until the user says it has finished.
+
+Then read its final message (the `worker_done` body, `herdr agent read`, or
+`tmux capture-pane`), relay the outcome in a line or two, and carry out the
+remediation the user chose on the paused task only if they direct you to.
+Under Orca, also ack the delivery and `worker-release` the dispatch.
+
+### Otherwise, a subagent investigates and you ask
+
+Use a harness subagent for steps 2 and 3 only, preferably in the background.
+Subagents cannot reliably put a question in front of the user, so you do
+steps 4 and 5 yourself.
+
+Prefer a subagent that inherits this conversation, such as Claude Code's
+`fork` subagent type, because the transcript is the main evidence.
+
+Tell the user in one line that the investigation is running, and that
+meanwhile you can continue the paused task if they say so. When the report
+arrives, check that its quotes are real and that its proposals follow
+step 3, then go to step 4.
+
+### The brief
+
+A delegate that does not inherit this conversation sees nothing of it, so
+its brief must carry:
+
+- both summaries, which a delegate in a visible pane uses to open its step 4
+  questions;
 - the mistake as confirmed in step 1, in the user's words where possible;
 - the transcript facts that matter: what was asked, what you did and when,
   and the decisions or commands involved;
@@ -92,16 +124,22 @@ brief must carry:
   output, or other injected context that its tools cannot re-read;
 - the repository's content rules, e.g. that it is public.
 
-In every case, tell it to follow steps 2 and 3 of this skill read-only:
-no edits, commits, or questions to the user. It should report the cause
-with quoted evidence and the proposals with target files and exact wording;
-an Orca worker writes the report to a file and passes it as
-`--report-path`.
+Tell a delegate in a visible pane to load this skill and follow steps 2 to 5.
+Its brief must also tell it:
 
-Then tell the user in one line that the investigation is running, and that
-meanwhile you can continue the paused task if they say so. When the report
-arrives, check that its quotes are real and its proposals follow step 3,
-then go to step 4.
+- to ask the user directly with its own questionnaire tool, in its own
+  pane. Under Orca, it must not use `orchestration ask`, which reaches only
+  you;
+- to check its quotes before asking, since nobody else will;
+- to apply, verify and commit only what the user chose, and to leave the
+  paused task alone, because that task belongs to you;
+- to end with the outcome: the cause, what was applied with commit SHAs, and
+  the remediation the user chose. Under Orca, that goes in the
+  `worker_done` body. Write a report file only if the user asks for one.
+
+Tell a subagent to follow steps 2 and 3 read-only: no edits, commits, or
+questions to the user. It reports the cause with quoted evidence, and the
+proposals with target files and exact wording.
 
 ## 2. Investigate the cause
 
@@ -162,11 +200,12 @@ summaries from dispatch:
 > which you invoked while working on [the paused task]:
 
 Then give the cause and evidence. Present the proposals yourself, even when
-a subagent drafted them, and use the questionnaire tool. Improvements come
-first as a multi-select with a "none" option. Remediation comes last as a
-single choice listing the plausible fixes for this mistake (e.g. commit now,
-revert, redo the step) plus "no remediation". Both questions may go in one
-questionnaire call.
+a subagent drafted them, and use the questionnaire tool. Ask one question
+per proposal, never one multi-select covering them all. Each question must
+stand alone: say what the change is, where it goes, and what it fixes, so
+the user can answer without remembering earlier context. Remediation comes
+last, as a single choice listing the plausible fixes for this mistake (e.g.
+commit now, revert, redo the step) plus "no remediation".
 
 ## 5. Apply and stop
 

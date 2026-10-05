@@ -40,7 +40,7 @@
         "Mod+Alt+N"
       ],
       "workspace.openBoard": [
-        "Mod+Alt+W"
+        "Mod+Alt+Shift+W"
       ],
       "terminal.focusNextPane": [],
       "terminal.focusPreviousPane": [],
@@ -51,12 +51,12 @@
         "Mod+Alt+D"
       ],
       "tab.nextTerminal": [],
-      "tab.nextAllTypes": [
-        "Mod+PageDown"
-      ],
       "tab.previousTerminal": [],
       "tab.previousAllTypes": [
         "Mod+PageUp"
+      ],
+      "tab.nextAllTypes": [
+        "Mod+PageDown"
       ]
     },
     "win32": {}

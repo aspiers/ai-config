@@ -213,28 +213,33 @@ best-of-breed combination for day-to-day use and testing.
 Never develop or commit new source work on `working`. Make and commit every
 source change on its narrowly scoped source branch in that branch's worktree.
 
-This applies only where the user tests through a `working` mixdown: a fork
-of an upstream they do not own, with an existing `working` branch built from
-`mixdown.working` config (`git config --get-all mixdown.working`), that the
-user actually runs, for example checked out in the main checkout and served
-from there. Mix config alone is not enough. Where it applies, without
-asking:
+In a fork of an upstream the user does not own, with a `working` branch and
+`mixdown.working` config (`git config --get-all mixdown.working`), add each
+new source branch to the mix (`git mix +<branch>`) and to the machete layout
+(`git machete add`) on its first commit, without asking. This is only
+configuration: do it even when the main checkout is on another branch, so
+the next mixdown includes the branch.
 
-- on the first commit to a new source branch, add it to the mix
-  (`git mix +<branch>`) and to the machete layout (`git machete add`);
-- after that, and after any commit, amend, or rebase of a configured source
-  branch, regenerate `working` from the full configured set in the main
-  checkout (`git mixdown -c`);
+Regenerate `working` only where the user actually runs it, for example
+checked out in the main checkout and served from there; mix config alone is
+not enough. Even then, wait until a logically complete piece of work is
+ready to test, such as when every commit a pull request needs has been
+made, or a rebase or review fix finishes one. Intermediate commits are not
+worth testing. Once it is ready, without asking:
+
+- regenerate `working` from the full configured set in the main checkout
+  (`git mixdown -c`);
 - then rebuild and restart whatever serves the main checkout, so the user's
   own instance runs the new `working`. Look for it in user service units
   whose working directory is the main checkout, and in the project's README
   or agent instructions; ask if nothing turns up. A dev server you started in
   a feature worktree does not count.
 
-Do not leave `working` stale or update it from only the branch that changed.
-Stop and ask only if the mixdown conflicts or would touch uncommitted changes
-in the main checkout. Never submit a branch upstream until the user has had
-the chance to test it in their rebuilt instance.
+Never update `working` from only the branch that changed. Stop and ask only
+if the mixdown conflicts or would touch uncommitted changes in the main
+checkout. If the main checkout is on another branch, ask before switching
+it, and report the regeneration as pending. Never submit a branch upstream
+until the user has had the chance to test it in their rebuilt instance.
 
 `working` is a local scratch branch. Never push it or open a PR from it;
 publish the independent source branches instead. This boundary keeps the

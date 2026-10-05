@@ -1,0 +1,187 @@
+#!/usr/bin/env python3
+"""ai-guard-hidden-question-context - stop Claude asking about text the user never saw
+
+Usage: Claude Code hook for two events, reading the hook input as JSON on
+stdin:
+
+  PreToolUse (matcher AskUserQuestion)
+      If everything the model wrote since the last tool result came back
+      only as a hidden progress update, deny the question and tell the
+      model to write that content as its reply instead.
+  Stop
+      After such a deny, block the stop once and tell the model to ask its
+      question now.
+
+Why: on Claude Opus 5.5 (and Fable 5/5.1, Sonnet 5.5) prose written right
+before a tool call is often returned as a progress-update `thinking` block
+rather than a `text` block. The user sees at most a one-line summary, while
+the model gets its full note back and believes the user read it. Before a
+questionnaire that hides the draft, table or answer the question is about.
+Text that ends a turn always arrives, so the fix is to make that content
+end a turn, then ask. See
+https://platform.claude.com/docs/en/build-with-claude/thinking#progress-updates
+and https://github.com/anthropics/claude-code/issues/96288
+
+Detection relies on Claude Code requesting `thinking.display: "updates"`,
+where only progress updates carry text. Under `"summarized"`
+(showThinkingSummaries) reasoning blocks carry text too, so this would deny
+questions that were preceded by ordinary reasoning only: still harmless,
+just one extra round trip.
+
+Each question is denied at most once and each stop blocked at most once,
+so the pair cannot loop. Any missing or unreadable input allows the call.
+"""
+
+import json
+import os
+import sys
+import time
+from pathlib import Path
+
+# The transcript is written asynchronously, so the pending call may land
+# a moment after PreToolUse fires.
+POLL_SECONDS = 2.0
+POLL_INTERVAL = 0.05
+
+# A state older than this belongs to an abandoned question.
+STATE_TTL_SECONDS = 1800
+
+# The deny text must not mention a later question or a mechanism: told
+# that, the model tends to end its turn with "next I'll ask..." and never
+# ask.
+DENY_REASON = (
+    "Not shown to the user: nothing you wrote since the last tool result "
+    "reached them as visible text, so they cannot see the context this "
+    "question depends on. Reply now with that content written out in "
+    "full (drafts, tables, findings, trade-offs), as plain text with no "
+    "tool call in the same message."
+)
+
+STOP_REASON = (
+    "The user can now see that context. Call AskUserQuestion now, with no "
+    "text before the call."
+)
+
+
+def state_path(session_id: str) -> Path:
+    base = os.environ.get("AI_GUARD_STATE_DIR") or os.path.join(
+        os.environ.get("XDG_STATE_HOME") or os.path.expanduser("~/.local/state"),
+        "ai-guard-hidden-question-context",
+    )
+    return Path(base) / f"{session_id}.json"
+
+
+def read_state(session_id: str) -> str | None:
+    path = state_path(session_id)
+    try:
+        state = json.loads(path.read_text())
+    except (OSError, ValueError):
+        return None
+    if time.time() - state.get("time", 0) > STATE_TTL_SECONDS:
+        path.unlink(missing_ok=True)
+        return None
+    return state.get("phase")
+
+
+def write_state(session_id: str, phase: str | None) -> None:
+    path = state_path(session_id)
+    if phase is None:
+        path.unlink(missing_ok=True)
+        return
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps({"phase": phase, "time": time.time()}))
+
+
+def load_entries(transcript: str, tool_use_id: str) -> list[dict] | None:
+    """Return transcript entries up to the pending call, or None if absent."""
+    deadline = time.monotonic() + POLL_SECONDS
+    while True:
+        entries = []
+        try:
+            with open(transcript) as fh:
+                for line in fh:
+                    try:
+                        entry = json.loads(line)
+                    except ValueError:
+                        continue
+                    entries.append(entry)
+                    for block in content(entry):
+                        if block.get("type") == "tool_use" and block.get("id") == tool_use_id:
+                            return entries
+        except OSError:
+            return None
+        if time.monotonic() >= deadline:
+            return None
+        time.sleep(POLL_INTERVAL)
+
+
+def content(entry: dict) -> list[dict]:
+    blocks = (entry.get("message") or {}).get("content")
+    return [b for b in blocks if isinstance(b, dict)] if isinstance(blocks, list) else []
+
+
+def context_hidden(entries: list[dict]) -> bool:
+    """True if the model's output since the last user entry was only hidden notes."""
+    hidden = False
+    for entry in reversed(entries):
+        kind = entry.get("type")
+        if kind == "user":
+            break
+        if kind != "assistant":
+            continue
+        for block in content(entry):
+            if block.get("type") == "text" and block.get("text", "").strip():
+                return False
+            if block.get("type") == "thinking" and block.get("thinking", "").strip():
+                hidden = True
+    return hidden
+
+
+def pre_tool_use(event: dict) -> dict | None:
+    session_id = event.get("session_id")
+    if event.get("tool_name") != "AskUserQuestion" or not session_id:
+        return None
+    if read_state(session_id) is not None:
+        # This question was already denied or is the re-ask: let it through.
+        write_state(session_id, None)
+        return None
+    transcript = event.get("transcript_path")
+    tool_use_id = event.get("tool_use_id")
+    if not transcript or not tool_use_id:
+        return None
+    entries = load_entries(transcript, tool_use_id)
+    if entries is None or not context_hidden(entries):
+        return None
+    write_state(session_id, "denied")
+    return {
+        "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "deny",
+            "permissionDecisionReason": DENY_REASON,
+        }
+    }
+
+
+def stop(event: dict) -> dict | None:
+    session_id = event.get("session_id")
+    if not session_id or read_state(session_id) != "denied":
+        return None
+    write_state(session_id, "reask")
+    return {"decision": "block", "reason": STOP_REASON}
+
+
+def main() -> int:
+    try:
+        event = json.load(sys.stdin)
+    except ValueError:
+        return 0
+    handler = {"PreToolUse": pre_tool_use, "Stop": stop}.get(event.get("hook_event_name"))
+    result = handler(event) if handler else None
+    if result:
+        json.dump(result, sys.stdout)
+        print()
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

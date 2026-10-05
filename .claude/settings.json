@@ -318,6 +318,16 @@
         ]
       },
       {
+        "matcher": "AskUserQuestion",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "ai-guard-hidden-question-context",
+            "timeout": 10
+          }
+        ]
+      },
+      {
         "matcher": "Bash",
         "hooks": [
           {
@@ -413,6 +423,15 @@
       }
     ],
     "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "ai-guard-hidden-question-context",
+            "timeout": 10
+          }
+        ]
+      },
       {
         "hooks": [
           {

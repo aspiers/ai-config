@@ -9,7 +9,8 @@ context keeps the full text. This includes text written just before an
 
 - Never assume the user saw anything you wrote mid-turn, and never point
   a question or a later message at it as "above".
-- Put drafts, tables and other material the user must review before
-  answering in a file under `tmp/`, and name its path in the question.
+- Write drafts, tables and findings the user must review before answering
+  a questionnaire as plain text immediately before it, never only in a
+  file. A hook makes you restate that text as a reply if it was hidden.
 - If told that content was not shown to the user, write it out in full as
   your reply.

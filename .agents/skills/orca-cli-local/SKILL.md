@@ -1,6 +1,6 @@
 ---
 name: orca-cli-local
-description: Applies local lessons to every use of the Orca CLI (orca-ide, orca-dev), including worktree creation, agent handoffs, terminal input to agents, and inter-agent messaging. Use alongside the upstream orca-cli skill any time the Orca CLI is needed, including before creating any branch worktree while running inside Orca in a repository that has an orca.yaml or is registered in Orca, since git worktree add and wt switch --create skip Orca's setup; also when spawning or handing off to agents, sending or typing into Orca terminals, messaging or briefing agents, or opening a PR from an Orca worktree.
+description: Applies local lessons to every use of the Orca CLI (orca-ide, orca-dev). Use alongside the upstream orca-cli skill whenever the Orca CLI is needed, including before creating a branch worktree or asking the user for feedback on a change before committing while running inside Orca.
 ---
 
 # Local orca-cli guidance
@@ -114,6 +114,19 @@ others' terminal handles and bead IDs, and tell it to:
 
 Supervised siblings in one Run can use the Run's group addresses instead
 (`orchestration` reference `messaging-and-gates.md`).
+
+## Offer Orca's diff view for review
+
+When running inside Orca and you need the user's feedback on a change
+before committing, never put it in a Markdown file for them to review.
+Leave the edit uncommitted, and offer, as one option in your question, to
+open each changed file in its own tab with `file diff <path> --worktree
+<selector>`. Open the tabs only if the user picks that option. Showing the
+change in chat through the harness's own diff display is also fine.
+
+A diff tab shows every uncommitted change in that file, not only yours. If
+the file also has hunks you didn't write, say so when you offer the tab, and
+say which hunks are yours.
 
 ## Read the screen before every send
 

@@ -74,6 +74,13 @@ changes alike.
 
 - **Check the record's DATE against the lock before attempting a write.** A
   bill dated in a locked period cannot be voided, full stop.
+- **Read the CURRENT lock dates from Xero; never reuse a remembered one.**
+  MCP `list-organisation-details` returns `Period Lock Date` and
+  `End of Year Lock Date`. The adviser moves them: a lock date recorded
+  in a bead had moved forward three months later, and a void planned on the
+  old date was refused. MCP writes
+  report the refusal as `400 ValidationException: The document cannot be
+  edited as it is currently dated before the period lock date …`.
 - Standard remedies, all requiring the user's decision: a **credit note
   dated after the lock date** to reverse it; asking the adviser to lift the
   lock; or leaving the record and adding a **note** explaining it.

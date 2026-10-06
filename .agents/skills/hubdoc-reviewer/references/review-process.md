@@ -28,11 +28,37 @@ agent-browser wait 2000
 agent-browser screenshot
 ```
 
+**Stable selectors (verified 2026-10-06)** — these survive ref churn when
+another agent shares the browser:
+
+| Control | Selector |
+|---|---|
+| Workflow tabs | `#btn-workflow-review`, `#btn-workflow-data` (Processing), `#btn-workflow-all`, `#btn-workflow-failed`, `#btn-workflow-archived` |
+| Upload Document | `#add-receipt` |
+| Sign In With Xero (login page) | `a.btn-terms-conds` |
+| A document in the left list | `a:has(span.biller-name)`; add `:not(.selected)` to pick the other one when two are listed. `find text "<Supplier>" click` can hit a hidden element under the header. |
+
+`agent-browser click "#btn-workflow-review"` (a native click by selector)
+switches tabs fine; the warning above is about JS `.click()` only.
+
 **NOTE — documents still processing**: Documents that are still being processed
 by Hubdoc's OCR pipeline only appear in the **All** and **Processing** tabs —
 they will NOT appear in the **Review** tab yet. If you are told to work on
 specific documents that cannot be found in Review, check the **All** tab and
 click the document directly from there.
+
+**NOTE — edits autosave, and completed documents leave Review**: Hubdoc saves
+field edits as they are made (they survived the tab being closed before
+publish, 2026-10-06). Once Document Type, Mark as Paid and the reference are
+filled, the document can drop out of the **Review** list while still
+**unpublished**. Find it in **All** and check its Xero chip says
+`Not Published` before assuming it went anywhere.
+
+**NOTE — emailed documents get a new supplier**: A document emailed to the
+Hubdoc inbox is filed under a supplier named after the sender (e.g. `Acme`)
+even when an established supplier exists (`Acme Cloud`). Select the
+established supplier first: its saved defaults then fill Tax Rate, Xero
+contact, Account Code and Status, without resetting the other fields.
 
 ### 2. Check how many documents need review
 
@@ -145,7 +171,12 @@ interaction instead:
   Also verify currency wasn't corrupted:
   `agent-browser eval 'document.getElementById("editor-currency")?.value'`
 - **Invoice / Ref. #**, **Tax Rate**, **Document Type**, **Supplier**: JS eval
-  is fine for these as they don't have the same validation issue.
+  is fine for these as they don't have the same validation issue, but native
+  commands work too and are preferred (verified 2026-10-06):
+  `agent-browser select "#editor-document-type" "Receipt"` (clicking the
+  visible dropdown overlay's option did **not** change the underlying
+  `<select>`), `agent-browser fill "#editor-invoice-number" "<ref>"`, and
+  `agent-browser check "#paid-status-checkbox"` for Mark as Paid.
 
 Then fill/correct each field:
 
@@ -328,9 +359,17 @@ For newly-created Xero contacts, annotate the New column, e.g.
 ### 5. Publish the document
 
 Use `snapshot -i -C` to find the "Publish" button (not "Publish All") and
-click it by ref. Do NOT use `button.publish-one-btn` as a CSS selector —
-it may not match. Do NOT use `find text "Publish" click` as it may match
-"Publish All" instead.
+click it by ref. Do NOT use a bare `button.publish-one-btn` as a CSS
+selector — it may not match. Scoped to the Xero section it does, and it is
+the safer choice when refs are unstable (verified 2026-10-06):
+`agent-browser scrollintoview "#xero-edit-integration button.publish-one-btn"`
+then `agent-browser click` the same selector. Do NOT use
+`find text "Publish" click` as it may match "Publish All" instead.
+
+Publishing takes about 30 seconds. Xero records it in three steps (bill
+Created → PDF attached → Approved), so an MCP read in between shows a
+**DRAFT** bill with no attachment; that is not a failure. Wait for the Xero
+chip to read `Published on …` before verifying.
 
 **NEVER click "Publish All".**
 

@@ -117,6 +117,32 @@ it.
 - Re-check `tab list` after focus jumps, new tabs, or external links.
 - Tie evidence to the tab and browser instance from which it came.
 
+### Two agents (or an agent and the user) in one browser
+
+The active tab and the `@eN` ref table are **global to the agent-browser
+session**, not per caller. Verified 2026-10-06 with two Claude sessions
+sharing one Chrome:
+
+- Another agent's `tab` switch between your `tab tX` and your `click @eN`
+  sends your click to their page; a stray click landed on a Hubdoc icon this
+  way.
+- Another agent's `snapshot`, and even your own `tab tX`, invalidate refs:
+  `Unknown ref: eN` straight after a fresh snapshot.
+- Tabs can vanish (the user closes them) and new ones appear; a tab number
+  says nothing about who opened it. Ask before using a tab you did not open.
+
+Mitigations, best first:
+
+1. **Separate sessions**: each agent uses its own
+   `agent-browser --session <name>` (attached with `--cdp <port>` to the
+   running Chrome, so it does not launch a second Chrome on the same
+   profile; a launch without `--cdp` makes the running Chrome open empty
+   windows). Each session has its own active tab and refs.
+2. Otherwise, put `tab tX` and the action **in one command chain**, and
+   target elements by **CSS selector** (`#id`, `a:has(span.x)`,
+   `dl:has(a[href*='…']) dt`) rather than `@eN` refs.
+3. Message the other agent before a burst of browser actions and when done.
+
 ## Browser and profile boundaries
 
 Agent-browser sees the page DOM and page viewport only. It cannot see or

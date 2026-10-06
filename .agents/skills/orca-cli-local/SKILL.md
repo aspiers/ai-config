@@ -128,6 +128,29 @@ A diff tab shows every uncommitted change in that file, not only yours. If
 the file also has hunks you didn't write, say so when you offer the tab, and
 say which hunks are yours.
 
+## Workaround: worker tabs titled `worker-task_<id>`
+
+Temporary, until [`stablyai/orca#21917`][orca-21917] is fixed (seen in
+1.4.219). `orchestration worker-start` stores `worker-<task id>` as the
+custom title of each worker terminal it creates. A custom title outranks
+Orca's task-derived title and the agent's own title, so the tab stays
+unreadable whatever `--task-title` says.
+
+Pass a readable `--task-title` to `worker-start`. Then, if it created a
+terminal (no `--terminal`), clear the placeholder so the tab shows that
+task title:
+
+```sh
+orca-ide terminal rename --terminal <worker handle>
+```
+
+The handle is `worker.agentTerminalHandle` in `orchestration worker-show
+--dispatch <id> --json`. Omitting `--title` only removes the placeholder;
+setting one would pin it over every later title. Workers without a terminal
+need nothing.
+
+[orca-21917]: https://github.com/stablyai/orca/issues/21917
+
 ## Workaround: Orca narrows fork remotes, hiding fork PRs
 
 Temporary, until [`stablyai/orca#25703`][orca-25703] and

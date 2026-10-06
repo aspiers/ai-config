@@ -128,6 +128,25 @@ A diff tab shows every uncommitted change in that file, not only yours. If
 the file also has hunks you didn't write, say so when you offer the tab, and
 say which hunks are yours.
 
+## Workaround: Orca narrows fork remotes, hiding fork PRs
+
+Temporary, until [`stablyai/orca#25703`][orca-25703] and
+[`#12956`][orca-12956] are fixed (seen in 1.4.219). When a worktree's PR
+comes from a fork, Orca reuses any remote with the fork's URL, including one
+the user added, and replaces its `+refs/heads/*` fetch refspec with one for
+that worktree's branch only. Other branches pushed to that remote then get no
+tracking ref, and Orca shows no PR for them.
+
+After pushing a worktree's branch to a remote other than `origin`, run
+`git rev-parse --abbrev-ref @{u}`. If it fails with "not stored as a
+remote-tracking branch", tell the user, and ask before running
+`git config --add remote.<name>.fetch '+refs/heads/*:refs/remotes/<name>/*'`.
+Leave Orca's per-branch lines in place. Orca still strips the wide line again
+when a new fork-PR worktree on another branch is set up.
+
+[orca-25703]: https://github.com/stablyai/orca/issues/25703
+[orca-12956]: https://github.com/stablyai/orca/issues/12956
+
 ## Read the screen before every send
 
 Before any `terminal send` to an agent, `terminal read` it. Send only if it

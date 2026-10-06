@@ -53,11 +53,26 @@ modified inside the window can still land on page 2+.
 
 ## `list-invoices`, `list-bank-transactions`, `list-contacts`
 
-Same caveat applies. `list-bank-transactions` has **no date filter**
-at all — pagination is the only way to reach older entries, and the
-default sort is by last-modified (so a 2024 entry recently re-touched
-will appear before older 2025 entries). Do not infer "missing from
-Xero" from a single page.
+Same caveat applies: do not infer "missing from Xero" from a single page.
+In the local build, `list-bank-transactions` accepts `fromDate`/`toDate`,
+`contactIds`, `types` and `statuses` (used successfully 2026-10-06), and
+`list-invoices` accepts `fromDate`/`toDate`, so prefer narrowing over
+paging.
+
+### Search by contact ID, not by name: `Contains` is case-sensitive
+
+`where: Contact.Name.Contains("Acme")` returned **no** bills for a
+contact named `acme.io`, although many existed (2026-10-06). The Xero
+`where` string match is case-sensitive, so a name search silently misses
+contacts whose capitalisation differs from your guess, and the empty
+result looks like "no bills exist". Instead:
+
+1. `list-contacts searchTerm=<name>` (case-insensitive) to get the
+   contact ID;
+2. `list-invoices contactIds=[<id>]` (or `list-bank-transactions
+   contactIds=[...]`).
+
+Never conclude a supplier has no bills from a `Contact.Name` filter alone.
 
 When looking for a specific imported bank transaction:
 

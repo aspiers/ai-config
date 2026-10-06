@@ -16,8 +16,9 @@ DEPLOYED_RULES = "~/.agents/AGENTS.md"
 CODEX_BUILD = ROOT / "bin/codex-global-agents-md"
 
 # Codex caps project AGENTS.md content at 32 KiB by default, and its docs
-# disagree on whether the global file counts, so keep the shared file small.
-MAX_RULES_BYTES = 4096
+# disagree on whether the global file counts. Even if it does, 6 KiB of rules
+# plus the style and this repository's AGENTS.md (about 16 KiB) fit.
+MAX_RULES_BYTES = 6144
 
 
 class TestGlobalRulesParity(unittest.TestCase):

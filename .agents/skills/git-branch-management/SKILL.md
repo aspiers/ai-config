@@ -103,7 +103,9 @@ hooks.
 If setup did not run, run it before editing: for a `wt` worktree in a
 repository whose setup lives only in `orca.yaml`, run its `scripts.setup`
 from the new worktree, with `ORCA_ROOT_PATH` set to the main checkout.
-Never borrow another checkout's dependencies or build output.
+Never borrow another checkout's dependencies or build output. If the
+repository has setup for only one tool, or none, propose adding a shared
+script that both run: see the `setting-up-worktree-hooks` skill.
 
 Reserve the main checkout for mixdowns and combined testing, matching the
 default that `git-branch-mixer` describes.

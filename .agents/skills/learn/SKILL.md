@@ -65,10 +65,18 @@ start an agent in it, start the delegate there. The user can see it, so it
 runs steps 2 to 5 itself, asking in its own pane and applying what they
 choose. Use the first of these that applies:
 
-- **Orca** (`ORCA_TERMINAL_HANDLE` is set): a supervised worker, started
-  with `orchestration run-create` and `orchestration worker-start` as the
-  `orchestration` skill describes. On Linux the CLI is `orca-ide`, never
-  bare `orca`. Do not use a harness subagent.
+- **Orca** (`ORCA_TERMINAL_HANDLE` is set): a new tab running your agent's
+  CLI with the brief as its initial prompt, read from a file in that
+  checkout's `tmp/`:
+
+  ```sh
+  orca-ide terminal create --worktree <selector> --title "<readable title>" \
+    --command '<agent CLI> "$(cat tmp/<brief>.md)"'
+  ```
+
+  This is a handoff, not a supervised worker, so it needs no heartbeats,
+  `worker_done` or release. Do not use a harness subagent. On Linux the CLI
+  is `orca-ide`, never bare `orca`.
 - **Herdr** (`HERDR_ENV=1`): a new pane with an agent started in it, as the
   `herdr` skill describes.
 - **tmux** (`TMUX` is set): a new window running your agent's CLI, with the
@@ -87,10 +95,7 @@ starting another agent.
 
 Do not wait for it or relay its outcome: the user sees the questions and
 results first-hand in the delegate's pane. Carry out the remediation the
-user chose on the paused task only if they direct you to. Under Orca, the
-next time you check messages after its `worker_done`, ack that delivery
-(`orchestration check --ack <deliveryId>`; until then `check` keeps
-returning the same oldest batch) and `worker-release` the dispatch.
+user chose on the paused task only if they direct you to.
 
 ### Otherwise, a subagent investigates and you ask
 
@@ -125,14 +130,13 @@ Tell a delegate in a visible pane to load this skill and follow steps 2 to 5.
 Its brief must also tell it:
 
 - to ask the user directly with its own questionnaire tool, in its own
-  pane. Under Orca, it must not use `orchestration ask`, which reaches only
-  you;
+  pane;
 - to check its quotes before asking, since nobody else will;
 - to apply, verify and commit only what the user chose, and to leave the
   paused task alone, because that task belongs to you;
 - to end with the outcome: the cause, what was applied with commit SHAs, and
-  the remediation the user chose. Under Orca, that goes in the
-  `worker_done` body. Write a report file only if the user asks for one.
+  the remediation the user chose. Write a report file only if the user
+  asks for one.
 
 Tell a subagent to follow steps 2 and 3 read-only: no edits, commits, or
 questions to the user. It reports the cause with quoted evidence, and the

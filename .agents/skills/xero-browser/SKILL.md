@@ -80,6 +80,34 @@ changes alike.
 - Do NOT retry the same write, and do NOT look for a way around the lock —
   it is a deliberate accounting control, not a UI bug.
 
+### Reversing a locked bill with a supplier credit note
+
+Once the user has chosen the credit-note remedy, raise it **from the bill**,
+not from scratch, and not through MCP:
+
+- The MCP `create-credit-note` tool hard-codes a **sales** credit note
+  (`ACCRECCREDIT`), `DRAFT` status, today's date and the base currency, so it
+  cannot reverse a bill, let alone a foreign-currency one. (Verified against
+  the local server's `create-xero-credit-note.handler.ts`, 2026-10-06.)
+- On the bill's View page, open **Bill Options** (click the `dl`'s `dt`) and
+  follow **Add Credit Note**
+  (`/AccountsPayable/EditCreditNote.aspx?fromInvoiceID=<uuid>`). The form
+  copies the contact, lines, account, tax rate, currency **and the bill's
+  own exchange rate**, so the reversal nets to zero with no FX gain/loss.
+  The date defaults to today, i.e. after the lock.
+- Give it a distinct number (e.g. `<bill number>-CN`): the default repeats
+  the bill's number, which confuses later duplicate checks by number.
+- Save with `agent-browser eval "Invoice.save('Approve'); 'invoked'"`. A
+  native click on the `Approve` link misfired (2026-10-06): it landed on a
+  blank **New Bill** form with "From cannot be empty" errors and created
+  nothing. Bills use the same `Invoice.save` handler.
+- Xero then **allocates the credit to the bill automatically**: the bill
+  page shows "Less Credit Note" and "Amount credited on …". Confirm via MCP
+  that the bill is `PAID` with `Amount Credited` equal to its total, and the
+  credit note (`list-credit-notes`) is `ACCPAYCREDIT`, `PAID`, with
+  `Remaining Credit: 0`. Add an explanatory note to both (notes are
+  immutable).
+
 ## Authentication / Login
 
 The browser session **must already be logged in to Xero** before any of the

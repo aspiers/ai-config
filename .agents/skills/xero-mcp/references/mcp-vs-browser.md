@@ -11,6 +11,10 @@ already open.
 | **Create / update / void a manual journal** | MCP write tools (`xero-mcp` → "Manual journals") | Faster than the browser Edit flow; void-and-replace works via MCP. |
 | **Balance sheet / P&L / trial balance / aged payables/receivables** | MCP `list-report-*` / `list-trial-balance` | Purpose-built report endpoints. (Note `list-trial-balance` output can exceed the tool's token limit — it spills to a file; grep that. `list-report-balance-sheet` is compact.) |
 | **Search narrations / free-text across journals** | **BROWSER** — Account Transactions Filter (`xero-browser` → "Searching Transactions By Description") | The global Xero Search bar does NOT search manual-journal narrations. |
+| **Unreconciled bank statement lines** (what's waiting in the reconcile screen) | **BROWSER** — `/BankRec/BankRec.aspx?accountID=<bank account uuid>` | The Accounting API only exposes booked transactions; `list-bank-transactions` cannot see feed lines. Statement lines need the Finance API (`BankStatementsPlus`), whose scope is restricted (developer-terms addendum) and absent from our token. Checked 2026-10-06. |
+| **Approve, delete or void an invoice/bill** | MCP `update-invoice` with only `status` (`AUTHORISED` / `DELETED` / `VOIDED`) | Added by upstream PR #221 in the local build. Verified 2026-10-06 (approve, delete a draft, void an unpaid bill). Send `DELETED`/`VOIDED` alone; Xero ignores other fields with them. Still refused inside an adviser lock. |
+| **Supplier credit note** (e.g. reversing a bill in a locked period) | **BROWSER** — Bill Options → Add Credit Note (`xero-browser` → "Reversing a locked bill with a supplier credit note") | MCP `create-credit-note` hard-codes a sales `ACCRECCREDIT`, `DRAFT`, today, base currency. `create-credit-note-allocation` and `list-credit-notes` do handle supplier credit notes. |
+| **Did a bank line clear a bank account?** (balance check) | MCP `list-report-balance-sheet` | Its bank row is Xero's balance; compare with the statement balance shown on the BankRec page. Equal means nothing unreconciled. |
 
 ## Anti-pattern — do NOT do this
 

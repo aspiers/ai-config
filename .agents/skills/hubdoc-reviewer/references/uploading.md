@@ -45,8 +45,10 @@ the document appears.
 Evidence (2026-10-06): uploading one two-page supplier invoice PDF
 returned 403 from the Akamai edge in agent-browser **and** in the user's
 regular Chrome, which had never seen this error before; emailing the same
-file to the Hubdoc inbox worked. Trigger unknown: something in that file,
-or an edge-side change affecting all uploads. Distinguish by whether other
-files also fail.
+file to the Hubdoc inbox worked. An hour later a different supplier's PDF
+receipt uploaded normally from agent-browser, so the block was specific
+to that file or temporary, not a blanket block on uploads. When one file
+is refused, try the next file normally rather than switching everything
+to email.
 
 ## Downloading and reading Hubdoc PDFs

@@ -67,20 +67,24 @@ choose. Use the first of these that applies:
 
 - **Orca** (`ORCA_TERMINAL_HANDLE` is set): a new tab running your agent's
   CLI with the brief as its initial prompt, read from a file in that
-  checkout's `tmp/`:
+  checkout's `tmp/`, and a session name (see below):
 
   ```sh
   orca-ide terminal create --worktree <selector> --title "<readable title>" \
-    --command '<agent CLI> "$(cat tmp/<brief>.md)"'
+    --command '<agent CLI> --name "<session name>" "$(cat tmp/<brief>.md)"'
   ```
 
   This is a handoff, not a supervised worker, so it needs no heartbeats,
   `worker_done` or release. Do not use a harness subagent. On Linux the CLI
   is `orca-ide`, never bare `orca`.
 - **Herdr** (`HERDR_ENV=1`): a new pane with an agent started in it, as the
-  `herdr` skill describes.
+  `herdr` skill describes, given a session name the same way.
 - **tmux** (`TMUX` is set): a new window running your agent's CLI, with the
-  brief as its initial prompt.
+  brief as its initial prompt and a session name the same way.
+
+Name the session after the mistake in three to six words, with the agent's
+launch flag (`claude --name`, `pi --name`); omit it for an agent without
+one, such as Codex.
 
 Start it in the main checkout of the repository that owns the instruction
 files most likely at fault, e.g. the one a skill resolves into (`realpath`

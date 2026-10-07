@@ -74,6 +74,21 @@ Work in the new worktree yourself only when the user explicitly says so.
 Then, before editing, `terminal list --worktree <selector>` and `terminal
 read` the setup terminal to confirm setup finished without errors.
 
+## Name every agent you start
+
+Give each agent session you start a 3–6-word name for its task, so it is
+recognisable in the agent's session picker and in its Orca tab, which shows
+the agent's terminal title.
+
+- With `terminal create --command`, put the name on the agent's command
+  line: `claude --name "<name>" …` or `pi --name "<name>" …`. Codex has no
+  launch-time name flag.
+- `worktree create --agent` cannot pass agent arguments until
+  [`stablyai/orca#25067`][orca-25067] lands, so those sessions keep the
+  agent's automatic title. Don't abandon `--agent` just to name one.
+
+[orca-25067]: https://github.com/stablyai/orca/issues/25067
+
 ## Handles go stale quickly
 
 A `terminal wait` on the create-returned handle can report

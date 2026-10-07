@@ -88,7 +88,8 @@ agent-browser click "#editor-invoice-number"      # blur commits to the model
 `fill` alone sets the value and clears the required error, but does **not**
 commit to the model — the `Total:` line stays blank. The blur is what commits.
 
-Note `click` steals window focus from the user's terminal (see
+Unless a window-manager rule stops it, `click` steals window focus from
+the user's terminal (see
 [`agent-browser-local`](../../agent-browser-local/SKILL.md)) — warn them
 before this sequence, or their keystrokes land in the page.
 

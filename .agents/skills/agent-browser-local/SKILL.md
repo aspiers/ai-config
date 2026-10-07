@@ -175,11 +175,14 @@ user whether a Restore prompt is showing and let them click it. A lone
 `about:blank` is not proof the tabs are gone, and neither `snapshot` nor
 `screenshot` can detect the prompt.
 
-The boundary is crossed in the other direction too: `click` raises and focuses
-the Chromium window, stealing X focus from whatever the user is typing in, so
-their next keystrokes land in the page. `eval`, `snapshot`, and `screenshot` do
-not. Warn the user before a burst of clicks, or capture and restore focus
-around it. See [`references/window-focus.md`](references/window-focus.md).
+The boundary is crossed in the other direction too: on X11, `click`, tab
+switches and `tab new` make Chromium ask the window manager for focus, and an
+unconfigured one grants it, so the user's next keystrokes land in the page.
+The general fix is a window-manager rule refusing the agent window's
+activation requests; until one is in place, warn the user before such
+commands or capture and restore focus. Read
+[`references/window-focus.md`](references/window-focus.md) for the cause,
+the Fluxbox rule, and how to verify a fix.
 
 Agent-browser Chromium and the user's regular browser are separate processes
 with separate profiles, ports, extensions, and sessions. Never use evidence

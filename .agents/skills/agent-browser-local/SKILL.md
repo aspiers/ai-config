@@ -154,6 +154,16 @@ Mitigations, best first:
    tab (verified on 0.33.2 and 0.38.2, 2026-10-07). Refs and explicit `tab`
    switches stay per session either way.
 
+   Two limits, open upstream as of 0.38.2:
+
+   - A pin is not a lock: another session can still `tab <targetId>` onto
+     your tab and drive it, unnoticed
+     ([`#1790`](https://github.com/vercel-labs/agent-browser/issues/1790)).
+     Never switch to a tab another session owns.
+   - Start with `open`, not `tab new`: the fresh tab is created on attach,
+     so `tab new` leaves it behind as a stray `about:blank`
+     ([`#1986`](https://github.com/vercel-labs/agent-browser/issues/1986)).
+
    When done, run `"${ab[@]}" tab close` and then `"${ab[@]}" close`. The
    latter only disconnects; Chrome keeps running.
 2. Otherwise, put `tab tX` and the action **in one command chain**, and

@@ -375,30 +375,34 @@ chip to read `Published on …` before verifying.
 
 ### 5b. Check for validation errors after publishing
 
-After clicking Publish, wait and then check the publish status using JS:
+After clicking Publish, wait and then check the publish status using JS.
+Every query is scoped to `#xero-edit-integration`: the page also has a Xero
+**Files** section (`#xerofiles-edit-integration`) with its own
+`publish-state` chip, usually `not_configured`, which a document-wide query
+picks up and misreports (seen 2026-07-16).
 
 ```bash
 agent-browser wait 3000
 agent-browser eval --stdin <<'EVALEOF'
 (function() {
-  var failures = document.querySelectorAll('span.publish-state.publish-failure');
-  if (failures.length > 0) {
-    var alert = document.querySelector('div.failure-alert');
-    var summarySpan = document.querySelector('span.publish-state.publish-failure');
+  var root = document.querySelector('#xero-edit-integration');
+  if (!root) return JSON.stringify({ status: 'no_xero_section' });
+  var failure = root.querySelector('span.publish-state.publish-failure');
+  if (failure) {
+    var alert = root.querySelector('div.failure-alert');
     return JSON.stringify({
       status: 'error',
-      message: alert ? alert.textContent.trim() : summarySpan.textContent.trim()
+      message: alert ? alert.textContent.trim() : failure.textContent.trim()
     });
   }
-  var success = document.querySelector('span.publish-state.publish-success');
-  if (success) {
+  if (root.querySelector('span.publish-state.publish-success')) {
     return JSON.stringify({ status: 'success' });
   }
-  var notConfigured = document.querySelector('span.publish-state.publish-not_configured');
-  if (notConfigured) {
+  if (root.querySelector('span.publish-state.publish-not_configured')) {
     return JSON.stringify({ status: 'not_configured' });
   }
-  return JSON.stringify({ status: 'unknown' });
+  var state = root.querySelector('span.publish-state');
+  return JSON.stringify({ status: 'unknown', text: state && state.textContent.trim() });
 })()
 EVALEOF
 ```

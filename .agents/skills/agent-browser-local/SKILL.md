@@ -154,7 +154,7 @@ Mitigations, best first:
    tab (verified on 0.33.2 and 0.38.2, 2026-10-07). Refs and explicit `tab`
    switches stay per session either way.
 
-   Two limits, open upstream as of 0.38.2:
+   Limits as of 0.38.2 (the first two are open upstream):
 
    - A pin is not a lock: another session can still `tab <targetId>` onto
      your tab and drive it, unnoticed
@@ -163,9 +163,20 @@ Mitigations, best first:
    - Start with `open`, not `tab new`: the fresh tab is created on attach,
      so `tab new` leaves it behind as a stray `about:blank`
      ([`#1986`](https://github.com/vercel-labs/agent-browser/issues/1986)).
+   - A pin protects only its own session. Creating the pinned tab (the
+     first `open`, or `tab new` after `tab_gone`) still moves every
+     *unpinned* session, the default one included, onto it (verified
+     2026-10-07). Note the other sessions' active tabs (`agent-browser
+     session list`, then `--session <s> tab list --json`) before binding,
+     and switch each back with `--session <s> tab <tabId>` afterwards.
+   - A pinned tab usually sits behind other tabs, and some pages ignore
+     clicks while `document.visibilityState` is `hidden`: a bank's login
+     button registered the click and did nothing. Bring your own tab to the
+     front with `"${ab[@]}" tab <your tabId>`; other sessions stay put.
 
    When done, run `"${ab[@]}" tab close` and then `"${ab[@]}" close`. The
-   latter only disconnects; Chrome keeps running.
+   latter only disconnects; Chrome keeps running. The pin outlives both:
+   the next command fails with `tab_gone` until `tab new <url>` rebinds.
 2. Otherwise, put `tab tX` and the action **in one command chain**, and
    target elements by **CSS selector** (`#id`, `a:has(span.x)`,
    `dl:has(a[href*='…']) dt`) rather than `@eN` refs.

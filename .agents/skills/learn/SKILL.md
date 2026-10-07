@@ -70,9 +70,12 @@ choose. Use the first of these that applies:
   checkout's `tmp/`, and a session name (see below):
 
   ```sh
-  orca-ide terminal create --worktree <selector> --title "<readable title>" \
+  orca-ide terminal create --worktree <selector> \
     --command '<agent CLI> --name "<session name>" "$(cat tmp/<brief>.md)"'
   ```
+
+  Omit `--title` when the tab should follow the agent's session name; it
+  creates a pinned custom label.
 
   This is a handoff, not a supervised worker, so it needs no heartbeats,
   `worker_done` or release. Do not use a harness subagent. On Linux the CLI

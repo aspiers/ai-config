@@ -83,6 +83,10 @@ the agent's terminal title.
 - With `terminal create --command`, put the name on the agent's command
   line: `claude --name "<name>" …` or `pi --name "<name>" …`. Codex has no
   launch-time name flag.
+- Set the initial name with the agent's `--name` flag. Omit
+  `terminal create --title` when the tab should follow later session
+  renames; that flag pins a separate Orca label. Use it only when a fixed
+  tab label is intended.
 - `worktree create --agent` cannot pass agent arguments until
   [`stablyai/orca#25067`][orca-25067] lands, so those sessions keep the
   agent's automatic title. Don't abandon `--agent` just to name one.

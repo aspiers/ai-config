@@ -7,17 +7,21 @@ page. Fix it once in the window manager rather than per task.
 ## Why it happens
 
 Chromium asks the window manager to activate its window with an EWMH
-`_NET_ACTIVE_WINDOW` client message. It does so:
+`_NET_ACTIVE_WINDOW` client message when agent-browser switches or opens a
+tab: `tab <id>` sends `Page.bringToFront`, and `tab new` creates the target
+in the foreground. A window manager that grants every such request hands
+Chromium focus.
 
-- when agent-browser switches tab or opens one: `tab <id>` sends
-  `Page.bringToFront`, and `tab new` creates the target in the foreground;
-- on a synthetic `click`, even though agent-browser sends only
-  `Input.dispatchMouseEvent` and no raise of its own.
+On agent-browser 0.38.2 with Chrome 153, `click`, `snapshot`, `get` and
+`eval` left focus alone even with no protection, and no activation request
+accompanied the click. An August 2026 run on an older,
+unrecorded version saw a `click` move focus, so on other versions treat
+clicks as suspect until measured.
 
-A window manager that grants every such request hands Chromium focus. The
-upstream agent-browser pull requests that drop the implicit raise on tab
-switch ([`#1695`][pr-1695], [`#1880`][pr-1880]; issue [`#1247`][issue-1247])
-do not cover clicks, so an agent-browser change alone cannot fix it.
+Open upstream pull requests drop the implicit raise on tab switch and create
+tabs in the background ([`#1695`][pr-1695], [`#1880`][pr-1880]; issue
+[`#1247`][issue-1247]). Until one lands, and for anything else that raises
+the window, the window manager has to refuse it.
 
 [pr-1695]: https://github.com/vercel-labs/agent-browser/pull/1695
 [pr-1880]: https://github.com/vercel-labs/agent-browser/pull/1880
@@ -90,12 +94,12 @@ Untested here. Look for focus-stealing prevention that applies to
 ## Verifying a fix
 
 Ask the user first, since a failing test takes their focus. Sample the
-active window around each command, in your own session and tab (see
-"Two agents" in [`SKILL.md`](../SKILL.md) for finding `$port`):
+active window around a tab switch to your own tab, in your own session (see
+"Two agents" in [`SKILL.md`](../SKILL.md) for `$port` and `--pin-tab`):
 
 ```bash
 before=$(xdotool getactivewindow)
-agent-browser --session focustest --cdp "$port" click '#b'
+agent-browser --session focustest --pin-tab --cdp "$port" tab "$my_tab"
 sleep 1
 after=$(xdotool getactivewindow)
 [ "$before" = "$after" ] || xdotool windowactivate "$before"
@@ -103,13 +107,13 @@ after=$(xdotool getactivewindow)
 
 ## Without a window-manager fix
 
-`eval`, `snapshot` and `screenshot` do not take focus. Before clicks, tab
-switches, or new tabs, warn the user to stop typing, or capture and restore
+Before tab switches or new tabs (and clicks, on versions where they have
+not been measured), warn the user to stop typing, or capture and restore
 focus:
 
 ```bash
 orig=$(xdotool getactivewindow)
-# ... clicks ...
+# ... tab switches ...
 xdotool windowactivate "$orig"
 ```
 
@@ -118,10 +122,11 @@ approval under the skill's native-commands rule.
 
 ## Evidence
 
-- **2026-08-13, unprotected window:** `click` on an inert `<div>` moved focus
-  from the terminal to Chromium; `eval`, `snapshot` and `screenshot` did not.
-  An earlier unannounced click put the fragment `"n the wrong"`, from the
-  user's typing, into a Hubdoc amount field.
+- **2026-08-13, unprotected window, older agent-browser:** `click` on an
+  inert `<div>` moved focus from the terminal to Chromium; `eval`,
+  `snapshot` and `screenshot` did not. An earlier unannounced click put the
+  fragment `"n the wrong"`, from the user's typing, into a Hubdoc amount
+  field.
 - **2026-10-06, unprotected window:** a tab switch took focus; `xprop`/`xev`
   on the root window showed Chromium sending `_NET_ACTIVE_WINDOW` and the
   window manager granting it, with the pointer elsewhere.
@@ -131,5 +136,10 @@ approval under the skill's native-commands rule.
 - **2026-10-07, Fluxbox `{Deny, Refuse}`:** `tab new`, `click` (the button's
   handler ran), `fill`, `type`, and a link `click` that navigated all left
   `xdotool getactivewindow` unchanged; `_NET_ACTIVE_WINDOW` never changed.
+- **2026-10-07, protection briefly set to `None`, agent-browser 0.38.2,
+  Chrome 153:** `snapshot`, `get title`, `eval` and `click` on the visible
+  tab kept focus, and `xev -root -event substructure` saw no
+  `_NET_ACTIVE_WINDOW` from Chromium during the click. A tab switch straight
+  after sent one and took focus.
 - The restart fix and `SetFocusProtection` were verified on a private Xvfb
   display with a script that sends `_NET_ACTIVE_WINDOW` as an application.

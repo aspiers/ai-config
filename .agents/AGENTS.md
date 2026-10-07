@@ -8,6 +8,10 @@ The author's defaults for every agent harness configured here; adapt them.
   the issue tracker; inspect a local install only as a last resort.
 - Tool warnings and errors are claims, not facts: check the state they
   describe before repeating them or building a question on them.
+- When the user's first-hand recollection contradicts what a system shows
+  (e.g. "that was paid" against a record showing it unpaid), treat it as
+  evidence of a data problem and investigate; don't argue from the
+  displayed state.
 - Silence is not absence. Before saying something does not exist, make sure
   your check could have found it: keep its errors (no `2>/dev/null`), and
   resolve relative paths a tool prints against the directory it ran in.

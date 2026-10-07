@@ -228,6 +228,11 @@ attention-span is AGPL-3.0, so its text is **not** vendored into this public
 repository. `bin/attention-span-install` wires a local clone into each agent
 instead, using whichever mechanism that agent actually supports:
 
+> **⚠️ AUTHOR-SPECIFIC:** the author's clone tracks the `no-arrow-markers`
+> branch of the fork [aspiers/attention-span](https://github.com/aspiers/attention-span),
+> which replaces the styles' `→` point markers with bold-led Markdown
+> bullets. Clone upstream instead to get the styles as published.
+
 | Agent | Mechanism | Path |
 | ----- | --------- | ---- |
 | Claude Code | native output styles | `~/.claude/output-styles/` |

@@ -27,8 +27,10 @@ note() { printf '  %s\n' "$*"; }
 
 [ -d "$SRC/output-styles" ] ||
     die "no attention-span clone at $SRC
-Clone it first:
-  git clone https://github.com/alexgreensh/attention-span $SRC"
+Clone it first, from upstream:
+  git clone https://github.com/alexgreensh/attention-span $SRC
+or from the fork without → point markers:
+  git clone -b no-arrow-markers https://github.com/aspiers/attention-span $SRC"
 
 [ -f "$SRC/output-styles/$STYLE.md" ] ||
     die "unknown style '$STYLE'; available: $(cd "$SRC/output-styles" && ls *.md | sed 's/\.md$//' | tr '\n' ' ')"

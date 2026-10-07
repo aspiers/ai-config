@@ -86,6 +86,9 @@ COPYING
 ^/tests
 ^/orca-plugins
 tmp
+# Orca and other tools create git worktrees under <repo>/.worktrees, which
+# for a stowed repo is inside the stow package.
+\.worktrees
 nohup\.out
 ^/\.beads
 ^/\.beads.*\.lock

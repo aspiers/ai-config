@@ -133,25 +133,29 @@ sharing one Chrome:
 
 Mitigations, best first:
 
-1. **Separate sessions** attached to the running Chrome:
+1. **Separate pinned sessions** attached to the running Chrome
+   (agent-browser 0.34 or later):
 
    ```bash
-   port=$(agent-browser get cdp-url | sed -E 's#^ws://[^:]+:([0-9]+)/.*#\1#')
-   agent-browser --session <name> --cdp "$port" tab new <url>
+   port=$(head -1 <profile-dir>/DevToolsActivePort)
+   ab=(agent-browser --session <name> --pin-tab --cdp "$port")
+   "${ab[@]}" open <url>
    ```
 
-   Run `get cdp-url` in the session that launched Chrome (usually
-   `default`), from the directory its profile is relative to. Always pass
-   `--cdp`: `--session` alone launches a second Chrome on the same
-   profile, which hands off to the running one and opens empty windows.
+   Chrome writes its debugging port to `DevToolsActivePort` in the profile
+   directory, so this needs no command against the session that launched
+   it. Always pass `--cdp`: `--session` alone launches a second Chrome on
+   the same profile, which hands off to the running one and opens empty
+   windows.
 
-   Each session keeps its own refs and its own `tab` switches, but **any
-   session's `tab new` moves every attached session's active tab** to the
-   new tab (verified 2026-10-07). Run `tab list` after another agent may
-   have opened a tab. Close your tabs with
-   `curl -s http://127.0.0.1:$port/json/close/<target-id>` (ids from
-   `/json/list`); `close` on an attached session only disconnects, leaving
-   Chrome running.
+   **Always pass `--pin-tab` too.** It binds the session to a fresh tab of
+   its own on first use, which `open` then navigates. Without it, any
+   session's `tab new` moves every attached session's active tab to the new
+   tab (verified on 0.33.2 and 0.38.2, 2026-10-07). Refs and explicit `tab`
+   switches stay per session either way.
+
+   When done, run `"${ab[@]}" tab close` and then `"${ab[@]}" close`. The
+   latter only disconnects; Chrome keeps running.
 2. Otherwise, put `tab tX` and the action **in one command chain**, and
    target elements by **CSS selector** (`#id`, `a:has(span.x)`,
    `dl:has(a[href*='…']) dt`) rather than `@eN` refs.

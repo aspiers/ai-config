@@ -151,6 +151,16 @@ download shelf, or crash-recovery dialog. A 2026-07-16 verification screenshot
 contained only the webpage, not the Chromium frame. Native UI requires an
 explicitly approved OS/window-level tool.
 
+**A freshly restarted agent-browser Chrome may be restorable: ask before
+navigating.** Chrome offers its native "Restore pages" prompt only after an
+abnormal exit (crash or kill, including `kill -9`; never after a clean
+shutdown), so the prompt is proof the browser was killed and that session
+state was saved. If `tab list` shows a lone `about:blank` where tabs used to
+be, do **not** `open` a URL: that can discard the restorable session. Ask the
+user whether a Restore prompt is showing and let them click it. A lone
+`about:blank` is not proof the tabs are gone, and neither `snapshot` nor
+`screenshot` can detect the prompt.
+
 The boundary is crossed in the other direction too: `click` raises and focuses
 the Chromium window, stealing X focus from whatever the user is typing in, so
 their next keystrokes land in the page. `eval`, `snapshot`, and `screenshot` do
@@ -159,7 +169,13 @@ around it. See [`references/window-focus.md`](references/window-focus.md).
 
 Agent-browser Chromium and the user's regular browser are separate processes
 with separate profiles, ports, extensions, and sessions. Never use evidence
-from one as proof about the other.
+from one as proof about the other. The user's regular browser may itself
+expose a remote-debugging port (e.g. 9222); that is never agent-browser's to
+attach to, so don't theorise that agent-browser "failed to find" it.
+Likewise, a fresh agent-browser Chrome that appears right after an `open` is
+the aftermath of an earlier death, not its cause: diagnose crashes by
+catching one as it happens and reading agent-browser's source, not by
+reconstructing process history afterwards.
 
 A relative profile such as `--user-data-dir=./.agent-browser-data` resolves
 against the browser server's working directory. Changing that directory creates

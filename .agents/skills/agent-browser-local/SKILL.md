@@ -133,11 +133,25 @@ sharing one Chrome:
 
 Mitigations, best first:
 
-1. **Separate sessions**: each agent uses its own
-   `agent-browser --session <name>` (attached with `--cdp <port>` to the
-   running Chrome, so it does not launch a second Chrome on the same
-   profile; a launch without `--cdp` makes the running Chrome open empty
-   windows). Each session has its own active tab and refs.
+1. **Separate sessions** attached to the running Chrome:
+
+   ```bash
+   port=$(agent-browser get cdp-url | sed -E 's#^ws://[^:]+:([0-9]+)/.*#\1#')
+   agent-browser --session <name> --cdp "$port" tab new <url>
+   ```
+
+   Run `get cdp-url` in the session that launched Chrome (usually
+   `default`), from the directory its profile is relative to. Always pass
+   `--cdp`: `--session` alone launches a second Chrome on the same
+   profile, which hands off to the running one and opens empty windows.
+
+   Each session keeps its own refs and its own `tab` switches, but **any
+   session's `tab new` moves every attached session's active tab** to the
+   new tab (verified 2026-10-07). Run `tab list` after another agent may
+   have opened a tab. Close your tabs with
+   `curl -s http://127.0.0.1:$port/json/close/<target-id>` (ids from
+   `/json/list`); `close` on an attached session only disconnects, leaving
+   Chrome running.
 2. Otherwise, put `tab tX` and the action **in one command chain**, and
    target elements by **CSS selector** (`#id`, `a:has(span.x)`,
    `dl:has(a[href*='…']) dt`) rather than `@eN` refs.

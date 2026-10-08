@@ -94,9 +94,11 @@ python3 tests/test_foss_comparison_reporting.py
 
 ## Background Human-Attention Tests
 
-`test_background_human_attention.py` verifies that `/bg`, `/bgp`, and `/bed`
-keep human-needed beads out of automatic queues, flag and clear them with a
-durable checklist, and surface `bd human list` at unattended handoff.
+`test_background_human_attention.py` verifies that the `/bg`, `/bgp`, and
+`/bed` wrappers delegate to `beads-grinding` and `beads-parallel-grinding`,
+and that those skills and `beads-best-practices` keep human-needed beads out
+of automatic queues, split a person's part into its own `human` bead, and
+surface `bd human list` at unattended handoff.
 
 ```bash
 python3 tests/test_background_human_attention.py

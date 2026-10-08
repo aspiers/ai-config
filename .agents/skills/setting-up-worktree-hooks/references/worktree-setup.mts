@@ -13,7 +13,7 @@
 // properties). The .mts extension makes it ESM without Node's
 // typeless-package warning.
 //
-// Usage: node scripts/worktree-setup.mts [primary-checkout-path]
+// Usage: node scripts/worktree-setup.mts
 
 import { execFileSync, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, realpathSync, symlinkSync } from "node:fs";
@@ -27,18 +27,33 @@ const LOCAL_FILES = [".env.local"];
 export type LinkResult = "linked" | "present" | "no-source";
 
 function git(cwd: string, args: string[]): string {
-    return execFileSync("git", args, { cwd, encoding: "utf8" }).trim();
+    // Piped stderr keeps an expected failure (see primaryCheckout) quiet.
+    return execFileSync("git", args, {
+        cwd,
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "pipe"],
+    }).trim();
 }
 
 /**
- * The primary checkout owns the shared .git directory, so it is the parent
- * of --git-common-dir. This works for worktrunk, Orca and plain
- * `git worktree add` alike, without reading any tool's environment.
+ * The first `git worktree list` entry is the main worktree, under worktrunk,
+ * Orca and plain `git worktree add` alike. For a bare repository, or one
+ * made with --separate-git-dir, that entry is the metadata directory rather
+ * than a checkout, so it is trusted only if it is its own work tree.
+ * Otherwise this returns null rather than guessing: a guessed directory,
+ * such as the parent of a bare repo, could hold an unrelated .env.local.
  */
-export function primaryCheckout(cwd: string): string {
-    return path.dirname(
-        git(cwd, ["rev-parse", "--path-format=absolute", "--git-common-dir"]),
+export function primaryCheckout(cwd: string): string | null {
+    const [entry] = git(cwd, ["worktree", "list", "--porcelain", "-z"]).split(
+        "\0",
     );
+    const candidate = entry.replace(/^worktree /, "");
+    try {
+        const top = git(candidate, ["rev-parse", "--show-toplevel"]);
+        return realpathSync(top) === realpathSync(candidate) ? candidate : null;
+    } catch {
+        return null;
+    }
 }
 
 export function linkLocalFile(
@@ -65,11 +80,18 @@ export function linkLocalFile(
     return "linked";
 }
 
-function install(cwd: string): number {
-    // Replace with this repository's own install and build steps.
+export function install(
+    cwd: string,
+    platform: NodeJS.Platform = process.platform,
+): number {
+    // Replace with this repository's own install and build steps. Windows
+    // needs a shell to resolve the npm.cmd shim, and since CVE-2024-27980
+    // Node refuses to spawn a .cmd file without one, so naming npm.cmd is
+    // no fix. A shell is safe here only because the arguments are constant.
     const { status, error } = spawnSync("npm", ["install"], {
         cwd,
         stdio: "inherit",
+        shell: platform === "win32",
     });
     if (error) {
         throw error;
@@ -79,18 +101,21 @@ function install(cwd: string): number {
 
 interface MainOptions {
     cwd?: string;
-    primary?: string;
     runInstall?: (cwd: string) => number;
 }
 
 /** Returns the install's exit code. */
 export function main({
     cwd = process.cwd(),
-    primary = primaryCheckout(cwd),
     runInstall = install,
 }: MainOptions = {}): number {
     const worktree = git(cwd, ["rev-parse", "--show-toplevel"]);
-    if (realpathSync(primary) === realpathSync(worktree)) {
+    const primary = primaryCheckout(cwd);
+    if (primary === null) {
+        console.log(
+            "No primary checkout (bare repository or separate git dir); skipped linking local files.",
+        );
+    } else if (realpathSync(primary) === realpathSync(worktree)) {
         console.log("In the primary checkout; skipped linking local files.");
     } else {
         for (const file of LOCAL_FILES) {
@@ -104,7 +129,5 @@ if (
     process.argv[1] &&
     import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href
 ) {
-    process.exitCode = main(
-        process.argv[2] ? { primary: process.argv[2] } : {},
-    );
+    process.exitCode = main();
 }

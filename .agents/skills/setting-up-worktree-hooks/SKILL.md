@@ -41,7 +41,8 @@ This skill covers *adding* it to a repo.
   script's "plain JS because tsx isn't installed yet" may no longer hold:
   Node ≥ 22.18 strips TypeScript types natively. Re-check claims about
   tooling versions, missing features or platform limits against the repo's
-  current toolchain.
+  current toolchain. Likewise, a precedent that spawns `npx.cmd` without a
+  shell is itself broken on Node ≥ 18.20.2 and ≥ 20.12.2 (see below).
 
 ## 2. Write the script
 
@@ -61,13 +62,25 @@ rather than copy:
   install itself be a no-op.
 - **Runs before install**, so it uses built-ins or the standard library
   only, never the project's own dependencies.
-- **Finds the primary checkout itself**, as the parent of `git rev-parse
-  --path-format=absolute --git-common-dir`. Accept an optional path
-  argument for layouts where that fails, such as bare repositories. This
-  works the same under wt, Orca and plain git, and keeps the hook lines free
-  of `$VAR`/`%VAR%` differences.
+- **Finds the primary checkout itself, and never guesses.** Take the first
+  entry of `git worktree list --porcelain -z`, and trust it only if `git -C
+  <entry> rev-parse --show-toplevel` succeeds and equals it, comparing real
+  paths. Otherwise there is no primary checkout: skip linking. Don't derive
+  it from `--git-common-dir`: for a worktree of the bare repo
+  `/srv/project.git` that gives `/srv`, and an unrelated `/srv/.env.local`
+  gets linked in. Checking for `bare` alone is not enough either: after
+  `git init --separate-git-dir`, the first entry is the metadata directory.
+  Capture or discard git's stderr, so the expected failure prints nothing.
+  This works the same under wt, Orca and plain git, and keeps the hook
+  lines free of `$VAR`/`%VAR%` differences.
 - **Skips file linking when it runs in the primary checkout**, comparing
   real paths.
+- **Spawns package managers through a shell on Windows only**, e.g.
+  `spawnSync("npm", ["install"], { shell: process.platform === "win32" })`.
+  Node can't resolve `npm`/`yarn`/`npx` shims without a shell, and since
+  CVE-2024-27980 it [refuses to spawn `.cmd` or `.bat` files without
+  one][cve] (EINVAL), so naming `npm.cmd` is no fix. Keep the arguments
+  constant or properly quoted, since the shell parses them.
 - **Fails hard on steps a working tree needs** (install, codegen, build).
   Steps that only fail on a flaky network or a private resource just warn,
   as long as a later step would catch a genuinely broken install. Pass the
@@ -131,8 +144,13 @@ extend the existing workflow rather than adding another.
    - skips a file missing from the primary;
    - skips linking in the primary checkout;
    - finds the primary from a subdirectory;
+   - finds no primary for a worktree of a bare repo, or of a
+     `--separate-git-dir` checkout, and never links a `.env.local` planted
+     beside `project.git`;
    - re-runs are harmless;
-   - passes the install's exit code through.
+   - passes the install's exit code through;
+   - spawns the install with a shell on `win32` only (mock
+     `node:child_process`, and make the platform a parameter).
 2. Create a throwaway worktree from a branch that has the new files, with
    each tool the repo uses (`wt switch --create`, Orca with setup set to
    run). Confirm dependencies, links and builds are in place.
@@ -146,3 +164,5 @@ extend the existing workflow rather than adding another.
 Add a short "Worktrees" note to the repo's `AGENTS.md` (or its equivalent).
 Say what the script sets up, which hooks call it, and the manual command
 after a plain `git worktree add`.
+
+[cve]: https://nodejs.org/en/blog/vulnerability/april-2024-security-releases-2

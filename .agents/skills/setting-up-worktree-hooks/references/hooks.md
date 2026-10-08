@@ -31,8 +31,6 @@ setup = "sh scripts/worktree-setup.sh"
   the user has approved the hooks.
 
 See the `worktrunk` skill for the config format and template variables.
-`{{ primary_worktree_path }}` gives the primary checkout's path if the
-script takes it as an argument.
 
 ## Orca (`orca.yaml`)
 

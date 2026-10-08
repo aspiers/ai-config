@@ -8,25 +8,38 @@
 # Safe to re-run: every step either skips work already done or is itself
 # idempotent.
 #
-# Usage: sh scripts/worktree-setup.sh [primary-checkout-path]
+# Usage: sh scripts/worktree-setup.sh
 #
-# Run from anywhere inside the new worktree. The primary checkout defaults
-# to the one owning the shared .git directory, so no tool-specific
-# environment variable is needed.
+# Run from anywhere inside the new worktree. It finds the primary checkout
+# itself, so no tool-specific environment variable is needed.
 
 set -e
 
 cd "$(git rev-parse --show-toplevel)"
 
-# The primary checkout owns the shared .git directory. Pass the path
-# explicitly where that is not true, e.g. a bare-repository layout.
-primary="${1:-$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")}"
+# The first `git worktree list` entry is the main worktree. For a bare
+# repository, or one made with --separate-git-dir, that entry is the
+# metadata directory rather than a checkout, so trust it only if it is its
+# own work tree. Otherwise leave primary empty rather than guessing: a
+# guessed directory, such as the parent of a bare repo, could hold an
+# unrelated .env.local. The -n test matters: `git -C ""` means the current
+# directory. The rev-parse failure is expected for a bare repo, so its
+# stderr is discarded.
+primary=
+candidate=$(git worktree list --porcelain | sed -n '1s/^worktree //p')
+if [ -n "$candidate" ] &&
+    top=$(git -C "$candidate" rev-parse --show-toplevel 2>/dev/null) &&
+    [ "$(cd "$top" && pwd -P)" = "$(cd "$candidate" && pwd -P)" ]; then
+    primary=$candidate
+fi
 
 # Gitignored files the app reads at runtime. Each is linked, not copied, so
 # a rotated secret reaches every worktree from one source of truth.
 LOCAL_FILES=".env.local"
 
-if [ "$(pwd -P)" = "$(cd "$primary" && pwd -P)" ]; then
+if [ -z "$primary" ]; then
+    echo "worktree setup: no primary checkout (bare repository or separate git dir); skipped linking local files."
+elif [ "$(pwd -P)" = "$(cd "$primary" && pwd -P)" ]; then
     echo "worktree setup: in the primary checkout; skipped linking local files."
 else
     for file in $LOCAL_FILES; do

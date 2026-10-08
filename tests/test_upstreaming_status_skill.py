@@ -35,11 +35,19 @@ class UpstreamingStatusSkillTests(unittest.TestCase):
         )
         self.assertIn("Always return the compact table in chat", self.text)
         self.assertIn("scripts/render-report.py", self.text)
-        self.assertRegex(self.text, r"temporary\s+`\.html` file outside the repository")
+        self.assertIn("`tmp/upstreaming-status.json`", self.text)
+        self.assertIn("`tmp/upstreaming-status.html`", self.text)
+        self.assertIn("git check-ignore tmp/upstreaming-status.html", self.text)
+        self.assertRegex(
+            self.text,
+            r"Never use a temporary directory\s+outside the repository",
+        )
         self.assertIn("sentence-length description", self.text)
         self.assertIn("dependencies", self.text)
         self.assertIn("machete_graph", self.text)
-        self.assertIn("Git Machete graph in a separate preformatted section", self.text)
+        self.assertRegex(
+            self.text, r"Git Machete\s+graph in a separate preformatted section"
+        )
         emoji_positions = [
             self.text.index(emoji)
             for emoji in ("⚪", "🟡", "📝", "🔴", "🟢", "⛔", "✅")

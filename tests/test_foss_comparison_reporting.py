@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Contract tests for accessible FOSS comparison matrices."""
 
+from html.parser import HTMLParser
 from pathlib import Path
 import unittest
 
@@ -18,6 +19,54 @@ PACKAGE_REPORTING = (
     ROOT / ".agents/skills/managing-pi-packages/references/reporting.md"
 )
 RATINGS = ("good", "caution", "poor", "unknown")
+LEGEND_LABELS = {
+    "rating-good": "Stronger / suitable",
+    "rating-caution": "Mixed / trade-off",
+    "rating-poor": "Weaker / blocker",
+    "rating-unknown": "Unknown / not comparable",
+}
+
+
+class RatingLegendParser(HTMLParser):
+    """Collect each legend key's rendered text, keyed by its rating class.
+
+    Matching the raw template source breaks whenever an HTML formatter
+    reflows a label across lines, although the browser renders the same
+    text, so compare whitespace-collapsed text instead.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.labels: dict[str, str] = {}
+        self._rating: str | None = None
+        self._nested_spans = 0
+        self._text: list[str] = []
+
+    def handle_starttag(self, tag, attrs):
+        if tag != "span":
+            return
+        if self._rating:
+            self._nested_spans += 1
+            return
+        classes = (dict(attrs).get("class") or "").split()
+        if "rating-key" in classes:
+            self._rating = next(
+                c for c in classes if c.startswith("rating-") and c != "rating-key"
+            )
+            self._text = []
+
+    def handle_endtag(self, tag):
+        if tag != "span" or not self._rating:
+            return
+        if self._nested_spans:
+            self._nested_spans -= 1
+            return
+        self.labels[self._rating] = " ".join("".join(self._text).split())
+        self._rating = None
+
+    def handle_data(self, data):
+        if self._rating:
+            self._text.append(data)
 
 
 class TestFossComparisonReporting(unittest.TestCase):
@@ -46,15 +95,13 @@ class TestFossComparisonReporting(unittest.TestCase):
         text = TEMPLATE.read_text()
         for rating in RATINGS:
             self.assertIn(f".rating-{rating}", text)
-            self.assertIn(f'rating-key rating-{rating}', text)
         self.assertIn('class="rating-cell {{DOMAIN_FIT_RATING}}"', text)
         self.assertIn('class="rating-cell {{MAINTENANCE_RATING}}"', text)
         self.assertIn('class="rating-cell {{RECOMMENDATION_RATING}}"', text)
         self.assertIn('aria-label="Rating legend"', text)
-        self.assertIn("Stronger / suitable", text)
-        self.assertIn("Mixed / trade-off", text)
-        self.assertIn("Weaker / blocker", text)
-        self.assertIn("Unknown / not comparable", text)
+        legend = RatingLegendParser()
+        legend.feed(text)
+        self.assertEqual(LEGEND_LABELS, legend.labels)
 
     def test_template_offers_a_removable_facet_matrix(self):
         text = TEMPLATE.read_text()

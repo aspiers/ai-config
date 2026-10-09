@@ -28,21 +28,27 @@ creating the bead issue.
    follow-up work you noticed along the way.
 2. Infer the issue type (`bug`, `feature`, `task`) from context; default to
    `task`.
-3. Create the bead first and immediately mark it in progress:
+3. Check for an existing bead. This is the only step allowed before
+   creating one. Run one quick search per key title word, for example:
+   `bd search "<word>" --status open,in_progress,blocked,deferred`
+   If a result plainly covers the same work, use it instead of creating a
+   new bead: tell the user, then `bd update <id> --claim`. If someone else
+   already owns it, stop and ask the user rather than working in parallel.
+4. Otherwise create the bead and immediately mark it in progress:
    `bd create --title="<title>" --description="<description>" --type=<type>`
    `bd update <id> --status=in_progress`
    Use "Investigating..." if the scope is unclear. Do not add deliverables
    absent from the request.
-4. Investigate as needed, then update the bead without broadening its scope:
+5. Investigate as needed, then update the bead without broadening its scope:
    `bd update <id> --title="<better title>" \
      --description="<final description>"`
-5. Complete exactly the work requested:
+6. Complete exactly the work requested:
    - If it requests implementation or application, make the requested changes.
    - If it requests only analysis, auditing, investigation, planning, review,
      recommendations, or proposals, produce those outputs without applying
      them.
    - If that distinction remains ambiguous, ask the user before modifying
      project files.
-6. When the requested work, not any merely proposed follow-up, is complete,
+7. When the requested work, not any merely proposed follow-up, is complete,
    run `bd close <id>`.
-7. If this interrupted previous work, resume it immediately without asking.
+8. If this interrupted previous work, resume it immediately without asking.

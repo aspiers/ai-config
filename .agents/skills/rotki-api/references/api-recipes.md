@@ -39,3 +39,14 @@ Timestamps are milliseconds.
 The lookup response's `was_fetched` is false when rotki already had the
 transaction, which distinguishes new hashes from ones already present.
 `delete_custom: false` keeps user-edited events when re-decoding.
+
+To edit an event read back from `POST /history/events`, drop
+`actual_group_identifier` before sending it to `PATCH /history/events`. If
+the event shares a transaction with a matched asset movement, the read-back
+`group_identifier` is the match's and the edit fails with "already exists";
+use `actual_group_identifier` as `group_identifier` instead.
+
+Spoof or poisoning addresses can be named in the private address book
+(`PUT /names/addressbook/private` with `entries: [{address, blockchain,
+name}]`) so rotki labels them wherever they appear; on-chain events from
+them can be tagged with the `spam` subtype.

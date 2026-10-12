@@ -102,6 +102,13 @@ Events are labelled with the accounts tracked when they were decoded. A
 transfer decoded before its other side's account was added stays a plain
 receive or spend (possibly income) until that hash is re-decoded.
 
+## Users' address books
+
+Identifying counterparties often tempts a search of the user's notes or
+address books. Ask before searching them, and do not print their entries
+(addresses or labels) into the transcript without permission. Report only
+the conclusion asked for, e.g. "this address is yours".
+
 ## Secrets in rotki errors
 
 Blockscout errors embed the full request URL, including `apikey=`, in

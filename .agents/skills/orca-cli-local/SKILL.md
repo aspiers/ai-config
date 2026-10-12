@@ -55,9 +55,23 @@ When running inside Orca (`ORCA_PANE_KEY` is set) in a repository with an
 `worktree create`, including one for your own next change. Outside Orca the
 CLI cannot create one; follow `git-branch-management` instead.
 `git worktree add` and `wt switch --create` skip Orca's setup, leaving no
-dependencies or env files. Pass `--no-parent`, `--base-branch
-origin/<target>` (see above), and `--setup run` unless the repository's
-setup policy already runs it.
+dependencies or env files. Pass `--parent-worktree path:<main checkout>`,
+`--base-branch origin/<target>` (see above), and `--setup run` unless the
+repository's setup policy already runs it.
+
+The parent keeps a repository's agent workspaces nested under its main
+checkout in Orca's sidebar. The main checkout is the first entry of `git
+worktree list`. Name it explicitly. If you omit it, Orca nests the new
+worktree under whichever worktree you are running in, often an unrelated
+feature.
+Parent a stacked branch on the worktree of the branch it builds on instead.
+Never pass `--no-parent`; the user repairs every such workspace by hand.
+
+Don't try to group agents as tabs of one workspace by running them in
+other worktrees from there. Orca ties a tab to its workspace's path, not the
+shell's directory, so resume after Sleep or a restart, the diff and git
+panels, and the agent's `active` selectors would all target the wrong
+checkout.
 
 A new worktree exists so that a new agent can work in it, even when the
 user only asked for the change and never mentioned a worktree, and even

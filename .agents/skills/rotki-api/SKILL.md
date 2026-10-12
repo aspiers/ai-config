@@ -98,8 +98,9 @@ receive or spend (possibly income) until that hash is re-decoded.
 ## Secrets in rotki errors
 
 Blockscout errors embed the full request URL, including `apikey=`, in
-notifications, logs and the conflicts table's `last_error`. Redact
-`apikey=` from any rotki output before saving or quoting it.
+notifications, logs and the conflicts table's `last_error`
+([rotki/rotki#13346](https://github.com/rotki/rotki/issues/13346)).
+Redact `apikey=` from any rotki output before saving or quoting it.
 
 ## MCP server
 

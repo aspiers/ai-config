@@ -76,6 +76,13 @@ through the same indexers, so it keeps failing where no free indexer
 serves the chain or era. Check the decoded amounts against an independent
 source; if they agree, the conflict is harmless to the books.
 
+Nothing else can clear one: no endpoint accepts internal-transaction data
+or marks a conflict accepted, and rotki never traces through an RPC node,
+so external traces (Alchemy, `cast run`) cannot be fed in. Leftovers are
+not worth an upstream request: the queue is filled only by a one-off
+migration in 1.42.1, and the code marks the table "temporary, to be
+removed in a future release", which will drop them.
+
 ## zkSync Lite
 
 - Adding a second zkSync Lite account fetches nothing if its history is

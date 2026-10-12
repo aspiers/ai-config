@@ -52,3 +52,14 @@ as Alchemy, then list the newer transfers. Classify them before acting:
 inbound-only ERC-1155/721 transfers and unsolicited ERC-20 deposits are
 usually spam airdrops that rotki does not record, not missing activity.
 Outgoing or native transfers missing from rotki are real gaps.
+
+## Identify tokens by contract, never by symbol
+
+Address-poisoning campaigns send dust from addresses that copy the first
+and last characters of a real counterparty, and fake token contracts emit
+forged `Transfer` events naming the victim, with symbols such as "USDC" or
+lookalike Unicode. Such entries show up as spends in Alchemy results and in
+rotki. Before calling a transfer real, check the token contract and who
+signed the transaction (`eth_getTransactionByHash` → `from`); then offer to
+add the fake token to ignored assets and name the lookalike in the private
+address book.

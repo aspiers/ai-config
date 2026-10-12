@@ -1,0 +1,47 @@
+#!/bin/bash
+#
+# git-restore-fork-fetch-refspec - undo Orca's narrowing of a fork remote
+#
+# Usage: Git pre-push hook, called as `git-restore-fork-fetch-refspec
+# <remote> <url>`. Install it globally as a config-based hook (Git 2.54+):
+#
+#   git config --global hook.fork-fetch-refspec.event pre-push
+#   git config --global hook.fork-fetch-refspec.command git-restore-fork-fetch-refspec
+#
+# Orca (stablyai/orca#25703, seen in 1.4.219) rewrites a hand-added fork
+# remote's `+refs/heads/*` fetch refspec down to the one branch of a fork-PR
+# worktree, as `+refs/heads/<branch>*:refs/remotes/<remote>/<branch>*`. Any
+# other branch pushed there then has no resolvable upstream, so Orca's PR
+# lookup never finds its PR. Adding the wide refspec back before the push
+# makes `git push -u` leave an upstream that resolves.
+#
+# Only remotes carrying Orca's narrowed form are widened. Orca's own `pr-*`
+# remotes stay narrow on purpose: they point at other people's forks, and
+# fetching all of their branches is what Orca's narrowing exists to stop.
+#
+# Remove once stablyai/orca#25703 is fixed.
+
+remote=$1
+
+# A push must never fail because of this hook, so every exit is 0.
+case $remote in
+    origin | upstream | pr-*) exit 0 ;;
+esac
+git config --get "remote.$remote.url" >/dev/null || exit 0
+[[ $(git config --type=bool --get "remote.$remote.orca-created") == true ]] && exit 0
+
+wide="+refs/heads/*:refs/remotes/$remote/*"
+narrowed=
+while IFS= read -r refspec; do
+    [[ $refspec == "$wide" ]] && exit 0
+    if [[ $refspec =~ ^\+refs/heads/(.+)\*:refs/remotes/([^/]+)/(.+)\*$ ]] &&
+        [[ ${BASH_REMATCH[2]} == "$remote" && ${BASH_REMATCH[1]} == "${BASH_REMATCH[3]}" ]]; then
+        narrowed=1
+    fi
+done < <(git config --get-all "remote.$remote.fetch")
+[[ -n $narrowed ]] || exit 0
+
+if git config --add "remote.$remote.fetch" "$wide"; then
+    echo "git-restore-fork-fetch-refspec: re-added $wide (stablyai/orca#25703)" >&2
+fi
+exit 0

@@ -193,9 +193,14 @@ the user added, and replaces its `+refs/heads/*` fetch refspec with one for
 that worktree's branch only. Other branches pushed to that remote then get no
 tracking ref, and Orca shows no PR for them.
 
-After pushing a worktree's branch to a remote other than `origin`, run
-`git rev-parse --abbrev-ref @{u}`. If it fails with "not stored as a
-remote-tracking branch", tell the user, and ask before running
+The `git-restore-fork-fetch-refspec` pre-push hook in this repository's
+`bin/` repairs this on every push; its header shows how to install it
+globally. `git hook list pre-push` shows `fork-fetch-refspec` when it is
+installed.
+
+Without the hook, after pushing a worktree's branch to a remote other than
+`origin`, run `git for-each-ref --format='%(upstream)' refs/heads/<branch>`.
+If it prints nothing, tell the user, and ask before running
 `git config --add remote.<name>.fetch '+refs/heads/*:refs/remotes/<name>/*'`.
 Leave Orca's per-branch lines in place. Orca still strips the wide line again
 when a new fork-PR worktree on another branch is set up.

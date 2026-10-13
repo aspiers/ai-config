@@ -84,12 +84,14 @@ python3 tests/test_research_report_locations.py
 
 ## FOSS Comparison Reporting Tests
 
-`test_foss_comparison_reporting.py` verifies accessible traffic-light matrix
-ratings, optional facet matrices, and the existing coloured verdict contract
-used by similar Pi package audit reports.
+`test_foss_comparison_reporting.py` verifies that FOSS research keeps its
+specialist evidence checks and delegates presentation to `matrix-comparison`.
+`test_matrix_comparison.py` exercises the shared renderer with non-product
+alternatives, facets, missing evidence, invalid filter values and hostile text.
 
 ```bash
 python3 tests/test_foss_comparison_reporting.py
+python3 tests/test_matrix_comparison.py
 ```
 
 ## Background Human-Attention Tests

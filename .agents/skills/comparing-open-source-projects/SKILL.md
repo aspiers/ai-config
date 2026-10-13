@@ -77,18 +77,15 @@ manufacturing a universal winner. Base recommendations on the user's stated
 needs and call out when licensing or maintenance makes an otherwise strong
 candidate unsuitable.
 
-Use the mandatory high-level summary matrix for orientation. Add focused
-matrices for distinct facets when they make a dense comparison easier to
-understand. In matrices, apply accessible traffic-light ratings to cells where
-relative strength or suitability can be judged fairly; retain plain text and
-leave non-ordinal facts uncoloured. The reporting contract defines the rating
-semantics and multi-matrix structure.
+Use [matrix-comparison](../matrix-comparison/SKILL.md) for the ranked HTML
+matrix, separate capability columns, accessible traffic-light ratings and
+multiple required-feature filters. It owns shared presentation and controls.
+Keep software-specific evidence and judgements in this skill. Leave
+non-ordinal facts uncoloured unless an explicit suitability judgement applies.
 
 ## Produce the report
 
-Read [the HTML reporting contract](references/reporting.md) completely before
-writing the report. Use
-[the self-contained report template](assets/report-template.html) as the
-structural and visual basis. The finished report must be written under
-`docs/research/` in the current Git repository and opened with the
-repository-specific opener described in the reporting contract.
+Read [the FOSS reporting requirements](references/reporting.md) before
+writing. They add the summary fields and licence/maintenance evidence to the
+shared matrix contract. Use the matrix-comparison renderer and template;
+this skill's legacy template path points to that same shared asset.

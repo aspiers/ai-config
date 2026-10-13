@@ -30,16 +30,17 @@ class TestResearchReportLocations(unittest.TestCase):
 
     def test_comparison_skill_uses_durable_report_directory(self):
         text = COMPARISON_SKILL.read_text()
-        self.assertIn("`docs/research/` in the current Git repository", text)
+        self.assertIn("../matrix-comparison/SKILL.md", text)
         self.assertNotIn("under `tmp/`", text)
 
-    def test_reporting_contract_builds_and_validates_docs_research_path(self):
-        text = REPORTING_CONTRACT.read_text()
-        self.assertIn('report_dir="$repo_root/docs/research"', text)
-        self.assertIn('mkdir -p "$report_dir"', text)
-        self.assertIn('html_report="$report_dir/foss-comparison-', text)
-        self.assertIn("inside `$repo_root/docs/research/`", text)
-        self.assertNotIn("$repo_root/tmp", text)
+    def test_reporting_contract_uses_shared_durable_location_policy(self):
+        foss = REPORTING_CONTRACT.read_text()
+        shared = (ROOT / ".agents/skills/matrix-comparison/references/reporting.md").read_text()
+        self.assertIn("`docs/research/` in the current repository", foss)
+        self.assertIn("../../matrix-comparison/references/reporting.md", foss)
+        self.assertIn("`docs/research/` in the current repository", shared)
+        self.assertIn("user instructions or the environment", shared)
+        self.assertIn("Update an existing report in place", shared)
 
 
 if __name__ == "__main__":

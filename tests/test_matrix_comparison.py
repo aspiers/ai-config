@@ -118,6 +118,42 @@ class TestMatrixComparison(unittest.TestCase):
         with self.assertRaises(ValueError):
             renderer.render(data)
 
+    def test_baseline_is_first_and_pinned_by_default(self):
+        data = fixture()
+        data['rows'].append({'id': 'current', 'name': 'Current process',
+                             'category': 'baseline', 'cells': {}})
+        text = renderer.render(data)
+        doc = Document()
+        doc.feed(text)
+        self.assertEqual(doc.row_ids[0], 'current')
+        self.assertEqual(doc.row_ids[4], 'current')
+        self.assertIn('id="pin-baseline" type="checkbox" checked', text)
+        config = json.loads(re.search(r'type="application/json">(.*?)</script>', text, re.S)[1])
+        self.assertTrue(config['pinBaseline'])
+        self.assertTrue(config['rows'][-1]['baseline'])
+        data['pin_baseline'] = False
+        unpinned = renderer.render(data)
+        doc = Document()
+        doc.feed(unpinned)
+        self.assertEqual(doc.row_ids[0], 'written')
+        self.assertIn('id="pin-baseline" type="checkbox">', unpinned)
+
+    def test_pin_control_is_absent_without_a_baseline(self):
+        self.assertNotIn('<input id="pin-baseline"', renderer.render(fixture()))
+
+    def test_identifying_columns_are_configurable_and_validated(self):
+        data = fixture()
+        data['fixed_columns'] = 3
+        self.assertIn('data-fixed-columns="3"', renderer.render(data))
+        for count in [0, 1, 7, True, '2']:
+            data['fixed_columns'] = count
+            with self.assertRaises(ValueError):
+                renderer.render(data)
+        data['fixed_columns'] = 2
+        data['pin_baseline'] = 'yes'
+        with self.assertRaises(ValueError):
+            renderer.render(data)
+
     def test_section_id_collisions_fail(self):
         data = fixture()
         data['table_id'] = 'candidate-written'

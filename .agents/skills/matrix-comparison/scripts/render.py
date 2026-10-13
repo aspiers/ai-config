@@ -92,18 +92,26 @@ def render_cell(value):
     return f'<td class="{status}">{text}</td>'
 
 
-def matrix(rows, cols, table_id, name_label, caption):
+def matrix(
+    rows, cols, table_id, name_label, caption, fixed_columns=2, pin_baseline=True
+):
     heads = ["Rank", name_label] + [column["label"] for column in cols]
     proportions = [5, 15] + [80 / len(cols)] * len(cols)
     colgroup = "".join(f'<col style="width:{width:.6f}%">' for width in proportions)
     header = "".join(f'<th scope="col">{escape(label)}</th>' for label in heads)
     rendered = []
+    ranks = {}
     rank = 0
+    for row in rows:
+        if row.get("category", "candidate") == "candidate":
+            rank += 1
+            ranks[row["id"]] = rank
+    if pin_baseline:
+        rows = sorted(rows, key=lambda row: row.get("category") != "baseline")
     for row in rows:
         category = row.get("category", "candidate")
         if category == "candidate":
-            rank += 1
-            label = str(rank)
+            label = str(ranks[row["id"]])
         else:
             label = category.capitalize()
         name = escape(row["name"])
@@ -114,10 +122,14 @@ def matrix(rows, cols, table_id, name_label, caption):
         rank_class = 'rank' if category == 'candidate' else 'context'
         content = f'<td class="{rank_class}">{escape(label)}</td><td>{name}</td>'
         content += "".join(render_cell(cell(row, column["key"])) for column in cols)
-        rendered.append(f'<tr data-id="{row["id"]}">{content}</tr>')
+        baseline = category == "baseline"
+        pinned = ' class="pinned-baseline"' if baseline and pin_baseline else ''
+        rendered.append(f'<tr data-id="{row["id"]}" '
+                        f'data-baseline="{str(baseline).lower()}"{pinned}>{content}</tr>')
     return (
         '<div class="table-wrap" tabindex="0" role="region" '
-        f'aria-label="{escape(caption)}"><table class="comparison" id="{table_id}">'
+        f'aria-label="{escape(caption)}"><table class="comparison" id="{table_id}" '
+        f'data-fixed-columns="{min(fixed_columns, len(cols) + 2)}">'
         f'<caption>{escape(caption)}</caption><colgroup>{colgroup}</colgroup>'
         f'<thead><tr>{header}</tr></thead><tbody>{"".join(rendered)}</tbody>'
         '</table></div>'
@@ -137,6 +149,13 @@ def render(data):
     if not main_cols or not data["rows"]:
         raise ValueError("At least one comparison column and candidate are required")
     rows = data["rows"]
+    fixed_columns = data.get("fixed_columns", 2)
+    if (isinstance(fixed_columns, bool) or not isinstance(fixed_columns, int)
+            or not 2 <= fixed_columns <= len(main_cols) + 2):
+        raise ValueError("fixed_columns must include rank/name and fit the table")
+    pin_baseline = data.get("pin_baseline", True)
+    if not isinstance(pin_baseline, bool):
+        raise ValueError("pin_baseline must be boolean")
     ids = set()
     facets = data.get("facets", [])
     facet_ids = set()
@@ -174,7 +193,9 @@ def render(data):
             if column.get("kind") == "feature" and value.get("present") is True:
                 present.append(column_key)
         config_rows.append({"id": key, "order": order, "values": values,
-                            "features": present, "search": " ".join(terms).lower()})
+                            "features": present,
+                            "baseline": row.get("category") == "baseline",
+                            "search": " ".join(terms).lower()})
     filters = data.get("numeric_filters", [])
     controls = []
     for i, constraint in enumerate(filters):
@@ -212,11 +233,12 @@ def render(data):
     if table_id in fragment_ids:
         raise ValueError(f"Summary table ID collides with another section: {table_id}")
     name_label = data.get("name_label", "Alternative")
-    matrices = matrix(rows, main_cols, table_id, name_label, "Comparison summary")
+    matrices = matrix(rows, main_cols, table_id, name_label, "Comparison summary",
+                      fixed_columns, pin_baseline)
     for facet in facets:
         matrices += (f'<section class="facet"><h2>{escape(facet["title"])}</h2>'
                      + matrix(rows, facet["columns"], f'comparison-facet-{facet["id"]}',
-                              name_label, facet["title"]) + '</section>')
+                              name_label, facet["title"], fixed_columns, pin_baseline) + '</section>')
     details = ""
     for row in rows:
         if row.get("details"):
@@ -242,10 +264,14 @@ def render(data):
         "OBSERVED_AT": escape(data["observed_at"]),
         "PICKS": '<section class="picks">' + "".join(picks) + '</section>' if picks else "",
         "NUMERIC_FILTERS": "".join(controls), "FEATURE_FILTER": feature_filter,
+        "PIN_CONTROL": ('<label class="pin-control"><input id="pin-baseline" '
+                        'type="checkbox"' + (' checked' if pin_baseline else '')
+                        + '>Pin baseline</label><span class="meta">Pinned baseline ignores filters.</span>')
+                       if any(row.get("category") == "baseline" for row in rows) else "",
         "SORT_OPTIONS": sort_options, "MATRICES": matrices, "DETAILS": details,
         "NOTES": '<details open><summary>Conditions and evidence</summary><ul class="notes">'
                  + facts(notes) + '</ul></details>' if notes else "",
-        "CONFIG": json.dumps({"rows": config_rows, "numericFilters": filters}, ensure_ascii=True)
+        "CONFIG": json.dumps({"rows": config_rows, "numericFilters": filters, "pinBaseline": pin_baseline}, ensure_ascii=True)
                   .replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026"),
     }
     template = Path(__file__).resolve().parents[1] / "assets/report-template.html"

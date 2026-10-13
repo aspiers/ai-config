@@ -21,6 +21,14 @@ source links; do not place raw HTML in input fields.
   render as unknown. `present: true` is required to pass a feature filter;
   `false` is known absence and omission means unknown. Colour never implies
   a filter flag. Numeric values use one stated unit; missing values sort last.
+- `fixed_columns`: optional count of leading identifying columns to freeze,
+  including rank and name. Defaults to `2`; increase it when variant/edition
+  columns also distinguish rows. Must be an integer from 2 to the column count.
+- `pin_baseline`: optional initial toggle state, default `true`. Rows marked
+  `category: baseline` appear first and remain sticky beneath the header while
+  other rows scroll. The checked control exempts them from filters and sorts.
+  Unchecking restores ordinary behaviour; multiple baselines stack. A report
+  with no baseline has no pin control.
 - `picks`: optional `{label, row_id, summary}` recommendations.
 - `notes`: optional `{label, text, sources}` qualifications or method notes.
 - `numeric_filters`: optional `{key, label, options}` constraints. Each option

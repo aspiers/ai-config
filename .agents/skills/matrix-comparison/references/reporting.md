@@ -31,8 +31,17 @@ create duplicate tabs. Never publish or send the report without authority.
 - The table and its section fit the available width. Do not impose a fixed
   pixel width, minimum width or fixed pixel widths for every column. Allow
   cells to wrap and adapt relative column proportions to the content.
-- Sticky headers and identity columns help with long matrices. Test their
-  offsets after resizing; disable column stickiness where it crowds mobile.
+- Keep headers and the leading columns required to distinguish rows fixed
+  during scrolling. Include variant/edition identifiers when names alone are
+  ambiguous. Measure column offsets on resize; do not disable identity-column
+  stickiness just because the viewport is narrow.
+- When there is a baseline, put it first and pin it below the headers with a
+  checked "Pin baseline" control by default. Alternatives must scroll directly
+  beneath it so any row can be positioned vertically adjacent to it. Compute
+  header and baseline offsets from their rendered heights, not pixel guesses.
+  Keep row/column intersections opaque and correctly layered. Add temporary
+  scroll-tail space while pinned so even the final alternative can reach the
+  baseline; remove that space when unpinned and when printing.
 - If fitting all columns produces unreadable cells, offer optional column
   visibility or focused facet matrices. Do not silently drop criteria or
   restore a forced minimum width.
@@ -70,6 +79,12 @@ default and state this beside the controls. No selected features means no
 feature constraint. Combine search, numeric limits and selected requirements
 with AND. Unknown capability does not satisfy a positive requirement.
 
+A pinned baseline stays visible regardless of search, feature requirements,
+numeric filters or sort order. Label this exception. When pinning is disabled,
+the baseline follows ordinary filtering, sorting and scrolling. Hide the
+control when no baseline exists. Reset restores the initial checked state.
+For multiple baselines, place them first and stack their sticky offsets.
+
 Show selected-feature and matching-row counts. Reset clears every control,
 restores recommendation order and restores all candidates. A zero-result
 selection displays a clear empty state. Keep all filtering local.
@@ -82,6 +97,9 @@ Do not embed researched markup, scripts, credentials or browsing state.
 
 Run the rendered report in a browser. Verify an individual and multiple
 requirements, deselection, reset, search, numeric boundaries, unknown values,
-ordering and zero results. Verify table containment and readability at desktop
+ordering and zero results, including when only a pinned baseline remains.
+Check pin/unpin, baseline-first sorting and filters, scrolling an alternative
+adjacent to the baseline, and row/column intersections after resize.
+Verify table containment and readability at desktop
 and narrow widths, sticky elements, light/dark colours and absence of script
 errors. An opened file is not evidence that these checks passed.

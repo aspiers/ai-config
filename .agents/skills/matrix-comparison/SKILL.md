@@ -40,6 +40,11 @@ basis briefly. Put identity, decisive constraints and verdict near the left.
 Use a different order when the user requests it or a ranking is not meaningful.
 Do not invent aggregate scores by counting green cells.
 
+When a baseline exists, put it first and pin it directly beneath the headers
+by default, with a checked "Pin baseline" option. Alternatives scroll directly
+underneath it for vertical comparison. Keep the columns needed to identify
+rows fixed during horizontal scrolling, including at narrow viewport widths.
+
 Give common decision criteria separate columns. Avoid one crowded "extras"
 cell for unrelated capabilities. Keep factual values precise; keep judgement
 and uncertainty visible. Use focused facet matrices when one matrix becomes

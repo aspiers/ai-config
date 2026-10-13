@@ -73,6 +73,8 @@ def cell(row, key):
         raise ValueError(f'Invalid status: {row["id"]}/{key}')
     if "present" in value and not isinstance(value["present"], bool):
         raise ValueError(f'Feature present must be boolean: {row["id"]}/{key}')
+    if "category" in value and (not isinstance(value["category"], str) or not value["category"]):
+        raise ValueError(f'Category must be nonempty text: {row["id"]}/{key}')
     if value.get("value") is not None:
         number(value["value"])
     return value
@@ -185,15 +187,16 @@ def render(data):
             raise ValueError(f"Invalid candidate category: {key}")
         if row.get("url"):
             url(row["url"])
-        values, present, terms = {}, [], [row["name"]]
+        values, categories, present, terms = {}, {}, [], [row["name"]]
         for column_key, column in all_cols.items():
             value = cell(row, column_key)
             values[column_key] = value.get("value")
+            categories[column_key] = value.get("category")
             terms.append(value["text"])
             if column.get("kind") == "feature" and value.get("present") is True:
                 present.append(column_key)
         config_rows.append({"id": key, "order": order, "values": values,
-                            "features": present,
+                            "features": present, "categories": categories,
                             "baseline": row.get("category") == "baseline",
                             "search": " ".join(terms).lower()})
     filters = data.get("numeric_filters", [])
@@ -210,6 +213,21 @@ def render(data):
             options += f'<option value="{j}">{escape(option["label"])}</option>'
         controls.append(f'<label>{escape(constraint["label"])}<select data-numeric="{i}">'
                         f'{options}</select></label>')
+    categorical_filters = data.get("categorical_filters", [])
+    category_controls = []
+    for i, constraint in enumerate(categorical_filters):
+        key = constraint["key"]
+        if key not in all_cols:
+            raise ValueError(f"Category filter needs a known column: {key}")
+        options = '<option value="all">Any</option>'
+        for j, option in enumerate(constraint["options"]):
+            values = option["values"]
+            if (not isinstance(values, list) or not values
+                    or any(v is not None and (not isinstance(v, str) or not v) for v in values)):
+                raise ValueError("Category options need a nonempty list of strings/null")
+            options += f'<option value="{j}">{escape(option["label"])}</option>'
+        category_controls.append(f'<label>{escape(constraint["label"])}'
+                                 f'<select data-category="{i}">{options}</select></label>')
     feature_cols = [c for c in all_cols.values() if c.get("kind") == "feature"]
     feature_filter = ""
     if feature_cols:
@@ -263,7 +281,8 @@ def render(data):
         "TITLE": escape(data["title"]), "SCOPE": escape(data["scope"]),
         "OBSERVED_AT": escape(data["observed_at"]),
         "PICKS": '<section class="picks">' + "".join(picks) + '</section>' if picks else "",
-        "NUMERIC_FILTERS": "".join(controls), "FEATURE_FILTER": feature_filter,
+        "NUMERIC_FILTERS": "".join(controls),
+        "CATEGORICAL_FILTERS": "".join(category_controls), "FEATURE_FILTER": feature_filter,
         "PIN_CONTROL": ('<label class="pin-control"><input id="pin-baseline" '
                         'type="checkbox"' + (' checked' if pin_baseline else '')
                         + '>Pin baseline</label><span class="meta">Pinned baseline ignores filters.</span>')
@@ -271,7 +290,7 @@ def render(data):
         "SORT_OPTIONS": sort_options, "MATRICES": matrices, "DETAILS": details,
         "NOTES": '<details open><summary>Conditions and evidence</summary><ul class="notes">'
                  + facts(notes) + '</ul></details>' if notes else "",
-        "CONFIG": json.dumps({"rows": config_rows, "numericFilters": filters, "pinBaseline": pin_baseline}, ensure_ascii=True)
+        "CONFIG": json.dumps({"rows": config_rows, "numericFilters": filters, "pinBaseline": pin_baseline, "categoricalFilters": categorical_filters}, ensure_ascii=True)
                   .replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026"),
     }
     template = Path(__file__).resolve().parents[1] / "assets/report-template.html"

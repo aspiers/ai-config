@@ -45,7 +45,8 @@ by default, with a checked "Pin baseline" option. Alternatives scroll directly
 underneath it for vertical comparison. Keep the columns needed to identify
 rows fixed during horizontal scrolling, including at narrow viewport widths.
 
-Give common decision criteria separate columns. Avoid one crowded "extras"
+Give common decision criteria separate columns and useful filters, including
+categorical choices and known absence as well as positive feature flags. Avoid one crowded "extras"
 cell for unrelated capabilities. Keep factual values precise; keep judgement
 and uncertainty visible. Use focused facet matrices when one matrix becomes
 hard to read, preserving candidates and order across facets.

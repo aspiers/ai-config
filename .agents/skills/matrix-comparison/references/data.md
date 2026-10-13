@@ -16,8 +16,9 @@ source links; do not place raw HTML in input fields.
   `category` (`candidate`, `baseline` or `excluded`) and a `cells` mapping.
   Order is recommendation order, not a computed score.
 - Each cell has `text`, optional `status` (`good`, `caution`, `poor`,
-  `unknown`, `neutral`), optional numeric `value`, optional boolean `present`
-  and optional `sources`, an array of `{label, url}` objects. Omitted cells
+  `unknown`, `neutral`), optional numeric `value`, optional boolean `present`,
+  optional string `category`, and optional `sources`, an array of
+  `{label, url}` objects. Omitted cells
   render as unknown. `present: true` is required to pass a feature filter;
   `false` is known absence and omission means unknown. Colour never implies
   a filter flag. Numeric values use one stated unit; missing values sort last.
@@ -34,6 +35,12 @@ source links; do not place raw HTML in input fields.
 - `numeric_filters`: optional `{key, label, options}` constraints. Each option
   has a label and numeric `max`, with optional `exclusive: true`. No option
   selected means no constraint; unknown values fail an active constraint.
+- `categorical_filters`: optional `{key, label, options}` selectors referencing
+  a known column. Each option has `label` and a nonempty `values` array of
+  exact cell-category strings. Group several values in one option where
+  useful. Use `null` to explicitly match cells without a known category.
+  The default "Any" imposes no category constraint. Category labels and
+  suitability colours are independent; do not infer either from the other.
 - `facets`: optional `{id, title, columns}` extra matrices using the same rows
   and cells. Column objects follow the main-column contract.
 - A row's optional `details` is an array of `{label, text, sources}` facts or

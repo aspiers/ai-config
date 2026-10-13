@@ -39,6 +39,7 @@ table tbody::after{content:"";display:table-row;height:var(--scroll-tail,0px)}
 <section class="controls" aria-label="Filter comparison">
 <label class="search-label" for="search">Search<input id="search" type="search" placeholder="Name or keyword" autocomplete="off"></label>
 {{NUMERIC_FILTERS}}
+{{CATEGORICAL_FILTERS}}
 {{FEATURE_FILTER}}
 {{PIN_CONTROL}}
 <label for="sort">Sort by<select id="sort">{{SORT_OPTIONS}}</select></label>
@@ -105,6 +106,7 @@ function setupStickyMatrix(table){
     const sort=document.getElementById('sort');
     const boxes=Array.from(document.querySelectorAll('#feature input[type=checkbox]'));
     const numeric=Array.from(document.querySelectorAll('select[data-numeric]'));
+    const categories=Array.from(document.querySelectorAll('select[data-category]'));
     const summary=document.getElementById('feature-summary');
     const count=document.getElementById('count');
     const empty=document.getElementById('empty');
@@ -132,7 +134,13 @@ function setupStickyMatrix(table){
                 const value=row.values[filter.key];
                 return value!=null&&(option.exclusive?value<option.max:value<=option.max);
             });
-            if(isPinned(row)||(row.search.includes(query)&&constraints&&selected.every(key=>row.features.includes(key))))visible.add(row.id);
+            const categoryMatch=categories.every(control=>{
+                if(control.value==='all')return true;
+                const filter=config.categoricalFilters[Number(control.dataset.category)];
+                const option=filter.options[Number(control.value)];
+                return option.values.includes(row.categories[filter.key]??null);
+            });
+            if(isPinned(row)||(row.search.includes(query)&&constraints&&categoryMatch&&selected.every(key=>row.features.includes(key))))visible.add(row.id);
         }
         const order=new Map(ordered.map((row,i)=>[row.id,i]));
         rowGroups.forEach((group,i)=>{
@@ -152,11 +160,13 @@ function setupStickyMatrix(table){
     sort.addEventListener('change',update);
     boxes.forEach(box=>box.addEventListener('change',update));
     numeric.forEach(control=>control.addEventListener('change',update));
+    categories.forEach(control=>control.addEventListener('change',update));
     document.getElementById('reset').addEventListener('click',()=>{
         if(pinBaseline)pinBaseline.checked=config.pinBaseline;
         search.value='';sort.value='rank';
         boxes.forEach(box=>{box.checked=false;});
         numeric.forEach(control=>{control.value='all';});
+        categories.forEach(control=>{control.value='all';});
         const menu=document.getElementById('feature-menu');
         if(menu)menu.open=false;
         update();

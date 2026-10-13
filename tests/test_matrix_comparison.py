@@ -154,6 +154,31 @@ class TestMatrixComparison(unittest.TestCase):
         with self.assertRaises(ValueError):
             renderer.render(data)
 
+    def test_categorical_filters_preserve_groups_and_unknowns(self):
+        data = fixture()
+        data['rows'][0]['cells']['async']['category'] = 'remote'
+        data['rows'][1]['cells']['async']['category'] = 'in-person'
+        data['categorical_filters'] = [{
+            'key': 'async', 'label': 'Participation', 'options': [
+                {'label': 'Remote', 'values': ['remote']},
+                {'label': 'Known', 'values': ['remote', 'in-person']},
+                {'label': 'Unverified', 'values': [None]},
+            ]}]
+        text = renderer.render(data)
+        config = json.loads(re.search(r'type="application/json">(.*?)</script>', text, re.S)[1])
+        self.assertEqual(config['rows'][0]['categories']['async'], 'remote')
+        self.assertIsNone(config['rows'][2]['categories']['async'])
+        self.assertEqual(config['categoricalFilters'], data['categorical_filters'])
+        self.assertIn('data-category="0"', text)
+        for values in [[], 'remote', [False], ['']]:
+            data['categorical_filters'][0]['options'][0]['values'] = values
+            with self.assertRaises(ValueError):
+                renderer.render(data)
+        data['categorical_filters'][0]['options'][0]['values'] = ['remote']
+        data['categorical_filters'][0]['key'] = 'missing'
+        with self.assertRaises(ValueError):
+            renderer.render(data)
+
     def test_section_id_collisions_fail(self):
         data = fixture()
         data['table_id'] = 'candidate-written'

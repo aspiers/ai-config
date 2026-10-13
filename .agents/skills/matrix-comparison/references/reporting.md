@@ -69,7 +69,9 @@ thresholds are chosen, explain them and keep them separate from ranking.
 
 ## Controls
 
-Provide search, recommendation order and useful numeric sorts. Include
+Provide search, recommendation order and useful numeric sorts. Make
+important categorical criteria filterable too, including presence/absence
+choices where relevant. Keep unknown values distinct from known absence. Include
 numeric constraint filters only when they apply to the domain; cost/budget
 is not assumed. Preserve units, boundary inclusivity and unknown values.
 
@@ -77,7 +79,7 @@ Feature requirements use labelled checkboxes or an accessible multi-select,
 not a single-choice dropdown. **Match all selected requirements (AND)** by
 default and state this beside the controls. No selected features means no
 feature constraint. Combine search, numeric limits and selected requirements
-with AND. Unknown capability does not satisfy a positive requirement.
+and categorical selections with AND. Unknown capability does not satisfy a positive requirement.
 
 A pinned baseline stays visible regardless of search, feature requirements,
 numeric filters or sort order. Label this exception. When pinning is disabled,

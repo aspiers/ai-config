@@ -109,15 +109,15 @@ the file you failed to read.
 
 Typical locations, in order of likelihood:
 
-- a notes file under the user's notes directory (search for
-  "Accounting", "accounts", "codes")
+- a notes file under the user's notes directory (ask before searching
+  it for "Accounting", "accounts", "codes")
 - an env var such as `$ACCOUNTING_NOTES`
 - the project's `CLAUDE.md` / `AGENTS.md`, or a project-level skill
 - the private project repo's own `.claude/skills/`
 
 ```bash
 # Search likely sources for the supplier or a keyword:
-grep -rinE "<supplier>|<keyword>" "$ACCOUNTING_NOTES" ~/notes ~/org 2>/dev/null
+grep -rinE "<supplier>|<keyword>" "$ACCOUNTING_NOTES"
 ```
 
 Record the location in the **project's own private skill or memory** once

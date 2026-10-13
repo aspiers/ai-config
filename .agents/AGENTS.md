@@ -56,8 +56,12 @@ The author's defaults for every agent harness configured here; adapt them.
 ## Privacy
 
 - Never read the user's private data without explicit permission for that
-  specific access: clipboard history, browser or shell history, mail,
-  personal chat logs, keyrings and password stores. Agent session
+  specific access: personal notes and documents, clipboard history,
+  browser or shell history, mail, personal chat logs, keyrings and
+  password stores. That includes searching them, and quoting a note in
+  chat does not grant access to the note. A file a loaded skill or
+  instruction names explicitly is pre-authorised; files beside it are
+  not. Agent session
   transcripts (e.g. via agentsview) are work records: search them freely.
   Reading the clipboard right after the task copied to it is fine. Needing
   to verify something is not permission; ask, naming the tool you would

@@ -176,8 +176,8 @@ dependencies per branch, links change requests, and renders the Git Machete
 graph in a separate preformatted section. Controls above the table sort by
 progress in either direction, stack order, branch size, name or staleness,
 and filter by stage, text, whose move, and whether any dependency has yet to
-merge. Merged and closed rows start hidden, and a count shows how many rows
-the filters hide.
+merge. The page starts with the most progress first and with merged and
+closed rows hidden, and a count shows how many rows the filters hide.
 The page keeps the chosen view in the URL hash and in `localStorage`, so a
 reload after regeneration keeps it. Never use a temporary directory
 outside the repository for these files. Check that `tmp/` is ignored by Git

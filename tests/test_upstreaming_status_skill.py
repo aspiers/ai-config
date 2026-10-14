@@ -245,6 +245,7 @@ class UpstreamingStatusRendererTests(unittest.TestCase):
         )
 
         self.assertIn('value="local" checked', rendered)
+        self.assertIn('<option value="progress-desc" selected>', rendered)
         self.assertRegex(rendered, r'value="closed" />[^<]*<span[^>]*>⛔</span> closed 1')
         self.assertRegex(rendered, r'value="merged" />[^<]*<span[^>]*>✅</span> merged 1')
         self.assertNotIn('value="ready"', rendered)

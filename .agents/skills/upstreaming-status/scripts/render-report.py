@@ -184,7 +184,7 @@ def render_rows(branches: list[dict]) -> str:
         )
         rows.append(
             f'<tr class="stage-{stage}"{attributes}>'
-            f"<td><code>{escaped(branch['name'])}</code>{description}</td>"
+            f'<td class="branch"><code>{escaped(branch["name"])}</code>{description}</td>'
             f"<td>{render_dependencies(branch['dependencies'])}</td>"
             f'<td class="divergence">↑{branch["ahead"]} ↓{branch["behind"]}</td>'
             f'<td class="progress"><span aria-hidden="true">{emoji}</span> '

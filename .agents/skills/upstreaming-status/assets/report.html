@@ -55,8 +55,6 @@
         margin: 0;
       }
       main {
-        margin: 0 auto;
-        max-width: 1600px;
         padding: clamp(1.25rem, 4vw, 3rem);
       }
       h1 {
@@ -143,10 +141,15 @@
           "Courier New", monospace;
         font-size: 0.95em;
       }
+      .branch {
+        width: 40%;
+      }
+      .branch > code {
+        white-space: nowrap;
+      }
       .description {
         color: var(--muted);
         margin: 0.45rem 0 0;
-        max-width: 72ch;
       }
       .meta {
         color: var(--muted);
@@ -163,9 +166,6 @@
       }
       .divergence {
         font-variant-numeric: tabular-nums;
-        white-space: nowrap;
-      }
-      .progress {
         white-space: nowrap;
       }
       .machete,
@@ -324,7 +324,7 @@
           </caption>
           <thead>
             <tr>
-              <th scope="col">Branch and description</th>
+              <th scope="col" class="branch">Branch and description</th>
               <th scope="col">Depends on</th>
               <th scope="col">Upstream ↕</th>
               <th scope="col">Upstream progress</th>

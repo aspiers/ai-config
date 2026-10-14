@@ -1,6 +1,6 @@
 ---
 name: orca-cli-local
-description: Applies local lessons to every use of the Orca CLI (orca-ide, orca-dev). Use alongside the upstream orca-cli skill whenever the Orca CLI is needed, including before creating a branch worktree or asking the user for feedback on a change before committing while running inside Orca.
+description: Applies local lessons to every use of the Orca CLI (orca-ide, orca-dev). Use alongside the upstream orca-cli skill whenever the Orca CLI is needed, including before creating a branch worktree, when starting a fix or change in a repository registered in Orca, or asking the user for feedback on a change before committing while running inside Orca.
 ---
 
 # Local orca-cli guidance
@@ -52,8 +52,9 @@ tacticalvote it still pointed at `origin/locals-2025`, 211 commits behind
 
 When running inside Orca (`ORCA_PANE_KEY` is set) in a repository with an
 `orca.yaml`, or registered in Orca, create every new worktree with
-`worktree create`, including one for your own next change. Outside Orca the
-CLI cannot create one; follow `git-branch-management` instead.
+`worktree create`, including one for your own next change, and one for a
+fix you were just asked to make, before diagnosing it. Outside Orca the CLI
+cannot create one; follow `git-branch-management` instead.
 `git worktree add` and `wt switch --create` skip Orca's setup, leaving no
 dependencies or env files. Pass `--parent-worktree path:<main checkout>`,
 `--base-branch origin/<target>` (see above), and `--setup run` unless the

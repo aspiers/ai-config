@@ -84,3 +84,8 @@
 # launch, so tracking them would dirty this repository on every start.
 /.pi/agent/extensions/orca-*.ts
 /.omp/agent/extensions/orca-*.ts
+#
+# Likewise its OpenCode status plugin, written as a single file plus a TUI
+# copy, with no marker line.
+/.config/opencode/plugins/orca-*.js
+/.config/opencode/plugins/orca-*-tui/

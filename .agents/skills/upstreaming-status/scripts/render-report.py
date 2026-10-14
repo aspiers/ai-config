@@ -172,6 +172,7 @@ def render_rows(branches: list[dict]) -> str:
         data = {
             "stage": stage,
             "rank": rank,
+            "progress": STAGES[stage][0],
             "stack": positions[branch["name"]],
             "name": branch["name"],
             "ahead": branch["ahead"],

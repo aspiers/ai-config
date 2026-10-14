@@ -224,6 +224,8 @@ class UpstreamingStatusRendererTests(unittest.TestCase):
         self.assertEqual(
             names.index("fix/landed") + 1, names.index("fix/after-merged")
         )
+        self.assertEqual(root["progress"], "4")
+        self.assertEqual(landed["progress"], "6")
         self.assertEqual(child["unblocked"], "0")
         self.assertEqual(other["unblocked"], "1")
         self.assertEqual(after["unblocked"], "1")

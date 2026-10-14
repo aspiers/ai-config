@@ -286,7 +286,8 @@
         <label class="field">
           <span>Sort by</span>
           <select name="sort">
-            <option value="progress">Progress</option>
+            <option value="progress">Progress (least first)</option>
+            <option value="progress-desc">Progress (most first)</option>
             <option value="stack">Stack order</option>
             <option value="size">Branch size (smallest first)</option>
             <option value="name">Name A–Z</option>
@@ -356,6 +357,7 @@
           direction * (a.dataset[key] - b.dataset[key]);
         const sorters = {
           progress: () => 0,
+          "progress-desc": byNumber("progress", -1),
           stack: byNumber("stack"),
           size: byNumber("ahead"),
           name: (a, b) => a.dataset.name.localeCompare(b.dataset.name),

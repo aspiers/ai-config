@@ -99,7 +99,8 @@ numbers when URLs are available.
 
 Write report data to `tmp/upstreaming-status.json` at the root of the
 repository being reported on, creating `tmp/` if needed. Use this shape;
-`request` is optional and `stage` must be one of the status names above:
+`request` and `waiting_on` are optional and `stage` must be one of the status
+names above:
 
 ```json
 {
@@ -120,7 +121,8 @@ repository being reported on, creating `tmp/` if needed. Use this shape;
       "behind": 0,
       "stage": "published",
       "progress": "Fork published, no PR",
-      "next_step": "Open PR"
+      "next_step": "Open PR",
+      "waiting_on": "me"
     },
     {
       "name": "fix/other",
@@ -135,7 +137,8 @@ repository being reported on, creating `tmp/` if needed. Use this shape;
         "label": "PR #42",
         "url": "https://example.com/owner/project/pull/42"
       },
-      "next_step": "Await review"
+      "next_step": "Await review",
+      "waiting_on": "upstream"
     }
   ],
   "runtime_notes": [
@@ -153,6 +156,12 @@ status output in `machete_graph`; if Machete is unavailable, put the exact reaso
 there rather than inventing a graph. Set `stale` to `true` when remote state was
 not refreshed.
 
+Set `waiting_on` to `me` when the next step is the user's, such as rebasing,
+addressing review, or opening a change request, and to `upstream` when the
+branch waits on maintainers, reviewers, or upstream CI. Give it on every
+branch or none: the report's "Whose move" filter appears only when some branch
+has it, and a branch without it matches neither choice.
+
 Render the JSON with the bundled `scripts/render-report.py` into
 `tmp/upstreaming-status.html`, next to the JSON, so that every run overwrites
 the same file and the browser can be refreshed rather than opening a new tab:
@@ -164,7 +173,12 @@ python3 <skill-dir>/scripts/render-report.py \
 
 The renderer escapes dynamic content, orders rows by progress, shows stack
 dependencies per branch, links change requests, and renders the Git Machete
-graph in a separate preformatted section. Never use a temporary directory
+graph in a separate preformatted section. Controls above the table sort by
+progress, stack order, branch size, name or staleness, and filter by stage,
+text, whose move, and whether any dependency has yet to merge. Merged and
+closed rows start hidden, and a count shows how many rows the filters hide.
+The page keeps the chosen view in the URL hash and in `localStorage`, so a
+reload after regeneration keeps it. Never use a temporary directory
 outside the repository for these files. Check that `tmp/` is ignored by Git
 (`git check-ignore tmp/upstreaming-status.html`); if it is not, warn the user
 that the generated files will show as untracked rather than committing them

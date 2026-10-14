@@ -73,7 +73,30 @@ class UpstreamingStatusSkillTests(unittest.TestCase):
 
 
 class UpstreamingStatusRendererTests(unittest.TestCase):
-    def render(self, branches: list[dict]) -> str:
+    def branch(self, name: str, stage: str, **fields: object) -> dict:
+        return {
+            "name": name,
+            "purpose": "purpose",
+            "description": "Description.",
+            "dependencies": [],
+            "ahead": 1,
+            "behind": 0,
+            "stage": stage,
+            "progress": stage,
+            "next_step": "Next",
+        } | fields
+
+    def row_attributes(self, rendered: str, name: str) -> dict[str, str]:
+        row = re.search(rf'<tr [^>]*data-name="{re.escape(name)}"[^>]*>', rendered)
+        self.assertIsNotNone(row, name)
+        return dict(re.findall(r'data-([a-z-]+)="([^"]*)"', row.group(0)))
+
+    def render_fails(self, branches: list[dict]) -> str:
+        with self.assertRaises(subprocess.CalledProcessError) as caught:
+            self.render(branches, capture_output=True, text=True)
+        return caught.exception.stderr
+
+    def render(self, branches: list[dict], **run_options: object) -> str:
         data = {
             "repository": "owner/project",
             "canonical_url": "https://example.com/owner/project",
@@ -103,6 +126,7 @@ class UpstreamingStatusRendererTests(unittest.TestCase):
                     str(output_path),
                 ],
                 check=True,
+                **run_options,
             )
             return output_path.read_text()
 
@@ -166,6 +190,88 @@ class UpstreamingStatusRendererTests(unittest.TestCase):
 
         self.assertIn("No source branches qualify.", rendered)
         self.assertIn('class="table-wrap hidden"', rendered)
+
+    def test_rows_carry_stack_order_and_unblocked_state(self) -> None:
+        rendered = self.render(
+            [
+                self.branch("fix/child", "local", dependencies=["fix/root"]),
+                self.branch("fix/other", "local", waiting_on="me"),
+                self.branch("fix/root", "ready", waiting_on="upstream"),
+                self.branch(
+                    "fix/after-merged", "published", dependencies=["fix/landed"]
+                ),
+                self.branch("fix/landed", "merged"),
+            ]
+        )
+
+        child = self.row_attributes(rendered, "fix/child")
+        other = self.row_attributes(rendered, "fix/other")
+        root = self.row_attributes(rendered, "fix/root")
+        after = self.row_attributes(rendered, "fix/after-merged")
+        landed = self.row_attributes(rendered, "fix/landed")
+        stack = sorted(
+            (int(row["stack"]), name)
+            for name, row in (
+                ("fix/child", child),
+                ("fix/other", other),
+                ("fix/root", root),
+                ("fix/after-merged", after),
+                ("fix/landed", landed),
+            )
+        )
+        names = [name for _, name in stack]
+        self.assertEqual(names.index("fix/root") + 1, names.index("fix/child"))
+        self.assertEqual(
+            names.index("fix/landed") + 1, names.index("fix/after-merged")
+        )
+        self.assertEqual(child["unblocked"], "0")
+        self.assertEqual(other["unblocked"], "1")
+        self.assertEqual(after["unblocked"], "1")
+        self.assertEqual(landed["unblocked"], "0")
+        self.assertEqual(root["waiting-on"], "upstream")
+        self.assertEqual(other["waiting-on"], "me")
+        self.assertEqual(child["waiting-on"], "")
+        self.assertNotIn('class="field hidden"', rendered)
+
+    def test_merged_and_closed_stage_filters_start_unchecked(self) -> None:
+        rendered = self.render(
+            [
+                self.branch("fix/local", "local"),
+                self.branch("fix/closed", "closed"),
+                self.branch("fix/merged", "merged"),
+            ]
+        )
+
+        self.assertIn('value="local" checked', rendered)
+        self.assertRegex(rendered, r'value="closed" />[^<]*<span[^>]*>⛔</span> closed 1')
+        self.assertRegex(rendered, r'value="merged" />[^<]*<span[^>]*>✅</span> merged 1')
+        self.assertNotIn('value="ready"', rendered)
+        self.assertIn('class="field hidden"', rendered)
+
+    def test_dependency_cycle_still_orders_every_row(self) -> None:
+        rendered = self.render(
+            [
+                self.branch("fix/a", "local", dependencies=["fix/b"]),
+                self.branch("fix/b", "local", dependencies=["fix/a"]),
+            ]
+        )
+
+        stacks = {
+            self.row_attributes(rendered, name)["stack"] for name in ("fix/a", "fix/b")
+        }
+        self.assertEqual(stacks, {"0", "1"})
+
+    def test_invalid_waiting_on_and_duplicate_names_are_rejected(self) -> None:
+        self.assertIn(
+            "waiting_on must be one of: me, upstream",
+            self.render_fails([self.branch("fix/a", "local", waiting_on="them")]),
+        )
+        self.assertIn(
+            "branch names must be unique",
+            self.render_fails(
+                [self.branch("fix/a", "local"), self.branch("fix/a", "ready")]
+            ),
+        )
 
 
 if __name__ == "__main__":

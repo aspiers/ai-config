@@ -27,6 +27,8 @@ REQUIRED_BRANCH_FIELDS = {
     "progress",
     "next_step",
 }
+WAITING_ON = {"me", "upstream"}
+HIDDEN_BY_DEFAULT = {"merged", "closed"}
 
 
 def escaped(value: object) -> str:
@@ -78,6 +80,9 @@ def validate(data: object) -> dict:
         if branch["stage"] not in STAGES:
             choices = ", ".join(STAGES)
             raise ValueError(f"branch {index} stage must be one of: {choices}")
+        if "waiting_on" in branch and branch["waiting_on"] not in WAITING_ON:
+            choices = ", ".join(sorted(WAITING_ON))
+            raise ValueError(f"branch {index} waiting_on must be one of: {choices}")
         dependencies = branch["dependencies"]
         if not isinstance(dependencies, list) or any(
             not isinstance(dependency, str) or not dependency
@@ -95,6 +100,10 @@ def validate(data: object) -> dict:
                 raise ValueError(
                     f"branch {index} {field} must be a non-negative integer"
                 )
+
+    names = [branch["name"] for branch in branches]
+    if len(names) != len(set(names)):
+        raise ValueError("branch names must be unique")
 
     machete_graph = data["machete_graph"]
     if not isinstance(machete_graph, str) or not machete_graph.strip():
@@ -117,10 +126,42 @@ def render_dependencies(dependencies: list[str]) -> str:
     return f'<ol class="dependencies">{items}</ol>'
 
 
+def stack_positions(ordered: list[dict]) -> dict[str, int]:
+    """Number branches depth-first so each stack root precedes its dependents."""
+    names = {branch["name"] for branch in ordered}
+    children: dict[str | None, list[dict]] = {}
+    for branch in ordered:
+        parent = next(
+            (name for name in reversed(branch["dependencies"]) if name in names), None
+        )
+        children.setdefault(parent, []).append(branch)
+    positions: dict[str, int] = {}
+
+    def visit(branch: dict) -> None:
+        if branch["name"] in positions:
+            return
+        positions[branch["name"]] = len(positions)
+        for child in children.get(branch["name"], []):
+            visit(child)
+
+    # Branches caught in a dependency cycle have no root, so visit them last.
+    for branch in children.get(None, []) + ordered:
+        visit(branch)
+    return positions
+
+
+def unblocked_by_stack(branch: dict, merged: set[str]) -> bool:
+    return branch["stage"] not in HIDDEN_BY_DEFAULT and all(
+        dependency in merged for dependency in branch["dependencies"]
+    )
+
+
 def render_rows(branches: list[dict]) -> str:
     rows = []
     ordered = sorted(branches, key=lambda branch: STAGES[branch["stage"]][0])
-    for branch in ordered:
+    positions = stack_positions(ordered)
+    merged = {branch["name"] for branch in branches if branch["stage"] == "merged"}
+    for rank, branch in enumerate(ordered):
         stage = branch["stage"]
         emoji = STAGES[stage][1]
         description = f'<p class="description">{escaped(branch["description"])}</p>'
@@ -128,8 +169,21 @@ def render_rows(branches: list[dict]) -> str:
         request_html = ""
         if isinstance(request, dict) and request.get("label"):
             request_html = linked_text(request["label"], request.get("url")) + " "
+        data = {
+            "stage": stage,
+            "rank": rank,
+            "stack": positions[branch["name"]],
+            "name": branch["name"],
+            "ahead": branch["ahead"],
+            "behind": branch["behind"],
+            "unblocked": int(unblocked_by_stack(branch, merged)),
+            "waiting-on": branch.get("waiting_on", ""),
+        }
+        attributes = "".join(
+            f' data-{key}="{escaped(value)}"' for key, value in data.items()
+        )
         rows.append(
-            f'<tr class="stage-{stage}">'
+            f'<tr class="stage-{stage}"{attributes}>'
             f"<td><code>{escaped(branch['name'])}</code>{description}</td>"
             f"<td>{render_dependencies(branch['dependencies'])}</td>"
             f'<td class="divergence">↑{branch["ahead"]} ↓{branch["behind"]}</td>'
@@ -139,6 +193,19 @@ def render_rows(branches: list[dict]) -> str:
             "</tr>"
         )
     return "\n".join(rows)
+
+
+def render_stage_filters(branches: list[dict]) -> str:
+    counts = {stage: 0 for stage in STAGES}
+    for branch in branches:
+        counts[branch["stage"]] += 1
+    return "".join(
+        f'<label class="chip stage-{stage}"><input type="checkbox" name="stage" '
+        f'value="{stage}"{"" if stage in HIDDEN_BY_DEFAULT else " checked"} /> '
+        f'<span aria-hidden="true">{emoji}</span> {stage} {counts[stage]}</label>'
+        for stage, (_, emoji) in STAGES.items()
+        if counts[stage]
+    )
 
 
 def render_inline_code(text: str) -> str:
@@ -176,6 +243,11 @@ def render_report(data: dict, template: str) -> str:
             f"{escaped(data['as_of'])} · {escaped(freshness)}"
         ),
         "{{ROWS}}": render_rows(data["branches"]),
+        "{{STAGE_FILTERS}}": render_stage_filters(data["branches"]),
+        "{{WHO_HIDDEN}}": ""
+        if any("waiting_on" in branch for branch in data["branches"])
+        else " hidden",
+        "{{STORAGE_KEY}}": escaped(f"upstreaming-status:{data['repository']}"),
         "{{EMPTY}}": ""
         if data["branches"]
         else '<p class="empty">No source branches qualify.</p>',

@@ -205,8 +205,69 @@
         border-radius: 12px;
         padding: 1rem;
       }
-      .hidden {
-        display: none;
+      .hidden,
+      [hidden] {
+        display: none !important;
+      }
+      .view {
+        align-items: end;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem 1.5rem;
+        margin-bottom: 1rem;
+        padding: 0.85rem 1rem;
+      }
+      .view fieldset {
+        border: 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        margin: 0;
+        padding: 0;
+      }
+      .view legend,
+      .view .field > span {
+        color: var(--muted);
+        display: block;
+        font-size: 0.85rem;
+        margin-bottom: 0.3rem;
+        padding: 0;
+      }
+      .view select,
+      .view input[type="search"] {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        color: var(--text);
+        font: inherit;
+        padding: 0.3rem 0.5rem;
+      }
+      .chip {
+        border: 1px solid var(--border);
+        border-left: 4px solid var(--stage);
+        border-radius: 999px;
+        cursor: pointer;
+        padding: 0.2rem 0.7rem 0.2rem 0.5rem;
+        white-space: nowrap;
+      }
+      .chip:has(input:checked) {
+        background: color-mix(in srgb, var(--panel), var(--stage) 18%);
+      }
+      .chip:has(input:focus-visible),
+      .view select:focus-visible,
+      .view input:focus-visible {
+        outline: 3px solid var(--accent);
+        outline-offset: 2px;
+      }
+      .unblocked-toggle {
+        white-space: nowrap;
+      }
+      .count {
+        color: var(--muted);
+        margin: 0 0 0 auto;
       }
     </style>
   </head>
@@ -216,10 +277,50 @@
       <p class="summary">{{SUMMARY}}</p>
       <p class="meta">{{META}}</p>
       {{EMPTY}}
+      <form
+        class="view{{TABLE_HIDDEN}}"
+        id="view"
+        data-storage-key="{{STORAGE_KEY}}"
+        aria-label="Sort and filter branches"
+      >
+        <label class="field">
+          <span>Sort by</span>
+          <select name="sort">
+            <option value="progress">Progress</option>
+            <option value="stack">Stack order</option>
+            <option value="size">Branch size (smallest first)</option>
+            <option value="name">Name A–Z</option>
+            <option value="staleness">Staleness (most behind first)</option>
+          </select>
+        </label>
+        <fieldset>
+          <legend>Stages</legend>
+          {{STAGE_FILTERS}}
+        </fieldset>
+        <label class="field">
+          <span>Search</span>
+          <input type="search" name="q" placeholder="Branch, description, PR…" />
+        </label>
+        <label class="field{{WHO_HIDDEN}}">
+          <span>Whose move</span>
+          <select name="who">
+            <option value="">Anyone</option>
+            <option value="me">Needs me</option>
+            <option value="upstream">Waiting on upstream</option>
+          </select>
+        </label>
+        <label
+          class="unblocked-toggle"
+          title="Hide branches that still need another source branch to merge first"
+        >
+          <input type="checkbox" name="unblocked" /> Nothing left to land first
+        </label>
+        <p class="count" id="count" aria-live="polite"></p>
+      </form>
       <div class="table-wrap{{TABLE_HIDDEN}}">
         <table>
           <caption>
-            Source branches ordered by upstream progress
+            Source branches
           </caption>
           <thead>
             <tr>
@@ -242,5 +343,97 @@
       </section>
       {{NOTES}}
     </main>
+    <script>
+      (() => {
+        const form = document.getElementById("view");
+        const tbody = document.querySelector("tbody");
+        const rows = [...tbody.rows];
+        const count = document.getElementById("count");
+        const stages = [...form.querySelectorAll('[name="stage"]')];
+        const { sort, q, who, unblocked } = form.elements;
+        const storageKey = form.dataset.storageKey;
+        const byNumber = (key, direction = 1) => (a, b) =>
+          direction * (a.dataset[key] - b.dataset[key]);
+        const sorters = {
+          progress: () => 0,
+          stack: byNumber("stack"),
+          size: byNumber("ahead"),
+          name: (a, b) => a.dataset.name.localeCompare(b.dataset.name),
+          staleness: byNumber("behind", -1),
+        };
+
+        // The view lives in the URL hash so a reload after regeneration
+        // keeps it; localStorage restores it when the report opens afresh.
+        function serialise() {
+          const params = new URLSearchParams({ sort: sort.value });
+          params.set(
+            "stages",
+            stages.filter((box) => box.checked).map((box) => box.value).join(",")
+          );
+          if (q.value) params.set("q", q.value);
+          if (who.value) params.set("who", who.value);
+          if (unblocked.checked) params.set("unblocked", "1");
+          return params.toString();
+        }
+
+        function restore() {
+          let saved = location.hash.slice(1);
+          try {
+            saved ||= localStorage.getItem(storageKey) || "";
+          } catch {}
+          if (!saved) return;
+          const params = new URLSearchParams(saved);
+          if (Object.hasOwn(sorters, params.get("sort"))) sort.value = params.get("sort");
+          if (params.has("stages")) {
+            const wanted = params.get("stages").split(",");
+            stages.forEach((box) => (box.checked = wanted.includes(box.value)));
+          }
+          q.value = params.get("q") || "";
+          who.value = params.get("who") || "";
+          unblocked.checked = params.get("unblocked") === "1";
+        }
+
+        function matches(row) {
+          const text = row.textContent.toLowerCase();
+          return (
+            stages.some((box) => box.checked && box.value === row.dataset.stage) &&
+            text.includes(q.value.trim().toLowerCase()) &&
+            (!who.value || row.dataset.waitingOn === who.value) &&
+            (!unblocked.checked || row.dataset.unblocked === "1")
+          );
+        }
+
+        function apply() {
+          const compare = sorters[sort.value];
+          rows.sort((a, b) => compare(a, b) || a.dataset.rank - b.dataset.rank);
+          let shown = 0;
+          for (const row of rows) {
+            row.hidden = !matches(row);
+            shown += !row.hidden;
+            tbody.append(row);
+          }
+          const hidden = rows.length - shown;
+          count.textContent =
+            `Showing ${shown} of ${rows.length} branches` +
+            (hidden ? ` · ${hidden} hidden by filters` : "");
+          const state = serialise();
+          history.replaceState(null, "", "#" + state);
+          try {
+            localStorage.setItem(storageKey, state);
+          } catch {}
+        }
+
+        restore();
+        // Some scripted drivers fire only "change" on selects.
+        form.addEventListener("input", apply);
+        form.addEventListener("change", apply);
+        form.addEventListener("submit", (event) => event.preventDefault());
+        window.addEventListener("hashchange", () => {
+          restore();
+          apply();
+        });
+        apply();
+      })();
+    </script>
   </body>
 </html>

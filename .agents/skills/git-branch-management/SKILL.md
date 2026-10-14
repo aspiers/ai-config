@@ -4,10 +4,10 @@ description: >-
   Structures git branches and worktrees: keeps unrelated changes on separate
   branches, isolates each in its own worktree created so the repository's
   setup runs, records dependencies with git-machete, and recombines them into
-  a temporary mixdown branch for local testing. Use before creating any
-  branch or worktree in a codebase that works on more than one branch,
-  including branching off the default branch to start a change; when starting
-  work in a fork, clone, or third-party checkout; when choosing what a new
+  a temporary mixdown branch for local testing. Use when starting any fix or
+  change, diagnosis included, in a codebase that works on more than one
+  branch or in a fork, clone or third-party checkout, before reading code for
+  it; before creating any branch or worktree; when choosing what a new
   branch should be based on; when a branch is growing a second unrelated
   concern; when deciding whether to stack branches or keep them independent;
   when preparing a change for a pull request or patch submission; when handed
@@ -66,6 +66,10 @@ submitted until A lands. Stack only where a real dependency exists; combine
 independent branches with a mixdown instead.
 
 ## Isolate each branch in its own worktree
+
+Set up the worktree as soon as the user asks for a fix or change, before
+diagnosing it or reading code for it. Diagnosis is part of the work, and a
+session that starts reading in the main checkout tends to stay there.
 
 Develop each independent branch in its own worktree, so branches do not
 contend for a single checkout and each keeps its own build state.

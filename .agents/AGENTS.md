@@ -51,7 +51,10 @@ The author's defaults for every agent harness configured here; adapt them.
   write the answers out just before it.
 - End every final message with next steps. A choice for the user goes in
   the questionnaire tool; otherwise give one recommended action and why, or
-  say nothing remains. Findings alone are not an ending.
+  say nothing remains. Findings alone are not an ending. When another
+  loaded rule asks for a closing note, such as what was skipped or not
+  checked, put it just before the next steps or the question, which stay
+  last.
 
 ## Privacy
 

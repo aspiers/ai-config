@@ -79,6 +79,10 @@ The author's defaults for every agent harness configured here; adapt them.
 
 ## Tools and workflow
 
+- A request to fix or change code starts the work, diagnosis included.
+  Before reading code for it, load `git-branch-management` (and
+  `orca-cli-local` inside Orca) and set up the branch and worktree it
+  calls for.
 - Put temporary files in the repository's `tmp/`, where file tools can
   read them.
 - Capture the output of slow (over ~5 s) or repeatedly analysed commands

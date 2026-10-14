@@ -418,6 +418,11 @@
           count.textContent =
             `Showing ${shown} of ${rows.length} branches` +
             (hidden ? ` · ${hidden} hidden by filters` : "");
+        }
+
+        // Save only views the user picked, so changed defaults still apply.
+        function update() {
+          apply();
           const state = serialise();
           history.replaceState(null, "", "#" + state);
           try {
@@ -427,8 +432,8 @@
 
         restore();
         // Some scripted drivers fire only "change" on selects.
-        form.addEventListener("input", apply);
-        form.addEventListener("change", apply);
+        form.addEventListener("input", update);
+        form.addEventListener("change", update);
         form.addEventListener("submit", (event) => event.preventDefault());
         window.addEventListener("hashchange", () => {
           restore();

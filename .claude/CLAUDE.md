@@ -14,3 +14,9 @@ context keeps the full text. This includes text written just before an
   file. A hook makes you restate that text as a reply if it was hidden.
 - If told that content was not shown to the user, write it out in full as
   your reply.
+
+## Headings
+
+Never start a heading or bold lead-in with a question word such as "What",
+"Why" or "How". Name the subject instead: "Debugging after the drop", not
+"What I did afterwards".

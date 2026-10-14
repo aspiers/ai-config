@@ -115,6 +115,12 @@ it will close work nobody did.
    that state the consequence of picking each. If you have a recommendation,
    make it the first option and append "(Recommended)" to its label.
 
+   A bead's options were written when it was filed, possibly before
+   decisions or rules now in force. Before recommending one, check it
+   against the code it touches and the rules loaded now. If it adds a new
+   file, format or setting for values the existing structure can already
+   hold, recommend the smaller option and say why.
+
    Never batch several beads into one call. One bead, one call — that is what
    makes the review legible.
 

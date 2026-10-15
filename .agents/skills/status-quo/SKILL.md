@@ -1,5 +1,5 @@
 ---
-name: sq
+name: status-quo
 description: >-
   Summarises the current session's status so a human can see where things
   stand and what happens next. Use when the user invokes `/sq`, asks for the

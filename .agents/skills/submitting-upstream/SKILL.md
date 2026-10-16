@@ -142,7 +142,8 @@ Present:
 - the canonical destination and chosen submission type;
 - relevant guidance and whether each requirement is satisfied;
 - existing upstream work and how this submission relates to it;
-- the exact draft;
+- the exact draft, in an Orca tab when running inside Orca (see the global
+  rules);
 - for code, the base, commits, diff scope, and verification results;
 - the command or action that will publish it.
 

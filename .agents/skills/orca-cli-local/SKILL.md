@@ -168,6 +168,9 @@ A diff tab shows every uncommitted change in that file, not only yours. If
 the file also has hunks you didn't write, say so when you offer the tab, and
 say which hunks are yours.
 
+This is about code changes. A Markdown draft of text to publish, such as a
+PR body, goes in an Orca tab instead, as the global rules describe.
+
 ## Workaround: worker tabs titled `worker-task_<id>`
 
 Temporary, until [`stablyai/orca#21917`][orca-21917] is fixed (seen in

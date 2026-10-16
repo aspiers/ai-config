@@ -71,11 +71,14 @@ choose. Use the first of these that applies:
 
   ```sh
   orca-ide terminal create --worktree <selector> \
+    --title "<session name>" \
     --command '<agent CLI> --name "<session name>" "$(cat tmp/<brief>.md)"'
   ```
 
-  Omit `--title` when the tab should follow the agent's session name; it
-  creates a pinned custom label.
+  Pass the session name to `--title` as well. Orca's Activity sidebar
+  ignores session names and otherwise titles the row from the brief's first
+  words, which are the same for every delegate. The pinned label won't
+  follow later renames, which a delegate doesn't need.
 
   This is a handoff, not a supervised worker, so it needs no heartbeats,
   `worker_done` or release. Do not use a harness subagent. On Linux the CLI

@@ -93,16 +93,31 @@ read` the setup terminal to confirm setup finished without errors.
 ## Name every agent you start
 
 Give each agent session you start a 3–6-word name for its task, so it is
-recognisable in the agent's session picker and in its Orca tab, which shows
-the agent's terminal title.
+recognisable in the agent's session picker and in Orca.
+
+Orca shows a tab's name on several surfaces, and each picks from different
+fields:
+
+- The tab bar uses the tab's custom title. Without one, it uses the
+  agent's session name (Claude and Codex only), then the first prompt's
+  opening words if "Auto-generate tab titles" is on, then the live
+  terminal title.
+- The Activity sidebar uses the custom title, else the opening words of
+  the latest prompt. It never shows the session name.
+- `terminal list` and `terminal show` report the latest terminal title,
+  not what the tab bar shows.
+
+So:
 
 - With `terminal create --command`, put the name on the agent's command
   line: `claude --name "<name>" …` or `pi --name "<name>" …`. Codex has no
   launch-time name flag.
-- Set the initial name with the agent's `--name` flag. Omit
-  `terminal create --title` when the tab should follow later session
-  renames; that flag pins a separate Orca label. Use it only when a fixed
-  tab label is intended.
+- Also pass `terminal create --title "<name>"` when the session won't be
+  renamed or several agents may open with similar prompts. It pins the
+  label everywhere until `terminal rename --terminal <handle>` without
+  `--title` clears it.
+- Omit `--title` only for a session you expect to rename, and start its
+  prompt with a line naming the task.
 - `worktree create --agent` cannot pass agent arguments until
   [`stablyai/orca#25067`][orca-25067] lands, so those sessions keep the
   agent's automatic title. Don't abandon `--agent` just to name one.

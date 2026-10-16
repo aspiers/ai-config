@@ -25,7 +25,8 @@ the failure to avoid.
   target branch, and any repo constraints the current session already
   learned (test commands, hosting, files to look at). If the user tests
   through a `working` mixdown branch in that repo, say so and tell the
-  worker to load `git-branch-management` before its first commit.
+  worker to load `git-branch-management` before its first commit, and to
+  ask you to remix rather than run or merely report one.
 - After create, `terminal read` the returned agent handle and confirm the
   brief is visible before reporting the handoff as started.
 - Only work in the new checkout from the current session if the user
@@ -130,6 +131,11 @@ mail, so a recipient sees messages only when it runs
   at each checkpoint"; and
 - "report with `orca-ide orchestration send --to <coordinator handle>
   --type status|question|escalation`".
+
+Treat a remix request as work: run it in the main checkout one at a time,
+rebuild and restart, then reply. The mailbox lives only as long as your
+terminal, so clear pending requests before moving that terminal to
+unrelated work.
 
 Don't ask a plain handoff agent for `worker_done`; without a Dispatch it is
 rejected ("worker_done requires taskId"). When you want reports or

@@ -1,5 +1,5 @@
 approvals_reviewer = "auto_review"
-model = "gpt-6-sol"
+model = "gpt-6.1-sol"
 model_reasoning_effort = "high"
 service_tier = "default"
 
@@ -56,28 +56,31 @@ trusted_hash = "sha256:708e5d674608928ce8ae4a2727b78d8f18fea7f9a6c9657fd92275030
 trusted_hash = "sha256:c11b4e9bdcd3cde3405ff5d2066e18b069072160671f20ff02973d2c5bb0c2ac"
 
 [hooks.state."/home/adam/.codex/hooks.json:pre_tool_use:1:0"]
-trusted_hash = "sha256:17ffe939b991b68edfc450faba2620150018768f47f75dac2130be01409b0508"
+trusted_hash = "sha256:33153c88ce09e9a5b899b9cb33dd23382be394a3e1cdb421e44e0b3778e8bdf2"
 
 [hooks.state."/home/adam/.codex/hooks.json:permission_request:0:0"]
-trusted_hash = "sha256:d127c2a740a1b5890355c549e54ce08ba17528d7027d58c36dc4e174d9219e07"
+trusted_hash = "sha256:bd2c29369e47a438a3f2c1c18896d7bd86ce58c0eb5542f1c3b879e427f92fc9"
 
 [hooks.state."/home/adam/.codex/hooks.json:post_tool_use:1:0"]
-trusted_hash = "sha256:4068318a0e7ca8b996657a69a6d8f66d2ce1c371247d1c70155fd7c37af125e5"
+trusted_hash = "sha256:a452131ceaecacb08404d1a8d49d85315fdf109905d152859c32b538c9002f93"
 
 [hooks.state."/home/adam/.codex/hooks.json:session_start:1:0"]
-trusted_hash = "sha256:80742952b119d0cff668ab970c29c92e88e225f4dd8b5a73127d4b5952706c4b"
+trusted_hash = "sha256:d853ef9fbaf2ff5c8504bf2463675664aaf29a8016c6a35293a6ddc053b4f030"
 
 [hooks.state."/home/adam/.codex/hooks.json:user_prompt_submit:0:0"]
-trusted_hash = "sha256:192b3b146ed8d3be388f25a3dc4250c274803134f101f0b9f1a473b457be437b"
+trusted_hash = "sha256:5383e8af0fe09d96df4e6d0f5f3edaec15485d6162a1a749b5c69e7242eb0478"
 
 [hooks.state."/home/adam/.codex/hooks.json:subagent_start:0:0"]
-trusted_hash = "sha256:3095e15ce6d8128044eda8eb3811a5f09c5b4fc30cd9282b834db0c032c037bb"
+trusted_hash = "sha256:269737162a0cf2b29b3e40df23411c02a8bbdeb5f471243c924dac116624cdcf"
 
 [hooks.state."/home/adam/.codex/hooks.json:subagent_stop:0:0"]
-trusted_hash = "sha256:708e5d674608928ce8ae4a2727b78d8f18fea7f9a6c9657fd922750304bb5beb"
+trusted_hash = "sha256:62ff9ef7fcca3784011e955f35ee3612b11168b2f62bd772f08adefb918d34be"
 
 [hooks.state."/home/adam/.codex/hooks.json:stop:0:0"]
-trusted_hash = "sha256:c11b4e9bdcd3cde3405ff5d2066e18b069072160671f20ff02973d2c5bb0c2ac"
+trusted_hash = "sha256:1ae8ee19d95298f7bc4821368a7d4600b9f9d36c68695812c19419b28b5ad53e"
+
+[hooks.state."/home/adam/.codex/hooks.json:pre_tool_use:2:0"]
+trusted_hash = "sha256:120fc8f80d51556bde972dbbe7b49bd11af0661b7c86134e6fbbfd604ff088ad"
 
 [mcp_servers.railway]
 command = "railway"
@@ -89,22 +92,23 @@ args = ["mcp"]
 
 [mcp_servers.node_repl]
 args = []
-command = "/opt/codex-desktop/resources/node_repl"
+command = "/usr/lib/chatgpt/resources/cua_node/bin/node_repl"
 startup_timeout_sec = 120
 
 [mcp_servers.node_repl.env]
 NODE_REPL_NATIVE_PIPE_CONNECT_TIMEOUT_MS = "1000"
-NODE_REPL_NODE_MODULE_DIRS = ""
-NODE_REPL_NODE_PATH = "/opt/codex-desktop/resources/node-runtime/bin/node"
-NODE_REPL_TRUSTED_CODE_PATHS = "/home/adam/.codex"
+NODE_REPL_NODE_MODULE_DIRS = "/usr/lib/chatgpt/resources/cua_node/lib/node_modules"
+NODE_REPL_NODE_PATH = "/usr/lib/chatgpt/resources/cua_node/bin/node"
+NODE_REPL_TRUSTED_CODE_PATHS = "/home/adam/.codex:/usr/lib/chatgpt/resources/cua_node/lib/node_modules"
 CODEX_HOME = "/home/adam/.codex"
-NODE_REPL_TRUSTED_BROWSER_CLIENT_SHA256S = "091a81603ff202a16ed56557709bf42d97caf8f0dd2e07ae9e26d7c014d71035"
-BROWSER_USE_AVAILABLE_BACKENDS = "chrome,iab"
-NODE_REPL_INSTRUCTIONS_USE_CASE_BROWSER = "Control the in-app browser in conjunction with the Browser Plugin."
-NODE_REPL_INSTRUCTIONS_USE_CASE_CHROME = "Control the Chrome browser in conjunction with the Chrome Plugin. Prefer this method of controlling Chrome over alternatives (such as Computer Use) unless the user explicitly mentions an alternative."
+BROWSER_USE_AVAILABLE_BACKENDS = "chrome,iab,mcpapps"
+BROWSER_USE_TINYSKY_ENABLED = "1"
+NODE_REPL_INSTRUCTIONS_USE_CASE_BROWSER = ""
+NODE_REPL_INSTRUCTIONS_USE_CASE_CHROME = ""
 BROWSER_USE_CODEX_APP_BUILD_FLAVOR = "prod"
-BROWSER_USE_CODEX_APP_VERSION = "26.730.61639"
-CODEX_CLI_PATH = "/home/adam/.codex/packages/standalone/releases/0.157.1-x86_64-unknown-linux-musl/bin/codex"
+BROWSER_USE_CODEX_APP_VERSION = "26.928.31416"
+NODE_REPL_TRUSTED_SERVICES = '{"browser":"/home/adam/.codex/plugins/cache/openai-bundled/browser/26.928.31416/scripts/browser-service.mjs"}'
+CODEX_CLI_PATH = "/usr/lib/chatgpt/resources/codex"
 
 [mcp_servers.d4d]
 enabled = true
@@ -125,6 +129,9 @@ trust_level = "trusted"
 [projects."/home/adam/.GIT/adamspiers.org/ai-config"]
 trust_level = "trusted"
 
+[projects."/home/adam/.config/orca/rate-limit-pty-cwd"]
+trust_level = "trusted"
+
 [tui]
 status_line = [
   "model-with-reasoning",
@@ -142,6 +149,7 @@ screen_reader_detection_done = true
 [tui.model_availability_nux]
 "gpt-5.6-sol" = 4
 gpt-6-astra = 4
+"gpt-6.1-sol" = 4
 
 [marketplaces.agentbox]
 last_updated = "2026-08-11T18:10:40Z"
@@ -157,6 +165,10 @@ source = "/home/adam/.codex/.tmp/bundled-marketplaces/openai-bundled"
 source_type = "local"
 source = "/home/adam/.cache/codex-runtimes/codex-primary-runtime/plugins/openai-primary-runtime"
 
+[marketplaces.ponytail]
+source_type = "git"
+source = "https://github.com/DietrichGebert/ponytail.git"
+
 [plugins."agentbox@agentbox"]
 enabled = true
 
@@ -164,9 +176,6 @@ enabled = true
 enabled = true
 
 [plugins."slack@openai-curated"]
-enabled = true
-
-[plugins."sites@openai-bundled"]
 enabled = true
 
 [plugins."browser@openai-bundled"]
@@ -190,14 +199,23 @@ enabled = true
 [plugins."template-creator@openai-primary-runtime"]
 enabled = true
 
-[plugins."computer-use@openai-bundled"]
-enabled = true
-
 [plugins."chrome@openai-bundled"]
 enabled = true
 
+[plugins."codex-app-tools@openai-bundled"]
+enabled = true
+
+[plugins."unified-computer-use@openai-bundled"]
+enabled = true
+
+[plugins."code-review@openai-bundled"]
+enabled = true
+
+[plugins."ponytail@ponytail"]
+enabled = true
+
 [desktop]
-conversationDetailMode = "STEPS_PROSE"
+conversationDetailMode = "STEPS_COMMANDS"
 ambient-suggestions-enabled = true
 followUpQueueMode = "queue"
 keepRemoteControlAwakeWhilePluggedIn = true
@@ -206,6 +224,5 @@ keepRemoteControlAwakeWhilePluggedIn = true
 global = "systemDefault"
 
 [shell_environment_policy.set]
-BROWSER_USE_AVAILABLE_BACKENDS = "chrome,iab"
 NODE_REPL_TRUSTED_BROWSER_CLIENT_SHA256S = "091a81603ff202a16ed56557709bf42d97caf8f0dd2e07ae9e26d7c014d71035"
-NODE_REPL_TRUSTED_CODE_PATHS = "/home/adam/.codex"
+

@@ -192,6 +192,12 @@
       "mcp__plugin_beads_beads__stats",
       "mcp__plugin_beads_beads__update"
     ],
+    "deny": [
+      "Bash(pkill:*)",
+      "Bash(killall:*)",
+      "Bash(bd init)",
+      "Bash(bd init:*)"
+    ],
     "ask": [
       "Bash(*parcellite*)",
       "Bash(*clipit*)",
@@ -226,12 +232,6 @@
       "Read(~/**/*GPaste*/**)",
       "Read(~/**/*klipper*/**)",
       "Read(~/**/*diodon*/**)"
-    ],
-    "deny": [
-      "Bash(pkill:*)",
-      "Bash(killall:*)",
-      "Bash(bd init)",
-      "Bash(bd init:*)"
     ],
     "defaultMode": "auto"
   },
@@ -519,13 +519,20 @@
     "caveman@caveman": false,
     "clangd-lsp@claude-plugins-official": true,
     "context-mode@context-mode": true,
-    "ruby-lsp@claude-plugins-official": true
+    "ruby-lsp@claude-plugins-official": true,
+    "ponytail@ponytail": true
   },
   "extraKnownMarketplaces": {
     "caveman": {
       "source": {
         "source": "github",
         "repo": "JuliusBrussee/caveman"
+      }
+    },
+    "ponytail": {
+      "source": {
+        "source": "github",
+        "repo": "DietrichGebert/ponytail"
       }
     }
   },

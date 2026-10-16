@@ -11,7 +11,9 @@ context keeps the full text. This includes text written just before an
   a question or a later message at it as "above".
 - Write drafts, tables and findings the user must review before answering
   a questionnaire as plain text immediately before it, never only in a
-  file. A hook makes you restate that text as a reply if it was hidden.
+  file. Inside Orca, a Markdown draft goes in an Orca tab instead (see the
+  global rules). A hook makes you restate that text as a reply if it was
+  hidden.
 - If told that content was not shown to the user, write it out in full as
   your reply.
 

@@ -45,6 +45,12 @@ The author's defaults for every agent harness configured here; adapt them.
 - The user reads only the final message of each turn. Put every answer,
   finding and deliverable there, even if repeated; never refer back to
   "above".
+- Inside Orca (`ORCA_TERMINAL_HANDLE` is set), write any Markdown the user
+  must review before it is sent or published, such as a PR title and body,
+  an issue or a comment, to a file in the repository's `tmp/` and open it
+  in an Orca tab with `orca-ide file open <path>`. Name the path in your
+  message instead of pasting the draft. Plain-text drafts, and Markdown
+  that needs no review such as reports or bead text, stay as they are.
 - Answer every question the user has asked, including mid-turn ones,
   before asking your own, whether from their prompt, an interruption or a
   free-text answer; an objection counts. A questionnaire ends the turn, so

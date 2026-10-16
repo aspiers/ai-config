@@ -20,7 +20,7 @@
     "npm:@aliou/pi-processes",
     "npm:@zenobius/pi-worktrees",
     {
-      "source": "https://github.com/aspiers/pi-status@fix/pi-status-title-renames",
+      "source": "https://github.com/aspiers/pi-status@working",
       "extensions": [
         "+src/index.ts"
       ]

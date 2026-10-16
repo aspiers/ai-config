@@ -50,7 +50,8 @@
     "git:github.com/aspiers/pi-shortcuts@configurable-shortcut",
     "npm:@jmfederico/pi-web@1.202609.1",
     "git:github.com/aspiers/pi-tmux-window-name@feat/configurable-title-lengths",
-    "git:github.com/aspiers/pi-herdr-tab-sync@fix/reset-stale-tab-label"
+    "git:github.com/aspiers/pi-herdr-tab-sync@fix/reset-stale-tab-label",
+    "git:github.com/DietrichGebert/ponytail"
   ],
   "hideThinkingBlock": false,
   "powerline": {

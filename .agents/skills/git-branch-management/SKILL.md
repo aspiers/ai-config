@@ -148,9 +148,12 @@ When combining two branches needs more than a textual conflict resolution
 (branch B moves code that branch A changes, so A's change must also be
 applied in B's new location, or tests from both need reconciling), that is
 a real dependency, not a mixdown concern. Stack the branch that needs
-adapting on the other, record it in machete, and commit the fix on the
-child branch. Do this without asking: it is this section's rule, not a
-judgement call.
+adapting on the other and commit the fix on the child branch. If that
+branch is not in the machete layout yet, add it under its new parent
+without asking, unless choosing the parent is itself hard. If it already
+is, moving it changes where an existing branch sits in the graph, so
+propose the move and ask first. Rebasing or propagating a rebase along
+the existing layout needs no confirmation.
 
 Never commit such a fix on `working` or hide it inside a merge commit.
 Rerere replays only conflict hunks, so edits made inside a merge, and

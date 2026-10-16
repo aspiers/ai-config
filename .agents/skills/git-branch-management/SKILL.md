@@ -226,12 +226,21 @@ new source branch to the mix (`git mix +<branch>`) and to the machete layout
 configuration: do it even when the main checkout is on another branch, so
 the next mixdown includes the branch.
 
+One agent owns each mixdown: the one in the main checkout, which has
+`working` (or whichever mixdown branch applies) checked out and normally
+coordinates the project. It runs remixes one at a time, because parallel
+mixdowns conflict. An agent in a linked worktree never runs the mixdown and
+never just reports it as pending: once its work is ready to test, it asks
+that agent to remix, naming the branches and commits to pick up, and checks
+for the reply. Under Orca, use `orchestration send --type question`. If no
+agent runs in the main checkout, ask the user.
+
 Regenerate `working` only where the user actually runs it, for example
 checked out in the main checkout and served from there; mix config alone is
 not enough. Even then, wait until a logically complete piece of work is
 ready to test, such as when every commit a pull request needs has been
 made, or a rebase or review fix finishes one. Intermediate commits are not
-worth testing. Once it is ready, without asking:
+worth testing. Once it is ready, that agent, without asking:
 
 - regenerate `working` from the full configured set in the main checkout
   (`git mixdown -c`). If it fails, stop: a conflict leaves the main checkout

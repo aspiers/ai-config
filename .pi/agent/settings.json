@@ -51,7 +51,8 @@
     "npm:@jmfederico/pi-web@1.202609.1",
     "git:github.com/aspiers/pi-tmux-window-name@feat/configurable-title-lengths",
     "git:github.com/aspiers/pi-herdr-tab-sync@fix/reset-stale-tab-label",
-    "git:github.com/DietrichGebert/ponytail"
+    "git:github.com/DietrichGebert/ponytail",
+    "npm/node_modules/@jmfederico/pi-web/dist/pi-packages/relays"
   ],
   "hideThinkingBlock": false,
   "powerline": {

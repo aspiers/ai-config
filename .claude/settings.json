@@ -564,6 +564,7 @@
   "autoMemoryEnabled": false,
   "skipWorkflowUsageWarning": true,
   "theme": "auto",
+  "editorMode": "normal",
   "verbose": false,
   "preferredNotifChannel": "notifications_disabled",
   "autoCompactEnabled": true,

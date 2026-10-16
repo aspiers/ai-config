@@ -56,6 +56,11 @@ If you meet a bead that mixes the two — the person's part and agent work in
 one issue — say so when you report. It should have been split, and answering
 it will close work nobody did.
 
+This boundary covers only work the answers imply. It does not suspend
+duties that other loaded rules make automatic, such as regenerating a
+stale `working` mixdown you notice along the way: do those once the
+queue is done, as you would in any other turn.
+
 ## Workflow
 
 1. **Inventory both queues freshly.**

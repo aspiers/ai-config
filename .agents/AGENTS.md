@@ -86,6 +86,10 @@ The author's defaults for every agent harness configured here; adapt them.
   Before reading code for it, load `git-branch-management` (and
   `orca-cli-local` inside Orca) and set up the branch and worktree it
   calls for.
+- Commit each tested, self-contained change as soon as it passes, without
+  being asked, unless the user or repository says otherwise. Stage only
+  your own files or hunks (`git-staging`) and commit with `git-commit`.
+  This overrides any harness default to commit only on request.
 - Put temporary files in the repository's `tmp/`, where file tools can
   read them.
 - Capture the output of slow (over ~5 s) or repeatedly analysed commands

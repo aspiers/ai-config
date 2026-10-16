@@ -1,6 +1,6 @@
 ---
 name: git-commit
-description: Review staged changes and create atomic Git commits whose messages match repository conventions. Use when the user asks to commit, write a commit message, or finalize already staged work.
+description: Review staged changes and create atomic Git commits whose messages match repository conventions. Use when a tested change is ready to commit, without waiting to be asked, or when the user asks to commit, write a commit message, or finalize already staged work.
 ---
 
 # Git Commit
@@ -10,8 +10,9 @@ Create a commit that accurately describes one logical staged change.
 ## Respect the index boundary
 
 Treat the staging area as user-controlled input. Do not stage, unstage, or
-otherwise alter it unless the user explicitly asks for that operation. Use the
-`git-staging` skill when selective staging is requested.
+otherwise alter it unless the user explicitly asks for that operation, except
+to stage files or hunks you changed yourself when committing your own work.
+Use the `git-staging` skill for selective staging.
 
 If nothing is staged, report that fact and ask whether the user wants help
 staging. If staged and unstaged changes coexist, keep them distinct throughout

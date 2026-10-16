@@ -234,12 +234,18 @@ made, or a rebase or review fix finishes one. Intermediate commits are not
 worth testing. Once it is ready, without asking:
 
 - regenerate `working` from the full configured set in the main checkout
-  (`git mixdown -c`);
-- then rebuild and restart whatever serves the main checkout, so the user's
-  own instance runs the new `working`. Look for it in user service units
-  whose working directory is the main checkout, and in the project's README
-  or agent instructions; ask if nothing turns up. A dev server you started in
-  a feature worktree does not count.
+  (`git mixdown -c`). If it fails, stop: a conflict leaves the main checkout
+  mid-merge, so ask before resolving it;
+- only after a successful mixdown, rebuild, and only after a successful
+  build, restart whatever serves the main checkout, so the user's own
+  instance runs the new `working`. Look for it in user service units whose
+  working directory is the main checkout, and in the project's README or
+  agent instructions; ask if nothing turns up. A dev server you started in a
+  feature worktree does not count.
+
+That instance is the user's live one, so a rebuild that is not ready must
+never take it down: chain these steps with `&&`, never `;`, and check each
+result before the next.
 
 Never update `working` from only the branch that changed. Stop and ask only
 if the mixdown conflicts or would touch uncommitted changes in the main

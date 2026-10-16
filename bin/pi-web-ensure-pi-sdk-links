@@ -43,6 +43,11 @@ for mapping in "${links[@]}"; do
   if [[ -L "$link" ]]; then
     [[ $(readlink -f -- "$link") == $(readlink -f -- "$target") ]] && continue
     rm -- "$link"
+  elif [[ -d "$link" ]] && grep -qs "\"name\": *\"@earendil-works/$name\"" "$link/package.json"; then
+    # A plain `npm install` here installs peers as real copies. Pi never loads
+    # them and npm recreates them, so replace rather than fail the service.
+    rm -rf -- "$link"
+    printf 'Replaced npm-installed PI WEB SDK peer copy: %s\n' "$link"
   elif [[ -e "$link" ]]; then
     printf 'Refusing to replace non-symlink PI WEB SDK peer: %s\n' "$link" >&2
     exit 1

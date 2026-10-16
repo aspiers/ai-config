@@ -235,7 +235,7 @@
     ],
     "defaultMode": "auto"
   },
-  "model": "opus[1m]",
+  "model": "opus",
   "hooks": {
     "Notification": [
       {
@@ -543,6 +543,9 @@
   "modelSettings": {
     "claude-fable-5-1": {
       "effortLevel": "medium"
+    },
+    "claude-opus-5-5": {
+      "effortLevel": "high"
     }
   },
   "dialogExpiry": "never",

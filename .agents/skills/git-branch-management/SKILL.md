@@ -246,8 +246,12 @@ made, or a rebase or review fix finishes one. Intermediate commits are not
 worth testing. Once it is ready, that agent, without asking:
 
 - regenerate `working` from the full configured set in the main checkout
-  (`git mixdown -c`). If it fails, stop: a conflict leaves the main checkout
-  mid-merge, so ask before resolving it;
+  (`git mixdown -c`). If a merge conflicts and the fix is plain, such as
+  keeping both of two adjacent edits, resolve it yourself and re-run the
+  mixdown, as `git-branch-mixer` describes. Ask the user only when the fix
+  needs a design decision, such as moving a branch already in the machete
+  layout under a different parent, or choosing between incompatible
+  behaviours;
 - only after a successful mixdown, rebuild, and only after a successful
   build, restart whatever serves the main checkout, so the user's own
   instance runs the new `working`. Look for it in user service units whose
@@ -260,10 +264,11 @@ never take it down: chain these steps with `&&`, never `;`, and check each
 result before the next.
 
 Never update `working` from only the branch that changed. Stop and ask only
-if the mixdown conflicts or would touch uncommitted changes in the main
-checkout. If the main checkout is on another branch, ask before switching
-it, and report the regeneration as pending. Never submit a branch upstream
-until the user has had the chance to test it in their rebuilt instance.
+if a mixdown conflict needs a design decision or the mixdown would touch
+uncommitted changes in the main checkout. If the main checkout is on
+another branch, ask before switching it, and report the regeneration as
+pending. Never submit a branch upstream until the user has had the chance
+to test it in their rebuilt instance.
 
 `working` is a local scratch branch. Never push it or open a PR from it;
 publish the independent source branches instead. This boundary keeps the

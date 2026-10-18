@@ -36,7 +36,7 @@ Otherwise translate the restriction into filter flags for `bd ready`:
 | A label | `--label=<label>` (repeat to require all; `--label-any` for any) |
 | Beads within an epic | `--parent=<epic-id>` (matches all descendants) |
 | A priority | `--priority=<0-4>` |
-| An issue type | `--type=<bug\|feature\|task\|chore>` |
+| An issue type | `--type=<type>`, e.g. `bug`, `feature`, `chore` or `spike` |
 | An assignee | `--assignee=<name>` |
 
 A bare word with no other context means a label, so a scope of `fiscal-host`
@@ -98,7 +98,7 @@ bead; yours stays in the bead you are holding:
 ```bash
 ask=$(bd create --title="Decide: <the question>" \
                 --description="<context, options, what turns on each>" \
-                --type=task --json | jq -r .id)
+                --type=decision --json | jq -r .id)
 bd label add "$ask" human
 bd dep add "$current" "$ask"
 bd update "$current" --status=open

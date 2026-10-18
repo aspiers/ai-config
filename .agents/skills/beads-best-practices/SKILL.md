@@ -56,6 +56,28 @@ workflow explicitly requires overlapping tracked work. Do not bulk-claim a
 label, epic, milestone, search result, or requested task set merely because all
 items are in scope.
 
+## Choose the Issue Type
+
+Pass `--type` on every `bd create` and pick it on purpose; `task` is only the
+default. People and queue filters (`bd ready --type`, `--exclude-type`,
+`bd list --type`) rely on the type to tell kinds of work apart.
+
+| Type | Use for |
+| --- | --- |
+| `bug` | Behaviour that is wrong now |
+| `feature` | A new or changed capability |
+| `chore` | Maintenance with no change in behaviour: upgrades, config sync, cleanup |
+| `spike` | A timeboxed investigation whose output is knowledge, not a change |
+| `decision` | A choice to make or record, with its options and rationale |
+| `epic` | A bounded deliverable with children ([grouping](#choose-grouping-deliberately)) |
+| `story` | A need told from a user's point of view, where the project uses stories |
+| `milestone` | A marker for a set of issues being done; it holds no work itself |
+| `task` | Concrete work that fits none of the above |
+
+Run `bd types` to see any custom types the repository adds. When a bead turns
+out to be a different kind of work, correct it with
+`bd update <id> --type=<type>`.
+
 ## Work That Needs a Person
 
 ### One Bead, One Doer
@@ -87,11 +109,17 @@ dependent work wait on it:
 ```bash
 ask=$(bd create --title="Decide: <the question>" \
                 --description="<context, options, what turns on each>" \
-                --type=task --json | jq -r .id)
+                --type=decision --json | jq -r .id)
 bd label add "$ask" human
 bd dep add "$work" "$ask"
 bd human list --json
 ```
+
+Give it `--type=decision` whenever the person's part is a decision, an
+approval or feedback, which covers most of these beads. The answer
+`bd human respond` records then stays findable with
+`bd list --type=decision`. Use `task` only when the person must do something
+themselves, such as enter credentials or plug in a device.
 
 `bd human list` is how the user finds these, and it lists exactly the beads
 carrying the label. A bead needing a person but carrying no label is
@@ -409,7 +437,7 @@ and do not compress structured content into a long one-line flag value.
 Prefer stdin or file flags when the command supports them:
 
 ```bash
-bd create --title="Handle expired sessions" --type=task --body-file - <<'EOF'
+bd create --title="Handle expired sessions" --type=bug --body-file - <<'EOF'
 ## Context
 
 Expired sessions currently produce an unclear error.

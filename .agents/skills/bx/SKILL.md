@@ -26,8 +26,9 @@ creating the bead issue.
    observation into its own `human`-labelled bead joined by a dependency.
    This applies to every bead you create here, including incidental ones for
    follow-up work you noticed along the way.
-2. Infer the issue type (`bug`, `feature`, `task`) from context; default to
-   `task`.
+2. Infer the issue type from context, using "Choose the Issue Type" in
+   `beads-best-practices`: `bug`, `feature`, `chore`, `spike`, `decision`
+   and so on. Fall back to `task`.
 3. Check for an existing bead. This is the only step allowed before
    creating one. Run one quick search per key title word, for example:
    `bd search "<word>" --status open,in_progress,blocked,deferred`

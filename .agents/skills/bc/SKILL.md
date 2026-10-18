@@ -13,8 +13,9 @@ Do NOT explore the codebase, launch subagents, or do any other work before
 creating the bead issue.
 
 1. Load the `beads-best-practices` skill and follow it when writing the bead.
-2. Infer the issue type (`bug`, `feature`, `task`) from context; default to
-   `task`.
+2. Infer the issue type from context, using "Choose the Issue Type" in
+   `beads-best-practices`: `bug`, `feature`, `chore`, `spike`, `decision`
+   and so on. Fall back to `task`.
 3. Check for an existing bead. This is the only step allowed before
    creating one. Run one quick search per key title word, for example:
    `bd search "<word>" --status open,in_progress,blocked,deferred`

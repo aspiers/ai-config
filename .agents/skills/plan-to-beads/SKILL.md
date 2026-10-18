@@ -243,7 +243,7 @@ Every bead description MUST follow this structure:
 - **NEVER create vague beads** — if you can't fill in the template with specifics, you haven't explored the codebase enough
 - **ALWAYS include relevant issue references** in each bead's Context section when available
 - **ALWAYS include the plan file path** in each bead's Context section for traceability
-- Use `bd create --type task --priority 2 --labels <feature-slug>` as the default. Adjust priority based on dependency order (earlier = higher priority)
+- Use `bd create --type task --priority 2 --labels <feature-slug>` as the default, but give each bead the type that fits its work (`bug`, `feature`, `chore`, `spike`, `decision`; see "Choose the Issue Type" in `beads-best-practices`). Adjust priority based on dependency order (earlier = higher priority)
 - **NEVER express ordering via `--parent`** — hierarchy is not dependency; all ordering goes in `bd dep add`, including between children of the same epic
 - **ALWAYS apply a consistent, unique label** (short kebab-case feature name) to every bead in the set, whether or not an epic is used
 - Create an epic parent only for a bounded deliverable with a feature-level done-condition; otherwise the label alone suffices

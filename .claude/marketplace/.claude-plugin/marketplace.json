@@ -1,0 +1,14 @@
+{
+  "name": "ai-config",
+  "owner": {
+    "name": "Adam Spiers"
+  },
+  "description": "Claude Code mods from ai-config",
+  "plugins": [
+    {
+      "name": "hidden-question-guard",
+      "source": "./hidden-question-guard",
+      "description": "Stops Claude asking a question whose context reached the user only as a hidden progress update"
+    }
+  ]
+}

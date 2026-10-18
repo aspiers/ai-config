@@ -1,0 +1,6 @@
+{
+  "name": "hidden-question-guard",
+  "version": "0.1.0",
+  "description": "Stops Claude asking a question whose context reached the user only as a hidden progress update",
+  "author": { "name": "Adam Spiers" }
+}

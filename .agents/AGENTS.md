@@ -51,6 +51,9 @@ The author's defaults for every agent harness configured here; adapt them.
   in an Orca tab with `orca-ide file open <path>`. Name the path in your
   message instead of pasting the draft. Plain-text drafts, and Markdown
   that needs no review such as reports or bead text, stay as they are.
+- Open any issue, PR or comment you post as the user with
+  `_Written by Claude, intent from @<their handle>._`, never "Drafted":
+  once posted it is no longer a draft, whatever older comments say.
 - Answer every question the user has asked, including mid-turn ones,
   before asking your own, whether from their prompt, an interruption or a
   free-text answer; an objection counts. A questionnaire ends the turn, so

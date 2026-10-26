@@ -170,6 +170,37 @@ others' terminal handles and bead IDs, and tell it to:
 Supervised siblings in one Run can use the Run's group addresses instead
 (`orchestration` reference `messaging-and-gates.md`).
 
+## Cleaning up after a handoff agent's branch merges
+
+Merging a handoff agent's branch does not end the agent or remove its
+workspace, and telling it to stop does neither: agents have gone on
+committing after "you can stop". Supervised workers have `worker-release`
+(see the `orchestration` skill); plain handoff agents need this instead.
+Do it for each agent as soon as its branch has merged into the trunk, not
+at the end of the session:
+
+1. Check the work has fully landed: `git cherry <trunk> <branch>` prints
+   no `+` lines and `git -C <worktree> status --short` prints nothing.
+2. `terminal read` the agent. Go on only if it is idle at its input
+   prompt and has reported nothing since you merged. If it is mid-turn,
+   has started other work, or started agents of its own, leave the
+   workspace and tell the user.
+3. Close its terminals and remove the workspace through Orca, so Orca's
+   sidebar and resume records stay consistent:
+
+   ```sh
+   orca-ide terminal close --worktree <selector> --all
+   orca-ide worktree rm --worktree <selector>
+   ```
+
+   Without `--force`, `worktree rm` refuses a dirty worktree. It deletes
+   the branch when Orca can prove it merged; otherwise check with `git
+   cherry` and run `git branch -d <branch>`. Add `--run-hooks` when the
+   repository defines an archive hook. It can return `removing: true`
+   before git has finished, so confirm with `git worktree list`.
+4. If the branch was pushed, delete the remote copy only where you may
+   push; otherwise list it for the user.
+
 ## Offer Orca's diff view for review
 
 When running inside Orca and you need the user's feedback on a change

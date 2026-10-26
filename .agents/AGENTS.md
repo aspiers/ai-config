@@ -97,6 +97,9 @@ The author's defaults for every agent harness configured here; adapt them.
   Before reading code for it, load `git-branch-management` (and
   `orca-cli-local` inside Orca) and set up the branch and worktree it
   calls for.
+- When delegated work in another worktree has merged, clean up its
+  worktree, branch and agent terminal before moving on, as
+  `git-branch-management` (or `orca-cli-local` inside Orca) describes.
 - Commit each tested, self-contained change as soon as it passes, without
   being asked, unless the user or repository says otherwise. Stage only
   your own files or hunks (`git-staging`) and commit with `git-commit`.

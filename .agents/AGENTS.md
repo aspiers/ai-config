@@ -109,6 +109,10 @@ The author's defaults for every agent harness configured here; adapt them.
 - Capture the output of slow (over ~5 s) or repeatedly analysed commands
   with `tee` into `tmp/` (see the `slow-command-running` skill). Don't pipe
   important output through `head`, which can hide errors.
+- Before running a tool through a package runner (`npx`, `bunx`,
+  `pnpm dlx`, `uvx`), run `type -a <tool>`. An installed copy, which may
+  carry local patches, wins over the runner, even when the tool's docs or
+  a skill show the runner form.
 - For GitHub, use the `gh` CLI rather than browser automation, unless asked.
 - Write `git diff --no-ext-diff`; the flag goes after the subcommand.
 - After pushing a PR's branch, watch CI to completion unprompted, report

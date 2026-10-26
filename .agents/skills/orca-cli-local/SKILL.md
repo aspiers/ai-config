@@ -148,7 +148,10 @@ mail, so a recipient sees messages only when it runs
   --type status|question|escalation`".
 
 Treat a remix request as work: run it in the main checkout one at a time,
-rebuild and restart, then reply. The mailbox lives only as long as your
+rebuild and restart, then reply. While agents you started are still
+working, run `orca-ide orchestration check --terminal
+"$ORCA_TERMINAL_HANDLE"` before ending each turn, since nothing delivers
+their mail to you while you sit idle. The mailbox lives only as long as your
 terminal, so clear pending requests before moving that terminal to
 unrelated work.
 
@@ -169,6 +172,28 @@ others' terminal handles and bead IDs, and tell it to:
 
 Supervised siblings in one Run can use the Run's group addresses instead
 (`orchestration` reference `messaging-and-gates.md`).
+
+## Asking your coordinator to act
+
+A handoff agent that needs the agent that started it to act, for example
+to remix, sends the request with `orchestration send`. The coordinator sees
+it only when it next runs `orchestration check`, and an agent idle at its
+prompt never does: on 2026-10-24 a remix request sat unread for 31 hours
+while the worker reported it as asked. After sending:
+
+1. `terminal read` the coordinator. If it is idle at its normal input
+   prompt (see "Read the screen before every send"), `terminal send` it a
+   one-line prompt naming the request's subject and asking it to run
+   `orca-ide orchestration check --terminal "$ORCA_TERMINAL_HANDLE"`. If it
+   is busy, leave it.
+2. Wait for the reply with `orca-ide orchestration check --terminal
+   "$ORCA_TERMINAL_HANDLE" --wait --timeout-ms 600000`.
+3. Report the request as pending until the reply arrives, never as done. If
+   the wait times out, run `orca-ide orchestration inbox --terminal
+   <coordinator handle> --json`. `read: 0` means nobody has seen it: tell
+   the user and name the coordinator's terminal.
+
+Supervised Dispatch workers use their preamble's `ask` instead.
 
 ## Cleaning up after a handoff agent's branch merges
 

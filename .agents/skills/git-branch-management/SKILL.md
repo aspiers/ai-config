@@ -240,9 +240,11 @@ One agent owns each mixdown: the one in the main checkout, which has
 coordinates the project. It runs remixes one at a time, because parallel
 mixdowns conflict. An agent in a linked worktree never runs the mixdown and
 never just reports it as pending: once its work is ready to test, it asks
-that agent to remix, naming the branches and commits to pick up, and checks
-for the reply. Under Orca, use `orchestration send --type question`. If no
-agent runs in the main checkout, ask the user.
+that agent to remix, naming the branches and commits to pick up, and waits
+for the reply, treating the remix as pending until it arrives. Under Orca,
+use `orchestration send --type question`, then wake an idle coordinator as
+`orca-cli-local` describes. If no agent runs in the main checkout, ask the
+user.
 
 Regenerate `working` only where the user actually runs it, for example
 checked out in the main checkout and served from there; mix config alone is

@@ -27,6 +27,16 @@ the expected `orca` CLI calls.
 python3 tests/test_orca_cycle_attention_agent.py
 ```
 
+## Pi Orca Tab Title Tests
+
+`pi/pi-orca-tab-title.test.ts` verifies that the `pi-orca-tab-title` Pi
+extension pins the generated short title, lets a later `/name` win, falls back
+to the session name, and leaves tabs alone inside Herdr or tmux.
+
+```bash
+node --test --experimental-strip-types tests/pi/pi-orca-tab-title.test.ts
+```
+
 ## Orca Extract Tests
 
 `test_orca_extract.py` pins token and whole-line extraction, the picker

@@ -22,7 +22,8 @@ The author's defaults for every agent harness here; adapt them.
 - Never claim something works or is fixed until you have run it. Claim
   only what you observed, for as long as you observed it: say "held for 5
   minutes", not "holds until restart", unless you checked what could undo
-  it.
+  it. Check a job's, process's or agent's state in the same turn before
+  reporting it: earlier observations and relayed reports go stale.
 - When something fails unexpectedly, recommend finding the root cause
   first. Offer a labelled workaround only when asked, when the cause is
   out of reach (say why), or to mitigate something urgent.

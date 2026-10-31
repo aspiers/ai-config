@@ -194,6 +194,12 @@ idle, so while agents you started are still working:
 Never ask the user to tell you to check: on 2026-10-31 a finished branch
 sat unmerged until the user asked why.
 
+Before telling the user whether an agent is running, done or waiting,
+check it in that same turn: run `orchestration check`, then `terminal
+read` the agent. Your memory of earlier turns, and status relayed by
+another session, are stale. On 2026-10-31 a coordinator twice listed
+agents as still working hours after they had reported or gone idle.
+
 The mailbox lives only as long as your terminal, so clear pending requests
 before moving that terminal to unrelated work. `check` on a handle Orca
 doesn't know, such as one from before a restart, prints "No messages." and

@@ -51,6 +51,10 @@ The author's defaults for every agent harness configured here; adapt them.
   in an Orca tab with `orca-ide file open <path>`. Name the path in your
   message instead of pasting the draft. Plain-text drafts, and Markdown
   that needs no review such as reports or bead text, stay as they are.
+  Show an HTML file or other rendered page in an Orca browser tab
+  (`orca-ide tab create --url file://<absolute path>`), not through a
+  hosted service such as a claude.ai Artifact, unless the user asks for a
+  link to share.
 - Open any issue, PR or comment you post as the user with
   `_Written by Claude, intent from @<their handle>._`, never "Drafted":
   once posted it is no longer a draft, whatever older comments say.

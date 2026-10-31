@@ -27,6 +27,9 @@ The author's defaults for every agent harness configured here; adapt them.
 - When something fails unexpectedly, recommend finding its root cause first.
   Offer a labelled workaround only when asked, when the cause is out of reach
   (say why), or to mitigate something urgent.
+- When you admit a mistake, or a correction shows your instructions fell
+  short, load the `learn` skill rather than editing instructions, skills
+  or memories yourself or recommending that edit.
 
 ## Communication
 

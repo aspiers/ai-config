@@ -1,13 +1,22 @@
 // Pin a Pi session's short title as its Orca tab's custom title, so the tab bar
 // and Activity sidebar show it, and Orca's synthetic "Pi ready" title can't
 // replace it. The short title comes from pi-tmux-window-name's custom entry;
-// an explicit /name, or a session without one, uses the session name.
+// after an explicit --name or /name, it is that name's leading words.
 
 import type { ExtensionAPI, SessionEntry } from "@earendil-works/pi-coding-agent";
 
 const WINDOW_NAME_ENTRY_TYPE = "pi-tmux-window-name/window";
 // Each attempt spawns the Orca CLI, so a stale terminal handle mustn't retry forever.
 const MAX_RENAME_FAILURES = 3;
+const SHORT_WORD_MAX = 6;
+const SHORT_CHAR_MAX = 40;
+
+// Long names put their most identifying words first, so the head still reads.
+export function leadingWords(name: string): string {
+  const words = name.trim().split(/\s+/).slice(0, SHORT_WORD_MAX);
+  while (words.length > 1 && words.join(" ").length > SHORT_CHAR_MAX) words.pop();
+  return words.join(" ");
+}
 
 export function resolveOrcaTitle(entries: SessionEntry[], sessionName: string): string {
   let sessionInfoIndex = -1;
@@ -24,10 +33,10 @@ export function resolveOrcaTitle(entries: SessionEntry[], sessionName: string): 
 
     // pi-tmux-window-name appends its entry right after setting the session
     // name, so a newer session_info means a manual /name, which wins.
-    return i > sessionInfoIndex ? shortName : sessionName;
+    return i > sessionInfoIndex ? shortName : leadingWords(sessionName);
   }
 
-  return sessionName;
+  return leadingWords(sessionName);
 }
 
 // Herdr and tmux panes inherit Orca's environment but own their own tab labels.

@@ -4,6 +4,7 @@ import test from "node:test";
 import type { SessionEntry } from "@earendil-works/pi-coding-agent";
 
 import {
+  leadingWords,
   orcaTerminalHandle,
   resolveOrcaTitle,
 } from "../../.pi/agent/extensions/pi-orca-tab-title.ts";
@@ -29,6 +30,12 @@ test("a later /name wins over the generated short name", () => {
 test("falls back to the session name without a short name", () => {
   assert.equal(resolveOrcaTitle([info, names({ windowName: "Tabs" })], "Long name"), "Long name");
   assert.equal(resolveOrcaTitle([], "Long name"), "Long name");
+});
+
+test("fits a long explicit name to the short tier by its leading words", () => {
+  const long = "Orca tab titles ignore Pi session names after idle in every workspace";
+  assert.equal(resolveOrcaTitle([info], long), "Orca tab titles ignore Pi session");
+  assert.equal(leadingWords("Manual name check"), "Manual name check");
 });
 
 test("only owns the tab outside Herdr and tmux", () => {

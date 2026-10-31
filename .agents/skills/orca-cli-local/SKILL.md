@@ -172,8 +172,18 @@ mail, so a recipient sees messages only when it runs
 Treat a remix request as work: run it in the main checkout one at a time,
 rebuild and restart, then reply. While agents you started are still
 working, run `orca-ide orchestration check --terminal
-"$ORCA_TERMINAL_HANDLE"` before ending each turn, since nothing delivers
-their mail to you while you sit idle. The mailbox lives only as long as your
+"$ORCA_TERMINAL_HANDLE"` before ending each turn, then arm a wait for their
+next report, since nothing delivers their mail to you while you sit idle.
+Start `orca-ide orchestration check --terminal "$ORCA_TERMINAL_HANDLE"
+--wait --timeout-ms 3600000` as a background command your harness wakes you
+on when it exits (in Claude Code, Bash with `run_in_background`). It exits
+as soon as a message arrives and prints it; after an empty timeout, re-arm
+it while agents are still working. Never ask the user to tell you to check:
+on 2026-10-31 a finished branch sat unmerged until the user asked why. Only
+if your harness cannot wake you, say that reports wait unread until the next
+prompt.
+
+The mailbox lives only as long as your
 terminal, so clear pending requests before moving that terminal to
 unrelated work.
 

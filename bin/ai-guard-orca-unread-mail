@@ -1,0 +1,117 @@
+#!/usr/bin/env python3
+"""ai-guard-orca-unread-mail - stop an Orca agent ending its turn with mail unread
+
+Usage:
+  ai-guard-orca-unread-mail          Claude Code or Codex Stop hook: reads the
+                                     hook input as JSON on stdin and prints
+                                     {"decision": "block", "reason": ...}
+  ai-guard-orca-unread-mail --text   for Pi and OpenCode adapters: prints the
+                                     reason as plain text, or nothing
+
+Inside an Orca terminal ($ORCA_TERMINAL_HANDLE set), peek at this terminal's
+orchestration mailbox without marking anything read. If it holds a message
+this guard has not raised before, refuse the stop once and list the unread
+messages, so the agent reads them before reporting any agent's state.
+
+Why: Orca mail is pull-only. A coordinator ended a long turn telling the user
+two agents were still running while one's report, and a question addressed
+to it, sat unread in its mailbox.
+
+Each message is raised at most once, and a Stop that already continued a
+turn is never blocked, so the guard cannot loop. Any missing input, CLI or
+error allows the stop.
+"""
+
+import json
+import os
+import sys
+from pathlib import Path
+
+from orca_cli import run_orca
+
+# Raised IDs kept per terminal; far more than one mailbox holds unread.
+MAX_REMEMBERED = 500
+
+
+def state_path(handle: str) -> Path:
+    base = os.environ.get("AI_GUARD_STATE_DIR") or os.path.join(
+        os.environ.get("XDG_STATE_HOME") or os.path.expanduser("~/.local/state"),
+        "ai-guard-orca-unread-mail",
+    )
+    return Path(base) / f"{handle}.json"
+
+
+def read_raised(handle: str) -> list[str]:
+    try:
+        return json.loads(state_path(handle).read_text())
+    except (OSError, ValueError):
+        return []
+
+
+def write_raised(handle: str, ids: list[str]) -> None:
+    path = state_path(handle)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(ids[-MAX_REMEMBERED:]))
+
+
+def unread_messages(handle: str) -> list[dict]:
+    try:
+        result = run_orca(
+            ["orchestration", "check", "--terminal", handle, "--peek"]
+        )
+    except (OSError, RuntimeError):
+        return []
+    return result.get("messages") or []
+
+
+def reason(messages: list[dict]) -> str:
+    lines = [
+        f"{len(messages)} unread Orca message(s) wait in this terminal's "
+        "mailbox:"
+    ]
+    for message in messages:
+        lines.append(
+            f"- {message.get('type', 'message')} from "
+            f"{message.get('from_handle', 'unknown')}: "
+            f"{message.get('subject') or '(no subject)'}"
+        )
+    lines.append(
+        'Run `orca-ide orchestration check --terminal "$ORCA_TERMINAL_HANDLE"` '
+        "and handle them before ending your turn. Don't tell the user any "
+        "agent's state until you have read them."
+    )
+    return "\n".join(lines)
+
+
+def check(event: dict) -> str | None:
+    handle = os.environ.get("ORCA_TERMINAL_HANDLE")
+    if not handle or event.get("stop_hook_active"):
+        return None
+    messages = unread_messages(handle)
+    raised = read_raised(handle)
+    if not any(m.get("id") not in raised for m in messages):
+        return None
+    write_raised(handle, raised + [m["id"] for m in messages if m.get("id") not in raised])
+    return reason(messages)
+
+
+def main() -> int:
+    text_mode = "--text" in sys.argv[1:]
+    event = {}
+    if not text_mode:
+        try:
+            event = json.load(sys.stdin)
+        except ValueError:
+            return 0
+    message = check(event)
+    if message:
+        if text_mode:
+            print(message)
+        else:
+            json.dump({"decision": "block", "reason": message}, sys.stdout)
+            print()
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

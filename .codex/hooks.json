@@ -133,6 +133,15 @@
             "timeout": 10
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "ai-guard-orca-unread-mail",
+            "timeout": 15
+          }
+        ]
       }
     ],
     "Interrupt": [

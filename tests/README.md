@@ -15,6 +15,22 @@ allows mentions inside arguments, other `git worktree` subcommands, and the
 python3 tests/test_ai_guard_git_worktree_add.py
 ```
 
+## Unread Orca Mail Guard Tests
+
+`test_ai_guard_orca_unread_mail.py` runs the `ai-guard-orca-unread-mail`
+Stop hook against a fake Orca CLI. It checks that unread mail blocks a stop
+once per message without marking it read, and that an empty mailbox, a
+continued stop, a CLI failure or a terminal outside Orca all allow it.
+`pi/unread-orca-mail.test.ts` and `opencode/unread-orca-mail.test.js` check
+that the Pi and OpenCode adapters start a new turn only when the guard
+reports mail.
+
+```bash
+python3 tests/test_ai_guard_orca_unread_mail.py
+node --test --experimental-strip-types tests/pi/unread-orca-mail.test.ts
+bun test tests/opencode/unread-orca-mail.test.js
+```
+
 ## Orca Attention-Agent Cycling Tests
 
 `test_orca_cycle_attention_agent.py` verifies that

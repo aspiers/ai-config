@@ -78,8 +78,8 @@ choose. Use the first of these that applies:
     --setup run --agent <agent id> --prompt "$(cat tmp/<brief>.md)"
   ```
 
-  `<slug>` is the session name below, slugified; it labels the sidebar
-  row. `--agent` cannot pass `--name` yet
+  `<slug>` is the session name's first three to six words, slugified; it
+  labels the sidebar row. `--agent` cannot pass `--name` yet
   ([`stablyai/orca#25067`][orca-25067]). Where the repository commits
   straight to its trunk, `<trunk>` is the local branch, which may be ahead
   of its remote.
@@ -92,9 +92,10 @@ choose. Use the first of these that applies:
 - **tmux** (`TMUX` is set): a new window running your agent's CLI, with the
   brief as its initial prompt and a session name the same way.
 
-Name the session after the mistake in three to six words, with the agent's
-launch flag (`claude --name`, `pi --name`); omit it for an agent without
-one, such as Codex.
+Name the session after the mistake in 8 to 12 words, most identifying
+first, as `orca-cli-local` describes, with the agent's launch flag
+(`claude --name`, `pi --name`); omit it for an agent without one, such as
+Codex.
 
 Start it in the repository that owns the instruction files most likely at
 fault, e.g. the one a skill resolves into (`realpath` its directory; its

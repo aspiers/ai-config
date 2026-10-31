@@ -100,8 +100,15 @@ read` the setup terminal to confirm setup finished without errors.
 
 ## Name every agent you start
 
-Give each agent session you start a 3–6-word name for its task, so it is
-recognisable in the agent's session picker and in Orca.
+Give each agent session you start a name for its task, so it is
+recognisable in the agent's session picker and in Orca. Titles come in
+three tiers, each for a different width:
+
+- **Long**, 8–12 words, most identifying words first: the session name,
+  shown by `/resume` and in window titles.
+- **Short**, 3–6 words and at most 40 characters: Orca's tab bar and
+  Activity sidebar.
+- **Tiny**, 1–2 words: narrow labels such as Herdr tabs.
 
 Orca shows a tab's name on several surfaces, and each picks from different
 fields:
@@ -117,18 +124,25 @@ fields:
 
 So:
 
-- With `terminal create --command`, put the name on the agent's command
-  line: `claude --name "<name>" …` or `pi --name "<name>" …`. Codex has no
-  launch-time name flag.
-- Also pass `terminal create --title "<name>"` when the session won't be
-  renamed or several agents may open with similar prompts. It pins the
-  label everywhere until `terminal rename --terminal <handle>` without
-  `--title` clears it.
-- Omit `--title` only for a session you expect to rename, and start its
-  prompt with a line naming the task.
+- With `terminal create --command`, put the long name on the agent's
+  command line: `claude --name "<name>" …` or `pi --name "<name>" …`.
+- Where a title-sync hook runs, it pins the short tier as the tab's custom
+  title, using the name's leading words, and re-pins after every rename.
+  Don't also pass `--title`: the hook replaces it. This repository's
+  `pi-orca-tab-title` Pi extension is one such hook.
+
+  > **⚠️ AUTHOR-SPECIFIC:** the author also runs a Claude hook,
+  > `herdr-claude-title-watch` from their herdr-config repository, that
+  > does the same for Claude in Orca, Herdr and tmux.
+
+- Without a hook, and for Codex, which has no launch-time name flag, pass
+  `terminal create --title "<short>"`. It pins the label everywhere until
+  `terminal rename --terminal <handle>` without `--title` clears it, so it
+  won't follow a later rename.
 - `worktree create --agent` cannot pass agent arguments until
-  [`stablyai/orca#25067`][orca-25067] lands, so those sessions keep the
-  agent's automatic title. Don't abandon `--agent` just to name one.
+  [`stablyai/orca#25067`][orca-25067] lands, so those sessions get an
+  automatically generated name, whose tiers a title-sync hook still pins.
+  Don't abandon `--agent` just to name one.
 
 [orca-25067]: https://github.com/stablyai/orca/issues/25067
 

@@ -68,20 +68,21 @@ start an agent in it, start the delegate there. The user can see it, so it
 runs steps 2 to 5 itself, asking in its own pane and applying what they
 choose. Use the first of these that applies:
 
-- **Orca** (`ORCA_TERMINAL_HANDLE` is set): a new tab running your agent's
-  CLI with the brief as its initial prompt, read from a file in that
-  checkout's `tmp/`, and a session name (see below):
+- **Orca** (`ORCA_TERMINAL_HANDLE` is set): a new worktree workspace with
+  your agent started in it, so each `/learn` shows in Orca's sidebar. Write
+  the brief to a file in your own repository's `tmp/` first:
 
   ```sh
-  orca-ide terminal create --worktree <selector> \
-    --title "<session name>" \
-    --command '<agent CLI> --name "<session name>" "$(cat tmp/<brief>.md)"'
+  orca-ide worktree create --repo path:<main checkout> --name <slug> \
+    --parent-worktree path:<main checkout> --base-branch <trunk> \
+    --setup run --agent <agent id> --prompt "$(cat tmp/<brief>.md)"
   ```
 
-  Pass the session name to `--title` as well. Orca's Activity sidebar
-  ignores session names and otherwise titles the row from the brief's first
-  words, which are the same for every delegate. The pinned label won't
-  follow later renames, which a delegate doesn't need.
+  `<slug>` is the session name below, slugified; it labels the sidebar
+  row. `--agent` cannot pass `--name` yet
+  ([`stablyai/orca#25067`][orca-25067]). Where the repository commits
+  straight to its trunk, `<trunk>` is the local branch, which may be ahead
+  of its remote.
 
   This is a handoff, not a supervised worker, so it needs no heartbeats,
   `worker_done` or release. Do not use a harness subagent. On Linux the CLI
@@ -95,9 +96,9 @@ Name the session after the mistake in three to six words, with the agent's
 launch flag (`claude --name`, `pi --name`); omit it for an agent without
 one, such as Codex.
 
-Start it in the main checkout of the repository that owns the instruction
-files most likely at fault, e.g. the one a skill resolves into (`realpath`
-its directory; under Orca, `repo list --json` gives its id). Follow that
+Start it in the repository that owns the instruction files most likely at
+fault, e.g. the one a skill resolves into (`realpath` its directory; its
+main checkout is the first entry of `git worktree list`). Follow that
 repository's rules on where commits go.
 
 Then tell the user in one line where the `/learn` questions will appear, and
@@ -150,6 +151,27 @@ Its brief must also tell it:
 - to end with the outcome: the cause, what was applied with commit SHAs, and
   the remediation the user chose. Write a report file only if the user
   asks for one.
+
+Under Orca, where the repository commits straight to its trunk, the brief
+also tells the delegate how to get its branch merged. A repository that
+takes PRs follows its own rules instead.
+
+1. After committing, list agent terminals in the main checkout:
+   `orca-ide terminal list --worktree path:<main checkout> --json`, keeping
+   those whose `agentIdentity` is non-null.
+2. If there is exactly one, it is the coordinator. Send it
+   `orca-ide orchestration send --to <handle> --type question` with a
+   subject `Merge <branch> into <trunk>` and the commits in the body, then
+   follow `orca-cli-local` "Asking your coordinator to act".
+3. If there are none or several, or no reply comes within 10 minutes, ask
+   the user with the questionnaire tool: pick a coordinator, or let the
+   delegate rebase onto the trunk and run `git -C <main checkout> merge
+   --ff-only <branch>` itself.
+
+A coordinator that merges cleans up the workspace as `orca-cli-local`
+"Cleaning up after a handoff agent's branch merges" says. A delegate that
+merged itself must not, since removing its own workspace kills it
+mid-step: it tells the user the workspace is ready for removal.
 
 Tell a subagent to follow steps 2 and 3 read-only: no edits, commits, or
 questions to the user. It reports the cause with quoted evidence, and the
@@ -228,3 +250,5 @@ the repository's policy. You may delegate the edits to a subagent, but
 verify the result yourself. Report what changed, with a one-line reminder of
 where the paused work stood. Then stop: resume the paused task only when the
 user says so.
+
+[orca-25067]: https://github.com/stablyai/orca/issues/25067

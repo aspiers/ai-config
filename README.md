@@ -253,10 +253,11 @@ this repository's own `AGENTS.md`, so project instructions win on conflict.
 > **Codex budget:** Codex reads at most `project_doc_max_bytes` (32 KiB by
 > default) of `AGENTS.md` content and truncates the rest. Its
 > [docs](https://learn.chatgpt.com/docs/agent-configuration/agents-md) call
-> this a combined limit; the Codex 0.159.2 source (`codex-rs/core/src/agents_md.rs`)
+> this a combined limit; the Codex 0.163.0 source (`codex-rs/core/src/agents_md.rs`)
 > applies it to project files only, leaving `~/.codex/AGENTS.md` uncounted.
-> Assume the stricter reading: the global file (style plus rules, about
-> 10 KiB) and this repository's `AGENTS.md` (about 16 KiB) must fit together.
+> Under the stricter reading, the global file (style plus rules, at most
+> about 15.5 KiB with the rules at their 8 KiB cap) and this repository's
+> `AGENTS.md` (about 16.2 KiB) still fit together, with little to spare.
 
 The installer strips the Claude-Code-specific YAML frontmatter for the other
 agents, since feeding them a `name:`/`keep-coding-instructions:` block would

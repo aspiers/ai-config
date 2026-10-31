@@ -242,6 +242,20 @@ say which hunks are yours.
 This is about code changes. A Markdown draft of text to publish, such as a
 PR body, goes in an Orca tab instead, as the global rules describe.
 
+## Showing a page or HTML file to the user
+
+`file open` opens an editor tab, which shows HTML as source. Open a rendered
+page, such as an HTML report, in Orca's built-in browser:
+
+```sh
+orca-ide tab create --url "file://$(realpath <file>)" --json
+```
+
+Confirm it loaded with `tab show --page <id>`, passing
+`result.browserPageId` from the create output (not its top-level `id`); it
+reports the title and URL. Write the file as a full document with
+`<!doctype html>` and a charset meta, or it renders in quirks mode.
+
 ## Workaround: worker tabs titled `worker-task_<id>`
 
 Temporary, until [`stablyai/orca#21917`][orca-21917] is fixed (seen in

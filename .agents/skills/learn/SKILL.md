@@ -8,17 +8,20 @@ description: >-
   proposes concrete context improvements, and lets the user choose which to
   apply and how to remediate. Use when the user invokes `/learn` or
   `$learn`, with or without a description of the mistake, including
-  `/learn /qs`-style shorthand naming the corrective command. For a broad
+  `/learn /qs`-style shorthand naming the corrective command. Also use
+  unprompted as soon as the agent admits a mistake of its own, or is about
+  to propose changing instructions, skills, or memories because of one,
+  instead of making or recommending that edit directly. For a broad
   end-of-session documentation sweep, use `documentation-updates`
   (`/reflect`) instead.
 ---
 
 # Learn from a mistake
 
-The user has interrupted ongoing work because you just made a mistake. Treat
-this as an **interlude**: the goal is to understand why the mistake happened
-and stop it recurring, without derailing the task it interrupted any
-further.
+You just made a mistake. Either the user interrupted ongoing work to invoke
+this, or you admitted the mistake yourself. Treat this as an
+**interlude**: the goal is to understand why the mistake happened and stop
+it recurring, without derailing the task it interrupted any further.
 
 ## Boundary
 

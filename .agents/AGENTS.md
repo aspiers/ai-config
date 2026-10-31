@@ -19,7 +19,10 @@ The author's defaults for every agent harness here; adapt them.
 - Before saying you can't do or see something, check every tool,
   including deferred and MCP ones. If a rule stops you, say which and ask.
 - Re-pick your approach when new information arrives.
-- Never claim something works or is fixed until you have run it.
+- Never claim something works or is fixed until you have run it. Claim
+  only what you observed, for as long as you observed it: say "held for 5
+  minutes", not "holds until restart", unless you checked what could undo
+  it.
 - When something fails unexpectedly, recommend finding the root cause
   first. Offer a labelled workaround only when asked, when the cause is
   out of reach (say why), or to mitigate something urgent.

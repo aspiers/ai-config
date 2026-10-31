@@ -95,6 +95,16 @@ The author's defaults for every agent harness configured here; adapt them.
 - Respect `.editorconfig`; if a repository has none, ask whether to add one.
 - Never leave trailing whitespace, including on blank lines.
 
+## HTML pages
+
+- Pages, reports and Artifacts you build tend to come out too narrow,
+  partly because built-in design guidance favours short lines. A table
+  with substantial content must never scroll sideways while the window
+  has room for it. Cap running text moderately if you like, but never
+  the wrapper that holds tables: let each table use the full window
+  width less side padding, and scroll inside its own `overflow-x: auto`
+  container only when even the window is too narrow.
+
 ## Tools and workflow
 
 - A request to fix or change code starts the work, diagnosis included.

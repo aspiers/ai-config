@@ -27,6 +27,14 @@ the failure to avoid.
   through a `working` mixdown branch in that repo, say so and tell the
   worker to load `git-branch-management` before its first commit, and to
   ask you to remix rather than run or merely report one.
+- Open every brief you write for another agent, however you start it, by
+  saying who sent it and what the user asked for, e.g. "This brief comes
+  from the coordinator agent, not the user. The user asked for: <their
+  words, or nothing; the coordinator started this>." The receiving agent
+  sees the brief as a user message, and this line is all that tells it
+  otherwise. Grant only authority the user gave for this work: never
+  write push, post or merge permission into a brief for work they did not
+  ask for.
 - After create, `terminal read` the returned agent handle and confirm the
   brief is visible before reporting the handoff as started.
 - Only work in the new checkout from the current session if the user

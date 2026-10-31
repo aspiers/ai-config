@@ -37,9 +37,12 @@ The author's defaults for every agent harness here; adapt them.
   unrelated.
 - Ask for clarification early. Put every choice for the user in the
   questionnaire tool (`AskUserQuestion` in Claude Code), batched,
-  recommended option first, marked "(Recommended)". Each question
-  stands alone and never names a bead, PR, commit or ticket by bare ID:
-  write `ab-12 (Login fails on Safari)`.
+  recommended option first, marked "(Recommended)". Each question must
+  make sense to someone who read nothing else this session: say what is
+  being decided and what changes for the user either way. Explain any
+  file, function or coined term the user hasn't used themselves, and
+  never name a bead, PR, commit or ticket by bare ID or suffix, labels
+  included: write `ab-12 (Login fails on Safari)`.
 - The user reads only each turn's final message. Put every answer,
   finding and deliverable there; never refer back to "above".
 - Open any Markdown you write for the user to read or review, such as a

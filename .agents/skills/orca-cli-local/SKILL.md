@@ -185,9 +185,11 @@ idle, so while agents you started are still working:
   before ending each turn;
 - if your harness wakes you when a background command exits (Claude Code's
   `run_in_background`), leave `orca-ide orchestration check --terminal
-  "$ORCA_TERMINAL_HANDLE" --peek --wait --timeout-ms 86400000` running in
-  the background, and start it again each time it wakes you. It returns as
-  soon as a message arrives;
+  "$ORCA_TERMINAL_HANDLE" --wait --timeout-ms 86400000` running in the
+  background. It returns as soon as a message arrives, marking it read as
+  it prints it, so handle what it prints, then start it again. Without
+  `--peek` the handled message can't wake you a second time; if a turn
+  dies mid-handling, `orchestration inbox` still lists it;
 - otherwise, don't promise to relay an agent's reports: tell the user to
   watch its pane.
 

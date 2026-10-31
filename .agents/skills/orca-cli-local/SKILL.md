@@ -299,6 +299,11 @@ field, which is the status line on the workspace card. Orca's Send action
 removes the notes it delivers, so an empty list may mean they were already
 sent to an agent.
 
+Apply each note to its selected text and the problem its body names.
+Keep the rest of the passage, its facts and lists included, even when that
+makes the reword harder, and ask before removing anything the note didn't
+mention.
+
 Orca anchors a note only by its stored line numbers and selected text and
 never updates them when the file changes. Save the notes to a file in
 `tmp/` before editing or renaming the file they annotate: edits can move a

@@ -248,8 +248,25 @@ the file also has hunks you didn't write, say so when you offer the tab, and
 say which hunks are yours.
 
 This is about code changes. A Markdown draft of text to publish, such as a
-PR body, goes in an Orca tab instead, as the global rules describe, and so
-does a report, spec or design written for the user to read.
+PR body, goes in an Orca tab instead, as described next, and so does a
+report, spec or design written for the user to read.
+
+## Markdown for the user to read or review
+
+Open any Markdown file you write for the user to read or review in an Orca
+editor tab, in the same turn and before asking about it:
+
+```sh
+orca-ide file open <path>
+```
+
+Committing the file or summarising it in chat does not replace opening it.
+
+Write any Markdown draft the user must review before it is sent or
+published, such as a PR title and body, an issue or a comment, to a file
+in the repository's `tmp/` and open it the same way. Name the path in your
+message instead of pasting the draft. Plain-text drafts and bead text stay
+as they are.
 
 ## Reading the user's review notes
 

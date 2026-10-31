@@ -16,6 +16,17 @@ It must work whether the reader followed the session closely, skimmed it, or
 is returning cold after unrelated work. The `/sq` command reports where things
 stand now, regardless of how much text came before it.
 
+## Report only
+
+`/sq` asks for a report, not for work. Gather state with read-only commands,
+then write the summary. Do not remix, build, restart services, push, post,
+or start or message agents, even where another skill lets you do that
+without asking: those grants cover work the user has set going, and a
+status request sets nothing going. Put anything you find to do under
+**NEXT**, or under **NEEDED FROM YOU** when it waits on the user. Stale
+state turned up while checking, such as a missed remix request or an
+unanswered review, is a finding to report.
+
 ## Length and shape
 
 **Hard ceiling: 200 words.** Not a target. Most summaries should come in well

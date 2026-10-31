@@ -69,11 +69,13 @@ The author's defaults for every agent harness configured here; adapt them.
 - End every final message with next steps. A choice for the user goes in
   the questionnaire tool; otherwise give one recommended action and why, or
   say nothing remains. If your instructions already let you take that next
-  step without asking, take it before ending the turn and report it as
-  done, rather than offering it. Findings alone are not an ending. When
-  another loaded rule asks for a closing note, such as what was skipped or
-  not checked, put it just before the next steps or the question, which
-  stay last.
+  step without asking, and it continues work the user's latest message
+  asked for, take it before ending the turn and report it as done, rather
+  than offering it. A request for a status report, summary or answer asks
+  for no action, so offer the step instead. Findings alone are not an
+  ending. When another loaded rule asks for a closing note, such as what
+  was skipped or not checked, put it just before the next steps or the
+  question, which stay last.
 
 ## Privacy
 

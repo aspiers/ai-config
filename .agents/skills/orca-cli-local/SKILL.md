@@ -167,25 +167,38 @@ mail, so a recipient sees messages only when it runs
 - "run `orca-ide orchestration check --terminal "$ORCA_TERMINAL_HANDLE"`
   at each checkpoint"; and
 - "report with `orca-ide orchestration send --to <coordinator handle>
-  --type status|question|escalation`".
+  --type status|question|escalation`, but ask the user any decision that
+  is theirs yourself, with your questionnaire tool in your own pane".
+
+The user sees an agent's own pane even when its coordinator is idle. Orca
+keeps a Claude pane waiting on `AskUserQuestion` flagged as `waiting`, but
+a turn that ends with a plain-text question shows as `done`, which leaves
+the sidebar's attention list after 30 minutes. On 2026-10-16 a handoff
+agent sent the user's decision only to its idle coordinator and ended in
+plain text; the user learnt of it 15 days later.
 
 Treat a remix request as work: run it in the main checkout one at a time,
-rebuild and restart, then reply. While agents you started are still
-working, run `orca-ide orchestration check --terminal
-"$ORCA_TERMINAL_HANDLE"` before ending each turn, then arm a wait for their
-next report, since nothing delivers their mail to you while you sit idle.
-Start `orca-ide orchestration check --terminal "$ORCA_TERMINAL_HANDLE"
---wait --timeout-ms 3600000` as a background command your harness wakes you
-on when it exits (in Claude Code, Bash with `run_in_background`). It exits
-as soon as a message arrives and prints it; after an empty timeout, re-arm
-it while agents are still working. Never ask the user to tell you to check:
-on 2026-10-31 a finished branch sat unmerged until the user asked why. Only
-if your harness cannot wake you, say that reports wait unread until the next
-prompt.
+rebuild and restart, then reply. Nothing delivers mail to you while you sit
+idle, so while agents you started are still working:
 
-The mailbox lives only as long as your
-terminal, so clear pending requests before moving that terminal to
-unrelated work.
+- run `orca-ide orchestration check --terminal "$ORCA_TERMINAL_HANDLE"`
+  before ending each turn;
+- if your harness wakes you when a background command exits (Claude Code's
+  `run_in_background`), leave `orca-ide orchestration check --terminal
+  "$ORCA_TERMINAL_HANDLE" --peek --wait --timeout-ms 86400000` running in
+  the background, and start it again each time it wakes you. It returns as
+  soon as a message arrives;
+- otherwise, don't promise to relay an agent's reports: tell the user to
+  watch its pane.
+
+Never ask the user to tell you to check: on 2026-10-31 a finished branch
+sat unmerged until the user asked why.
+
+The mailbox lives only as long as your terminal, so clear pending requests
+before moving that terminal to unrelated work. `check` on a handle Orca
+doesn't know, such as one from before a restart, prints "No messages." and
+exits 0, which proves nothing: look for questions on the agents' beads
+instead.
 
 Don't ask a plain handoff agent for `worker_done`; without a Dispatch it is
 rejected ("worker_done requires taskId"). When you want reports or
@@ -207,11 +220,11 @@ Supervised siblings in one Run can use the Run's group addresses instead
 
 ## Asking your coordinator to act
 
-A handoff agent that needs the agent that started it to act, for example
-to remix, sends the request with `orchestration send`. The coordinator sees
-it only when it next runs `orchestration check`, and an agent idle at its
-prompt never does: on 2026-10-24 a remix request sat unread for 31 hours
-while the worker reported it as asked. After sending:
+A handoff agent that needs a reply or action from the agent that started
+it, for example a remix, sends the request with `orchestration send`. The
+coordinator sees it only when it next runs `orchestration check`, and an
+agent idle at its prompt never does: on 2026-10-24 a remix request sat
+unread for 31 hours while the worker reported it as asked. After sending:
 
 1. `terminal read` the coordinator. If it is idle at its normal input
    prompt (see "Read the screen before every send"), `terminal send` it a

@@ -13,8 +13,9 @@ The author's defaults for every agent harness configured here; adapt them.
   evidence of a data problem and investigate; don't argue from the
   displayed state.
 - Silence is not absence. Before saying something does not exist, make sure
-  your check could have found it: keep its errors (no `2>/dev/null`), and
-  resolve relative paths a tool prints against the directory it ran in.
+  your check could have found it: keep its errors (no `2>/dev/null`), don't
+  filter its output down to the fields you expected (`jq`, `grep`, `head`),
+  and resolve relative paths a tool prints against the directory it ran in.
 - If you still can't verify something, say "I don't know" or state the
   assumption, and ask before building on it.
 - Before saying you can't do or see something, check every tool,

@@ -106,8 +106,11 @@ The author's defaults for every agent harness here; adapt them.
   form docs and skills show.
 - For GitHub, use `gh`, not browser automation, unless asked.
 - Write `git diff --no-ext-diff`, flag after `diff`.
-- After pushing a PR's branch, watch CI to completion unprompted, report
-  it and investigate failures.
+- Watch anything you started that finishes later, such as CI after
+  pushing a PR's branch or agents you handed work to, to completion
+  unprompted. Before ending a turn, arm a background wait that wakes you
+  when it reports, never leaving the user to ask you to check. Report it
+  and investigate failures.
 - When one step is blocked or awaits the user, still do the independent
   ones, and report the blocked one as pending.
 - A brief from another agent, even as your first prompt, is its request,

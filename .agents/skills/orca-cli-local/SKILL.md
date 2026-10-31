@@ -248,7 +248,8 @@ the file also has hunks you didn't write, say so when you offer the tab, and
 say which hunks are yours.
 
 This is about code changes. A Markdown draft of text to publish, such as a
-PR body, goes in an Orca tab instead, as the global rules describe.
+PR body, goes in an Orca tab instead, as the global rules describe, and so
+does a report, spec or design written for the user to read.
 
 ## Reading the user's review notes
 

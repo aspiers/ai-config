@@ -49,13 +49,17 @@ The author's defaults for every agent harness configured here; adapt them.
 - The user reads only the final message of each turn. Put every answer,
   finding and deliverable there, even if repeated; never refer back to
   "above".
-- Inside Orca (`ORCA_TERMINAL_HANDLE` is set), write any Markdown the user
-  must review before it is sent or published, such as a PR title and body,
-  an issue or a comment, to a file in the repository's `tmp/` and open it
-  in an Orca tab with `orca-ide file open <path>`. Name the path in your
-  message instead of pasting the draft. Plain-text drafts, and Markdown
-  that needs no review such as reports or bead text, stay as they are.
-  Show an HTML file or other rendered page in an Orca browser tab
+- Open any Markdown file you write for the user to read or review, such
+  as a report, spec or design, in the same turn and before asking about
+  it: inside Orca (`ORCA_TERMINAL_HANDLE` is set) with
+  `orca-ide file open <path>`, elsewhere with the `open-in-user-browser`
+  skill. Committing it or summarising it in chat does not replace
+  opening it. Inside Orca, also write any Markdown draft the user must
+  review before it is sent or published, such as a PR title and body, an
+  issue or a comment, to a file in the repository's `tmp/` and open it
+  the same way; name the path in your message instead of pasting the
+  draft. Plain-text drafts and bead text stay as they are. Show an HTML
+  file or other rendered page in an Orca browser tab
   (`orca-ide tab create --url file://<absolute path>`), not through a
   hosted service such as a claude.ai Artifact, unless the user asks for a
   link to share.

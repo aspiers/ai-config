@@ -1,6 +1,6 @@
 ---
 name: orca-cli-local
-description: Applies local lessons to every use of the Orca CLI (orca-ide, orca-dev). Use alongside the upstream orca-cli skill whenever the Orca CLI is needed, including before creating a branch worktree, when starting a fix or change in a repository registered in Orca, or asking the user for feedback on a change before committing while running inside Orca.
+description: Applies local lessons to every use of the Orca CLI (orca-ide, orca-dev). Use alongside the upstream orca-cli skill whenever the Orca CLI is needed, including before creating a branch worktree, when starting a fix or change in a repository registered in Orca, asking the user for feedback on a change before committing while running inside Orca, or reading review notes the user left on a file in Orca.
 ---
 
 # Local orca-cli guidance
@@ -241,6 +241,29 @@ say which hunks are yours.
 
 This is about code changes. A Markdown draft of text to publish, such as a
 PR body, goes in an Orca tab instead, as the global rules describe.
+
+## Reading the user's review notes
+
+The user can leave review notes on lines of a file in Orca's editor or
+diff view. Orca keeps them in its own data, not in the file or in git, so
+`git diff` shows nothing. Read them with:
+
+```sh
+orca-ide worktree show --worktree <selector> --json |
+  jq '.result.worktree.diffComments'
+```
+
+Each note has `filePath`, `startLine` and `lineNumber` (an inclusive
+range), `selectedText` and `body`. They are not the worktree's `comment`
+field, which is the status line on the workspace card. Orca's Send action
+removes the notes it delivers, so an empty list may mean they were already
+sent to an agent.
+
+Orca anchors a note only by its stored line numbers and selected text and
+never updates them when the file changes. Save the notes to a file in
+`tmp/` before editing or renaming the file they annotate: edits can move a
+highlight to another match of the same words or drop it, and a rename
+leaves the notes pointing at the old path.
 
 ## Showing a page or HTML file to the user
 

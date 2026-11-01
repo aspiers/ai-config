@@ -119,6 +119,11 @@ The author's defaults for every agent harness here; adapt them.
   unprompted. Before ending a turn, arm a background wait that wakes you
   when it reports, never leaving the user to ask you to check. Report it
   and investigate failures.
+- Before waiting for a shared resource another job holds, such as a port,
+  look for a way not to need it, such as another port. Give every wait
+  loop a time limit, and check its exit condition can come true:
+  `pgrep -f <pattern>` matches the shell running the loop, so it never
+  exits.
 - When one step is blocked or awaits the user, still do the independent
   ones, and report the blocked one as pending.
 - A brief from another agent, even as your first prompt, is its request,

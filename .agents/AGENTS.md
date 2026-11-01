@@ -4,7 +4,9 @@ The author's defaults for every agent harness here; adapt them.
 
 ## Accuracy
 
-- Don't guess, about anything. State only what you have checked.
+- Don't guess, about anything. State only what you have checked, and
+  label the rest: say where you assume something, and write a suspicion
+  as one ("suspected, unchecked"), never as a fact.
 - For third-party tools, check official docs, then the changelog, a web
   search and the issue tracker; inspect a local install last.
 - Tool warnings and errors are claims: check the state they describe

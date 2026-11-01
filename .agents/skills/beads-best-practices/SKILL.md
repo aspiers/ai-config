@@ -304,6 +304,20 @@ Do not silently expand the active bead's scope. Routine steps already required
 by its stated task and acceptance criteria remain in that bead and do not need
 separate per-command issues.
 
+## File Bugs Against Current Code
+
+Before filing a bug you found on a branch, fetch and check whether the trunk
+changed the files involved:
+
+```bash
+git fetch
+git log --oneline HEAD..origin/<trunk> -- <files>
+```
+
+If it did, reproduce on the trunk first. If you can't, name the commit you saw
+it on in the description, say the trunk is unchecked, and set priority from
+what you reproduced, not from who might be affected.
+
 ## Choose Grouping Deliberately
 
 Labels and epics are different mechanisms, and they compose. Applying a label

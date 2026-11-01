@@ -28,8 +28,9 @@ it recurring, without derailing the task it interrupted any further.
 Until the user has chosen from your proposals:
 
 - do not fix the mistake itself, and do not edit instructions, skills, or
-  memories on the strength of the investigation. Acting early would pre-empt
-  the user's decision and muddy the evidence being examined;
+  memories on the strength of the investigation, except as the uncommitted
+  drafts step 4 opens for review. Acting early would pre-empt the user's
+  decision and muddy the evidence being examined;
 - do not resume the paused task on your own initiative. If the
   investigation runs in a separate agent, you may work on the paused
   task, but only as the user directs.
@@ -243,6 +244,11 @@ stand alone: say what the change is, where it goes, and what it fixes, so
 the user can answer without remembering earlier context. Remediation comes
 last, as a single choice listing the plausible fixes for this mistake (e.g.
 commit now, revert, redo the step) plus "no remediation".
+
+Inside Orca, before asking, apply each proposed change to a Markdown file
+as an uncommitted edit and open each changed file's diff in its own tab,
+as `orca-cli-local` describes. Revert the edits the user declines.
+Elsewhere, show the proposed wording or diff in chat.
 
 ## 5. Apply and stop
 

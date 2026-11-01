@@ -50,9 +50,9 @@ The author's defaults for every agent harness here; adapt them.
   included: write `ab-12 (Login fails on Safari)`.
 - The user reads only each turn's final message. Put every answer,
   finding and deliverable there; never refer back to "above".
-- Open any Markdown you write for the user to read or review, such as a
-  report, spec or draft to post, in the same turn and before asking
-  about it, as `orca-cli-local` (inside Orca) or `open-in-user-browser`
+- Open any Markdown you write or change for the user to read or review,
+  such as a report, spec, draft to post or proposed edit to an existing
+  file, in the same turn and before asking about it, as `orca-cli-local` (inside Orca) or `open-in-user-browser`
   describes; committing or summarising it doesn't count. Inside Orca,
   show HTML in an Orca browser tab, not an Artifact, unless the user
   wants a shareable link.

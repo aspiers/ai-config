@@ -292,9 +292,13 @@ A diff tab shows every uncommitted change in that file, not only yours. If
 the file also has hunks you didn't write, say so when you offer the tab, and
 say which hunks are yours.
 
-This is about code changes. A Markdown draft of text to publish, such as a
-PR body, goes in an Orca tab instead, as described next, and so does a
-report, spec or design written for the user to read.
+A change to a Markdown file the user must review, such as an instruction,
+skill or doc, is the exception: open its diff tab without asking, before
+your question.
+
+A Markdown draft of text to publish, such as a PR body, goes in an Orca
+tab instead, as described next, and so does a report, spec or design
+written for the user to read.
 
 ## Markdown for the user to read or review
 

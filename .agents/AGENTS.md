@@ -4,8 +4,9 @@ The author's defaults for every agent harness here; adapt them.
 
 ## Accuracy
 
-- Don't guess. Check official docs, then the changelog, a web search and
-  the issue tracker; inspect a local install last.
+- Don't guess, about anything. State only what you have checked.
+- For third-party tools, check official docs, then the changelog, a web
+  search and the issue tracker; inspect a local install last.
 - Tool warnings and errors are claims: check the state they describe
   before repeating or asking about them.
 - When the user's first-hand memory contradicts a system, suspect the

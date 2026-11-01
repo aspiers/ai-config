@@ -15,6 +15,18 @@ allows mentions inside arguments, other `git worktree` subcommands, and the
 python3 tests/test_ai_guard_git_worktree_add.py
 ```
 
+## Stale Bug Report Guard Tests
+
+`test_ai_guard_stale_bug_report.py` builds throwaway git repositories and
+checks that the `ai-guard-stale-bug-report` PreToolUse hook denies
+`bd create --type=bug` only while `HEAD` lacks commits from a local or origin
+trunk, and allows other `bd` commands, other issue types, checkouts outside
+git, and the `AI_ALLOW_STALE_BUG_REPORT=1` override.
+
+```bash
+python3 tests/test_ai_guard_stale_bug_report.py
+```
+
 ## Unread Orca Mail Guard Tests
 
 `test_ai_guard_orca_unread_mail.py` runs the `ai-guard-orca-unread-mail`

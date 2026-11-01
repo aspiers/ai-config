@@ -58,6 +58,15 @@
           }
         ],
         "matcher": "^Bash$"
+      },
+      {
+        "hooks": [
+          {
+            "command": "ai-guard-stale-bug-report",
+            "type": "command"
+          }
+        ],
+        "matcher": "^Bash$"
       }
     ],
     "SessionStart": [

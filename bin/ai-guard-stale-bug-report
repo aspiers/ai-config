@@ -1,0 +1,137 @@
+#!/usr/bin/env python3
+"""ai-guard-stale-bug-report - deny filing a bug from a branch behind trunk
+
+Usage: PreToolUse hook. Reads the tool call as JSON on stdin and, for a
+shell command that runs `bd create --type=bug` while the checkout's HEAD
+lacks commits its trunk has, prints a deny decision as JSON on stdout.
+Prints nothing otherwise.
+
+A bug seen on a stale branch may already be fixed on the trunk. An agent
+once filed a P1 bug saying production users hit it, from a branch a day
+behind the trunk, which had already fixed it. The deny reason tells the
+agent to check the trunk first.
+
+The trunk is what origin/HEAD points to, plus any local or origin `main`
+or `master`; HEAD counts as behind if any of them has commits it lacks.
+Nothing is fetched, so a trunk nobody has fetched lately looks current.
+
+Claude Code and Codex call this directly; they share the protocol. The
+OpenCode plugin and the Pi extension in this repository adapt it.
+
+Once the trunk is checked, or the bead says which commit the bug was seen
+on and that the trunk is unchecked, prefix the command with
+AI_ALLOW_STALE_BUG_REPORT=1.
+"""
+
+import json
+import os
+import subprocess
+import sys
+
+from guard_shell import command_words, segments
+
+OVERRIDE = "AI_ALLOW_STALE_BUG_REPORT"
+
+TRUNK_NAMES = ["main", "master"]
+
+
+def reason(trunk: str, behind: int) -> str:
+    return (
+        f"HEAD is {behind} commit(s) behind {trunk}, so this bug may already "
+        "be fixed there. Follow beads-best-practices \"File Bugs Against "
+        "Current Code\": check whether the trunk changed the files involved "
+        f"(`git log --oneline HEAD..{trunk} -- <files>`) and reproduce there "
+        "if it did. Once checked, or if the description names the commit "
+        "you saw the bug on and says the trunk is unchecked, prefix the "
+        f"command with {OVERRIDE}=1."
+    )
+
+
+def bug_type(args: list[str]) -> bool:
+    for i, arg in enumerate(args):
+        if arg.lower() in {"--type=bug", "-t=bug", "-tbug"}:
+            return True
+        if arg in {"--type", "-t"} and i + 1 < len(args) and args[i + 1].lower() == "bug":
+            return True
+    return False
+
+
+def is_bug_create(tokens: list[str]) -> bool:
+    words = command_words(tokens, OVERRIDE)
+    if not words or os.path.basename(words[0]) != "bd":
+        return False
+    # shortcut: assumes no value-taking global flag precedes the
+    # subcommand (`bd --db x create`); handle those if agents write them.
+    rest = [w for w in words[1:] if not w.startswith("-")]
+    if not rest or rest[0] not in {"create", "new"}:
+        return False
+    return bug_type(words[1:])
+
+
+def files_bug(command: str) -> bool:
+    try:
+        return any(is_bug_create(seg) for seg in segments(command))
+    except ValueError:
+        # Unbalanced quotes: the shell will reject it anyway.
+        return False
+
+
+def git(cwd: str, *args: str) -> str | None:
+    result = subprocess.run(
+        ["git", "-C", cwd, *args], capture_output=True, text=True, check=False
+    )
+    return result.stdout.strip() if result.returncode == 0 else None
+
+
+def trunk_refs(cwd: str) -> list[str]:
+    refs = []
+    origin_head = git(cwd, "symbolic-ref", "--short", "refs/remotes/origin/HEAD")
+    if origin_head:
+        refs.append(origin_head)
+    for name in TRUNK_NAMES:
+        for ref in (name, f"origin/{name}"):
+            if ref not in refs and git(cwd, "rev-parse", "--verify", "-q", ref):
+                refs.append(ref)
+    return refs
+
+
+def most_behind(cwd: str) -> tuple[str, int] | None:
+    """Return the trunk ref HEAD lags furthest, and by how many commits."""
+    worst = None
+    for ref in trunk_refs(cwd):
+        count = git(cwd, "rev-list", "--count", f"HEAD..{ref}")
+        if count and int(count) > 0 and (worst is None or int(count) > worst[1]):
+            worst = (ref, int(count))
+    return worst
+
+
+def main() -> int:
+    if os.environ.get(OVERRIDE) == "1":
+        return 0
+    try:
+        call = json.load(sys.stdin)
+    except json.JSONDecodeError:
+        return 0
+    command = (call.get("tool_input") or {}).get("command")
+    if not isinstance(command, str) or not files_bug(command):
+        return 0
+    # shortcut: ignores a `cd` earlier in the same command line.
+    behind = most_behind(call.get("cwd") or os.getcwd())
+    if behind is None:
+        return 0
+    json.dump(
+        {
+            "hookSpecificOutput": {
+                "hookEventName": "PreToolUse",
+                "permissionDecision": "deny",
+                "permissionDecisionReason": reason(*behind),
+            }
+        },
+        sys.stdout,
+    )
+    print()
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

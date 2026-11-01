@@ -12,7 +12,7 @@ import { spawnSync } from "node:child_process";
 
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
-const GUARDS = ["ai-guard-git-worktree-add"];
+const GUARDS = ["ai-guard-git-worktree-add", "ai-guard-stale-bug-report"];
 const GUARD_TIMEOUT_MS = 10_000;
 
 function denyReason(guard: string, payload: string): string | undefined {

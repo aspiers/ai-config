@@ -1,6 +1,6 @@
 // opencode plugin adapter for command guards written as Claude Code
 // PreToolUse hooks: dcg (Destructive Command Guard) and this repository's
-// ai-guard-git-worktree-add.
+// ai-guard-git-worktree-add and ai-guard-stale-bug-report.
 //
 // Claude Code's hook protocol natively pipes JSON to a subprocess's stdin
 // and interprets JSON responses. opencode's plugin system is purely
@@ -14,6 +14,7 @@
 const GUARDS = [
   { command: "dcg", env: { DCG_ROBOT: "1" } },
   { command: "ai-guard-git-worktree-add", env: {} },
+  { command: "ai-guard-stale-bug-report", env: {} },
 ];
 
 async function denyReason(path, env, payload) {

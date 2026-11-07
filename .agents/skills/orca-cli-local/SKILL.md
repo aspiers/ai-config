@@ -119,7 +119,17 @@ fields:
 - The Activity sidebar uses the custom title, else the opening words of
   the latest prompt. It never shows the session name.
 - `terminal list` and `terminal show` report the latest terminal title,
-  not what the tab bar shows.
+  not what the tab bar shows. The plain-text `terminal list` also prints
+  each tab's title, on a `tab <id> <title>` line above that tab's
+  terminals; `--json` and `terminal show` leave it out.
+
+To find an agent that a person or note names by its tab title or session
+name, search the plain-text listing with its `tab` lines kept, e.g.
+`orca-ide terminal list --worktree <selector> | grep -i -A3 '<name>'`,
+and take the `term_` handle under the matching `tab` line. If nothing
+matches, read the whole listing before saying the agent isn't running. On
+2026-11-07 an agent grepped only `term_` lines, missed the tab titled with
+the coordinator's name, and told the user no coordinator existed.
 
 So:
 

@@ -85,6 +85,7 @@ COPYING
 ^/\.agents/skills/allow-commands
 ^/tests
 ^/orca-plugins
+^/docs
 tmp
 # Orca and other tools create git worktrees under <repo>/.worktrees, which
 # for a stowed repo is inside the stow package.

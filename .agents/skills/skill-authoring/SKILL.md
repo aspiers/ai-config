@@ -1,6 +1,6 @@
 ---
 name: skill-authoring
-description: Create and maintain agent skills with concise trigger metadata, judgement-aware guidance, progressive disclosure, and tested interfaces. Use when adding, refactoring, reviewing, or troubleshooting skills and their bundled scripts or references.
+description: Create and maintain agent skills with concise trigger metadata, judgement-aware guidance, progressive disclosure, and tested interfaces. Use when adding, refactoring, reviewing, or troubleshooting skills and their bundled scripts or references, including before proposing where a new skill should live.
 ---
 
 # Skill Authoring
@@ -81,8 +81,10 @@ description: What the skill does. Use when the relevant trigger occurs.
 - `description` exists solely to route: it is the only part of the skill
   loaded before the skill is chosen, so its one job is letting the model
   recognise a matching situation. See below.
-- Use `.agents/skills/` for cross-platform skills unless project guidance says
-  otherwise.
+- Put every skill in `.agents/skills/`: the project's own, or
+  `~/.agents/skills/` for all projects. Never use `.claude/skills/` or
+  another single agent's directory, which hides the skill from the other
+  agents.
 
 ### Writing the description
 

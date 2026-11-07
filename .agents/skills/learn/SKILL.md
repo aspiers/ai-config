@@ -58,9 +58,10 @@ Exactly one session asks the user the step 4 questions; asking them in two
 places wastes the user's attention.
 
 Before dispatching, write two one-line summaries: what `/learn` is meant to
-address, and the task that was paused to invoke it. The outcome may arrive
-long after the user has moved on, possibly after compaction, so capture them
-now rather than reconstructing them later.
+address, and the task that was paused to invoke it. Each names the
+repository or project its work is in, since the delegate may run in
+another. The outcome may arrive long after the user has moved on, possibly
+after compaction, so capture them now rather than reconstructing them later.
 
 ### In a visible pane, the delegate asks the user itself
 
@@ -137,7 +138,7 @@ its brief must carry:
 - the mistake as confirmed in step 1, in the user's words where possible;
 - the transcript facts that matter: what was asked, what you did and when,
   and the decisions or commands involved;
-- the instruction sources in play: `AGENTS.md` / `CLAUDE.md` paths,
+- the instruction sources in play: absolute `AGENTS.md` / `CLAUDE.md` paths,
   skills loaded or skipped, and the text of any system reminders, hook
   output, or other injected context that its tools cannot re-read;
 - the repository's content rules, e.g. that it is public.
@@ -235,12 +236,15 @@ why it started. Open the findings by re-anchoring them, using the two
 summaries from dispatch:
 
 > Here are the findings from `/learn` on [what it was meant to address],
-> which you invoked while working on [the paused task]:
+> which you invoked while working on [the paused task] in [its repository
+> or project]:
 
-Then give the cause and evidence. Present the proposals yourself, even when
-a subagent drafted them, and use the questionnaire tool. Ask one question
-per proposal, never one multi-select covering them all. Each question must
-stand alone: say what the change is, where it goes, and what it fixes, so
+Then give the cause and evidence. Name the repository of every path you
+mention, such as "ai-config's `.agents/AGENTS.md`", whenever the session's
+repository differs from the paused task's. Present the proposals yourself,
+even when a subagent drafted them, and use the questionnaire tool. Ask one
+question per proposal, never one multi-select covering them all. Each question
+must stand alone: say what the change is, where it goes, and what it fixes, so
 the user can answer without remembering earlier context. Remediation comes
 last, as a single choice listing the plausible fixes for this mistake (e.g.
 commit now, revert, redo the step) plus "no remediation".

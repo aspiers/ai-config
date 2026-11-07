@@ -355,8 +355,24 @@ leaves the notes pointing at the old path.
 page, such as an HTML report, in Orca's built-in browser:
 
 ```sh
-orca-ide tab create --url "file://$(realpath <file>)" --json
+orca-ide tab create --split right --url "file://$(realpath <file>)" --json
 ```
+
+`--split right` opens the page in a pane beside your own terminal, where
+the user is reading your reply, so they see it without switching tabs;
+later pages open as that pane's visible tab. Run it from your own
+worktree, without `--worktree`. `active` and `current` mean the worktree
+of your shell's directory, not the one on the user's screen, and a tab
+in another workspace stays out of sight until the user hunts for it. Say
+where the page is, e.g. "in the pane to the right of this terminal". On
+2026-11-07 an agent opened a page in another repository's workspace and
+named only that workspace; the user couldn't find it.
+
+When a page replaces one you showed earlier, close the old tab with
+`tab close --page <id>` in the same step, and give each page a `<title>`
+that tells it apart from the others still open. The same day, the user
+faced three preview tabs with near-identical titles, one showing files
+that no longer existed, and couldn't tell them apart.
 
 Confirm it loaded with `tab show --page <id>`, passing
 `result.browserPageId` from the create output (not its top-level `id`); it

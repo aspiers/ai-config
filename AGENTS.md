@@ -73,7 +73,7 @@ them, and a leak by the author.
 ### Private/author-specific material belongs elsewhere
 
 Put it in a **private repo** (e.g. the relevant project's own
-`.claude/skills/`), in agent memory, or in the issue tracker — not here.
+`.agents/skills/`), in agent memory, or in the issue tracker — not here.
 Project-level skills in a private repo are the right home for
 organisation-specific conventions.
 

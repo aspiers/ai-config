@@ -113,7 +113,7 @@ Typical locations, in order of likelihood:
   it for "Accounting", "accounts", "codes")
 - an env var such as `$ACCOUNTING_NOTES`
 - the project's `CLAUDE.md` / `AGENTS.md`, or a project-level skill
-- the private project repo's own `.claude/skills/`
+- the private project repo's own `.agents/skills/`
 
 ```bash
 # Search likely sources for the supplier or a keyword:

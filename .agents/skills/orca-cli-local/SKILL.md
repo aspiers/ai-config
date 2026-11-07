@@ -35,6 +35,10 @@ the failure to avoid.
   otherwise. Grant only authority the user gave for this work: never
   write push, post or merge permission into a brief for work they did not
   ask for.
+- When a brief you receive conflicts with the project's rules or
+  memories, such as on whom to report to, ask the user which wins before
+  acting on it. On 2026-11-07 an agent read a project memory naming the
+  coordinator, yet reported to the brief's sender without saying so.
 - After create, `terminal read` the returned agent handle and confirm the
   brief is visible before reporting the handoff as started.
 - Only work in the new checkout from the current session if the user

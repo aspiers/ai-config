@@ -50,12 +50,21 @@ Find existing upstream knowledge or work before taking action.
    all of them and filter locally — that is exhaustive and avoids missing a
    thread whose title never uses your search terms. Otherwise use
    `gh search` or the venue's own search with the same focused variants.
-5. Read plausible matches enough to verify relevance. Note their status,
+5. Find the project's stance on AI-generated contributions. Check
+   `CONTRIBUTING*`, `CODE_OF_CONDUCT*`, any `AI_POLICY*` or similar file,
+   issue and pull-request templates, and the org-level `.github`
+   repository. Then search issues, pull requests, their comments, and the
+   discussion venues for terms such as AI, LLM, Copilot, ChatGPT, Claude
+   and "generated". Maintainers often state the policy only in a comment
+   on an unrelated thread, so a check of policy files alone is not enough.
+6. Read plausible matches enough to verify relevance. Note their status,
    latest meaningful activity, linked work, decisions, workarounds, and
    blockers.
-6. Report concisely:
+7. Report concisely:
    - canonical upstream and tracker URLs;
    - which venues were searched, and which exist but were not searched;
+   - any AI-contribution policy or maintainer statement, quoted with its
+     URL, date and the thread it appeared in, or that none was found;
    - relevant matches with title, status, URL, and why they match;
    - an assessment: active work, discussion only, previously resolved, or no
      relevant match;

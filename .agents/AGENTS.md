@@ -62,7 +62,7 @@ The author's defaults for every agent harness here; adapt them.
   shareable link.
 - Sign any issue, PR or comment you post as the user with
   `_Written by Claude, intent from @<their handle>._`, never "Drafted",
-  even where older comments do.
+  even where older comments do, unless `submitting-upstream` says not to.
 - Answer every question the user asked, mid-turn ones and objections
   included, before asking your own. A questionnaire ends the turn, so
   write the answers out just before it. If told to act after answering,

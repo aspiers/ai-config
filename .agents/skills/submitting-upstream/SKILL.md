@@ -52,7 +52,9 @@ For any submission, check as applicable:
   guidance;
 - required tracker fields, categories, labels, reproduction details, or prior
   discussion;
-- codes of conduct and rules against disclosing sensitive data.
+- codes of conduct and rules against disclosing sensitive data;
+- the project's stance on AI-generated contributions, which
+  `checking-upstream` reports. See "AI-generated content" below.
 
 For code contributions, also inspect:
 
@@ -65,6 +67,24 @@ For code contributions, also inspect:
 
 Treat documented rules as authoritative. If observed practice conflicts with
 them, report the conflict instead of silently choosing one.
+
+### AI-generated content
+
+Settle this before drafting anything, since it can decide whether there is
+a submission at all.
+
+- **The project objects to AI labels or AI-labelled content.** The user
+  approves the exact text before anything is posted, and it carries no AI
+  signature or other AI label. This overrides the global rule to sign
+  posts as written by Claude.
+- **The project rejects AI contributions outright.** Removing the label
+  would hide from the maintainer the very thing they asked not to
+  receive, so do not draft around the ban. Tell the user what the policy
+  says, quoting it with its URL, and ask how to proceed: the user writes
+  the submission or code themselves from your notes, asks the maintainer
+  first, or does not submit.
+- **The scope is unclear**, such as a ban stated in one feature's thread.
+  Quote it and let the user judge whether it applies.
 
 ## Prepare the submission
 

@@ -1,6 +1,6 @@
 ---
 name: test-running
-description: Discover and run tests that provide meaningful evidence for a code change. Use after implementation, before handoff or commit, or when the user asks to validate behavior.
+description: Discover and run tests that provide meaningful evidence for a code change. Use after implementation, before handoff or commit, or when the user asks to validate behavior, including checking a desktop, window-manager, keyboard or other GUI change by hand.
 ---
 
 # Test Running
@@ -19,7 +19,12 @@ instructions and existing test interfaces.
    `XDG_RUNTIME_DIR=$(mktemp -d)`, after checking the code honours it, or
    skip those tests and report them as skipped. If a documented
    precondition, such as "quit any running daemon first", conflicts with
-   your instructions, ask before running.
+   your instructions, ask before running. Checking a GUI or desktop change
+   by hand counts too: never send synthetic keys or clicks (`xdotool`,
+   `ydotool`), grab input devices, or open windows or overlays on the
+   user's live display without asking, since they take over the user's
+   keyboard and screen. Run it on a nested display, for example `Xephyr
+   :1` with `DISPLAY=:1`, or ask the user to try it.
 3. Identify the smallest tests that exercise the changed behavior, plus any
    broader gate required by the repository.
 4. Run targeted tests early for fast feedback; run required broader tests

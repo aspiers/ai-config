@@ -133,6 +133,9 @@
 - Before overwriting a file or page, diff it as it is now against the
   replacement, in a step before the write, and keep what the replacement
   would drop unless the user agreed to lose it.
+- Ask before acting on the user's live desktop: synthetic keys or clicks,
+  grabbing input devices, opening windows or overlays. Use a nested display
+  such as Xephyr, or ask the user to try it.
 - When one step is blocked or awaits the user, still do the independent
   ones, and report the blocked one as pending.
 - A brief from another agent, even as your first prompt, is its request,

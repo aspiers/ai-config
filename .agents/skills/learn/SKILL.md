@@ -216,18 +216,18 @@ Offer two to four concrete options. For each, name the target file, show the
 proposed wording or diff, and say why it addresses the cause found. Prefer:
 
 - resolving a contradiction over adding another rule on top of it;
-- moving guidance to where it is in scope at the moment of decision, such as
-  the skill used when finishing a task;
+- moving guidance into the skill or file loaded for that kind of work, such
+  as the skill used when finishing a task;
 - mechanical enforcement (hooks, scripts, checks) over more prose, where
   feasible; and
 - tightening existing wording over repeating it elsewhere.
 
-Follow `documentation-updates` for choosing where a lesson belongs, and
-respect repository rules about content, e.g. public repositories must not
-receive private or author-specific material. Lessons are agent-agnostic by
-default: target sources every agent reads, such as `AGENTS.md`, the shared
-global rules file, or a skill. Name an agent-specific file, such as
-`CLAUDE.md`, only for that agent's own features, and say why.
+Load `documentation-updates` and follow it to choose where a lesson
+belongs, and respect repository rules about content, e.g. public repositories
+must not receive private or author-specific material. Lessons are
+agent-agnostic by default: target sources every agent reads, such as a skill
+or `AGENTS.md`. Name an agent-specific file, such as `CLAUDE.md`, only for
+that agent's own features, and say why.
 
 ## 4. Ask the user
 

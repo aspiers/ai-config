@@ -27,7 +27,12 @@ location specified by the user, the repository, or a focused workflow.
    system. For agent rules, prefer `AGENTS.md` over `CLAUDE.md`, and the
    shared global rules file (e.g. `~/.agents/AGENTS.md`) over any single
    agent's global file, so all agents stay in parity. Use an agent-specific
-   file only for that agent's own features.
+   file only for that agent's own features. The shared global rules file
+   loads into every session, so it takes only rules for almost any task.
+   Guidance for one kind of work, such as writing skills or agent config,
+   goes in that work's skill. If an agent needed that skill and didn't load
+   it, fix the skill's description so it triggers; don't copy the rule into
+   an always-loaded file.
 3. Update the smallest relevant source. Link to existing detail rather than
    duplicating it.
 4. Check for conflicting or stale guidance and update it in the same scope.

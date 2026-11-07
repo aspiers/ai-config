@@ -17,7 +17,9 @@
   Keep all four in parity when changing shared behaviour, even where one is
   not in active daily use. Every one of them reads this file: Claude Code via
   the `CLAUDE.md` symlink, and the others through their own `AGENTS.md`
-  discovery.
+  discovery. Put shared rules and skills in the agent-neutral files
+  (`.agents/`, `AGENTS.md`), never in one agent's own directory, unless they
+  use a feature only that agent has.
 
 - **⚠️ THIS REPOSITORY IS PUBLIC.** Its skills and configs are published for
   consumption by people other than the author. Read "Public repository — no

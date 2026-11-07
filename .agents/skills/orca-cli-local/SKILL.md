@@ -370,9 +370,12 @@ named only that workspace; the user couldn't find it.
 
 When a page replaces one you showed earlier, close the old tab with
 `tab close --page <id>` in the same step, and give each page a `<title>`
-that tells it apart from the others still open. The same day, the user
-faced three preview tabs with near-identical titles, one showing files
-that no longer existed, and couldn't tell them apart.
+that tells it apart from the others still open. Close a tab yourself once
+it has unambiguously served its purpose, for example when the user has
+approved what it showed. When it probably has but you can't be sure, ask
+the user whether to close it. The same day, the user faced three preview
+tabs with near-identical titles, one showing files that no longer
+existed, and couldn't tell them apart.
 
 Confirm it loaded with `tab show --page <id>`, passing
 `result.browserPageId` from the create output (not its top-level `id`); it

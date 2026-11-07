@@ -110,26 +110,10 @@ must not happen merely because development work was requested.
 
 > **⚠️ AUTHOR-SPECIFIC:** On the author's machines, place a third-party
 > development checkout at `~/.GIT/3rd-party/<repository-name>` and register it
-> in `~/.config/mr/groups.d/26-AI`. Other users must substitute their own
-> source-tree and repository-manager conventions.
+> in `~/.config/mr/groups.d/26-AI` using the `mr-config-entries` skill. Other
+> users must substitute their own source-tree and repository-manager
+> conventions.
 
-Follow the existing remote scheme in that `mr` group file rather than
-inventing new remote names. For the author's upstream-plus-personal-fork
-layout, the canonical upstream is `origin` and the personal fork is the
-read-write `github` remote. Register that layout using the existing `mr`
-helpers. For example:
-
-```ini
-[$HOME/.GIT/3rd-party/example]
-checkout = github_clone
-remotes =
-    auto_remotes
-    github_readwrite_remote <fork-owner>
-lib =
-    set_git_origin_user <upstream-owner>
-```
-
-Before cloning, check whether the directory and `mr` entry already exist.
 Keep the Pi-managed checkout unchanged until a separately requested and audited
 installation or source-switch test is ready.
 

@@ -1,6 +1,6 @@
 ---
 name: orca-cli-local
-description: Applies local lessons to every use of the Orca CLI (orca-ide, orca-dev). Use alongside the upstream orca-cli skill before the first orca-ide or orca-dev command in a session, including commands a brief from another agent spells out, and before creating a branch worktree, when starting a fix or change in a repository registered in Orca, asking the user for feedback on a change before committing while running inside Orca, or reading review notes the user left on a file in Orca.
+description: Applies local lessons to every use of the Orca CLI (orca-ide, orca-dev). Use alongside the upstream orca-cli skill before the first orca-ide or orca-dev command in a session, including commands a brief from another agent spells out, and before creating a branch worktree, when starting a fix or change in a repository registered in Orca, asking the user for feedback on a change before committing while running inside Orca, showing the user a page, HTML file or screenshot inside Orca, or reading review notes the user left on a file in Orca.
 ---
 
 # Local orca-cli guidance
@@ -363,7 +363,7 @@ never updates them when the file changes. Save the notes to a file in
 highlight to another match of the same words or drop it, and a rename
 leaves the notes pointing at the old path.
 
-## Showing a page or HTML file to the user
+## Showing a page, HTML file or screenshot to the user
 
 `file open` opens an editor tab, which shows HTML as source. Open a rendered
 page, such as an HTML report, in Orca's built-in browser:
@@ -395,6 +395,14 @@ Confirm it loaded with `tab show --page <id>`, passing
 `result.browserPageId` from the create output (not its top-level `id`); it
 reports the title and URL. Write the file as a full document with
 `<!doctype html>` and a charset meta, or it renders in quirks mode.
+
+Open a screenshot or other image you took to show a result the same way,
+in the same turn: the browser tab renders a PNG. For several, such as
+before and after at two widths, write one HTML page showing them side by
+side with captions, and open that instead of a tab per image. Listing
+their paths in a report doesn't count, even when a brief asked for paths:
+on 2026-11-07 a worker reported committed screenshot paths three times,
+and the user had to ask to see them.
 
 ## Workaround: worker tabs titled `worker-task_<id>`
 

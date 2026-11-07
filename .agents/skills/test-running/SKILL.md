@@ -11,14 +11,23 @@ instructions and existing test interfaces.
 ## Workflow
 
 1. Read applicable project guidance and test configuration.
-2. Identify the smallest tests that exercise the changed behavior, plus any
+2. Before running anything broader than unit tests on the user's machine,
+   find what the suite touches outside its temporary files: running
+   services, sockets under `$XDG_RUNTIME_DIR`, config under `$HOME`,
+   ports. Integration tests can take over or delete the live copies the
+   user depends on. Point the suite at a scratch location, for example
+   `XDG_RUNTIME_DIR=$(mktemp -d)`, after checking the code honours it, or
+   skip those tests and report them as skipped. If a documented
+   precondition, such as "quit any running daemon first", conflicts with
+   your instructions, ask before running.
+3. Identify the smallest tests that exercise the changed behavior, plus any
    broader gate required by the repository.
-3. Run targeted tests early for fast feedback; run required broader tests
+4. Run targeted tests early for fast feedback; run required broader tests
    before completion when practical.
-4. Diagnose failures before editing. Distinguish product regressions from
+5. Diagnose failures before editing. Distinguish product regressions from
    pre-existing failures, flaky behavior, missing services, and environment
    problems.
-5. Re-run affected tests after fixes and report commands, scope, and results.
+6. Re-run affected tests after fixes and report commands, scope, and results.
 
 Add or update coverage when the change introduces behavior that the repository
 would normally test. Avoid tests that merely mirror implementation details.

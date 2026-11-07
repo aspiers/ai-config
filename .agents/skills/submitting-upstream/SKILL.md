@@ -136,8 +136,9 @@ Only use this path when code is actually being contributed.
 3. Shape commits to the project's documented or observed conventions. Never
    add another person's sign-off or claim a CLA on their behalf.
 4. Add required tests, documentation, changelog entries, and generated files.
-5. Run the project's verification commands and distinguish introduced failures
-   from pre-existing or environmental ones.
+5. Run the project's verification commands as `test-running` describes,
+   keeping them away from the user's live services, and distinguish
+   introduced failures from pre-existing or environmental ones.
 6. Draft the pull request, merge request, or patch text using the project's
    template and requested linkage syntax.
 

@@ -90,9 +90,11 @@ Orca can only create a worktree when you are running inside it, which its
 terminals signal by setting `ORCA_PANE_KEY`. So:
 
 - inside Orca, in a repository with an `orca.yaml` or registered in Orca
-  (`repo list --json`) with a setup script, create the worktree with Orca
-  and start an agent in it, as the `orca-cli-local` skill describes; do
-  not work in it from the current session unless the user says so;
+  (`repo list --json`), create the worktree with Orca and start an agent
+  in it, as the `orca-cli-local` skill describes, even when Orca has no
+  setup script for it, because only Orca gives the new agent its own
+  workspace in Orca's sidebar. Do not work in it from the current
+  session unless the user says so;
 - otherwise use `wt`, even when the repository has an `orca.yaml`:
 
 ```bash

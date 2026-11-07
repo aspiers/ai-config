@@ -59,11 +59,10 @@ tacticalvote it still pointed at `origin/locals-2025`, 211 commits behind
 
 ## Every new worktree gets its own agent
 
-When running inside Orca (`ORCA_PANE_KEY` is set) in a repository with an
-`orca.yaml`, or registered in Orca, create every new worktree with
-`worktree create`, including one for your own next change, and one for a
-fix you were just asked to make, before diagnosing it. Outside Orca the CLI
-cannot create one; follow `git-branch-management` instead.
+When `git-branch-management` says to create a worktree with Orca, create
+every new worktree with `worktree create`, including one for your own next
+change, and one for a fix you were just asked to make, before diagnosing it.
+That skill alone decides between Orca and `wt`.
 `git worktree add` and `wt switch --create` skip Orca's setup, leaving no
 dependencies or env files. Pass `--parent-worktree path:<main checkout>`,
 `--base-branch origin/<target>` (see above), and `--setup run` unless the

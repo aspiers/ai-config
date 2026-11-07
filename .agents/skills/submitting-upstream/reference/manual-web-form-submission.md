@@ -109,17 +109,21 @@ Ask them to confirm the things only the rendered form reveals:
 
 - issue-number and user references resolved to real links;
 - fenced code blocks rendered as code, not reflowed prose;
-- the template's `type` and labels actually applied.
+- the template's `type` and labels actually applied;
+- every checkbox and dropdown set as the draft says.
 
 ## After it is filed
 
 Ask for the resulting URL or number — there is no API response to read it
 from. Then verify it landed as intended, and record it wherever the work is
-tracked:
+tracked. Compare the filed body with the draft, checkbox states and dropdown
+values included, since nothing else catches a missed click. Tell the user
+about any difference so they can edit the issue.
 
 ```bash
 gh api repos/OWNER/REPO/issues/NUMBER \
   --jq '"#\(.number) \(.title)\nstate=\(.state) type=\(.type.name // "none") labels=\(.labels|map(.name)|join(",")) author=\(.user.login)"'
+gh api repos/OWNER/REPO/issues/NUMBER --jq .body
 ```
 
 ## Approval boundary

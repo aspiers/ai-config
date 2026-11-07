@@ -88,7 +88,9 @@ labels, so they are not pasted.
 
    For each field it loads the clipboard without a trailing newline, reads
    it back and aborts on a mismatch, then shows a desktop notification naming
-   the form field. Notifications stay up for 10 seconds and stack, and the
+   the form field. A file holding only a `#NOTE:` line gets a notification
+   saying what to set, and the clipboard keeps its last contents.
+   Notifications stay up for 10 seconds and stack, and the
    script advances every 5 seconds, so the user pastes without reporting back
    between fields. `-f` sets the first delay, `-d` the later ones and `-t`
    the display time, all in seconds; use them when the user asks for a

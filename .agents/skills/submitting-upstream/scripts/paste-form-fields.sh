@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
-# Load form-field files onto the clipboard one at a time, announcing each with
-# a desktop notification that names the field to paste into, and advance on a
-# timer so the user never has to report back between pastes.
+# Walk the user through a web form one field at a time: load each text field
+# onto the clipboard, announce every field with a desktop notification that
+# names it, and advance on a timer so the user never has to report back.
 #
 # Usage: paste-form-fields.sh [-f FIRST_DELAY] [-d DELAY] [-t DISPLAY_SECS] FILE...
 #
 # The field label comes from the filename: 2-problem-or-use-case.txt becomes
 # "Problem or use case". A first line of "#NOTE: text" is shown in the
-# notification and not copied.
+# notification and not copied. A file holding only that line announces a field
+# to set by hand, such as a checkbox or dropdown, and leaves the clipboard alone.
 set -euo pipefail
 
 first_delay=5
@@ -82,20 +83,29 @@ for file in "$@"; do
     if [[ $content == '#NOTE: '* ]]; then
         note=${content%%$'\n'*}
         note=${note#'#NOTE: '}
-        content=${content#*$'\n'}
+        content=${content#"#NOTE: $note"}
+        content=${content#$'\n'}
     fi
 
-    # Why printf '%s': a trailing newline lands in the form as a stray blank line.
-    printf '%s' "$content" | clip_in
-    # Why: a silent copy failure would mean pasting stale text into a public tracker.
-    if [[ $(clip_out) != "$content" ]]; then
-        notify "Paste aborted" "Clipboard check failed for $label"
-        echo "clipboard mismatch for $file" >&2
-        exit 1
+    if [[ -z $content ]]; then
+        if [[ -z $note ]]; then
+            echo "$file is empty; give it a #NOTE: line saying what to set" >&2
+            exit 1
+        fi
+        # Why: checkboxes and dropdowns take a click, so the clipboard keeps the last paste.
+        body="$label: $note"
+    else
+        # Why printf '%s': a trailing newline lands in the form as a stray blank line.
+        printf '%s' "$content" | clip_in
+        # Why: a silent copy failure would mean pasting stale text into a public tracker.
+        if [[ $(clip_out) != "$content" ]]; then
+            notify "Paste aborted" "Clipboard check failed for $label"
+            echo "clipboard mismatch for $file" >&2
+            exit 1
+        fi
+        body="Paste into: $label"
+        [[ -n $note ]] && body+=" — $note"
     fi
-
-    body="Paste into: $label"
-    [[ -n $note ]] && body+=" — $note"
     echo "$(date +%T) [$i/$total] $label"
 
     if ((i == total)); then

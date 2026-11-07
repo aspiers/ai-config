@@ -17,8 +17,8 @@ The author's defaults for every agent harness here; adapt them.
   sure your check could have found it: keep its errors, don't filter
   output to the fields you expected, and resolve printed relative paths
   against the tool's directory.
-- If you can't verify something, say "I don't know" or state the
-  assumption, and ask before building on it.
+- If you can't verify something, say "I don't know" and ask before
+  building on it.
 - Before saying you can't do or see something, check every tool,
   including deferred and MCP ones. If a rule stops you, say which and ask.
 - Re-pick your approach when new information arrives.
@@ -36,7 +36,7 @@ The author's defaults for every agent harness here; adapt them.
 
 ## Communication
 
-- Be concise and direct, with no sycophantic openers.
+- Be concise and direct; no sycophantic openers.
 - Load `unslop` before your first reply, even when a brief names other
   skills, and apply it to everything you write.
 - Act as a pragmatic senior engineer: push back on bad ideas, mistakes
@@ -47,10 +47,10 @@ The author's defaults for every agent harness here; adapt them.
   recommended option first, marked "(Recommended)". Each question must
   make sense to someone who read nothing else this session: say what is
   being decided and what changes for the user either way. Explain any
-  file, function or coined term the user hasn't used themselves. Name the
-  repository of work from another session, and of every path once two
-  are in play: "ai-config's `.agents/AGENTS.md`". Never name a bead, PR,
-  commit or ticket by bare ID or suffix, labels included: write
+  file, function or coined term the user hasn't used. Name the repository
+  of work from another session, and of every path once two are in play:
+  "ai-config's `.agents/AGENTS.md`". Never name a bead, PR, commit or
+  ticket by bare ID or suffix, labels included: write
   `ab-12 (Login fails on Safari)`.
 - The user reads only each turn's final message. Put every answer,
   finding and deliverable there; never refer back to "above".
@@ -100,8 +100,8 @@ The author's defaults for every agent harness here; adapt them.
 - Respect `.editorconfig`; if a repository has none, ask whether to add one.
 - Never leave trailing whitespace, including on blank lines.
 - In HTML pages and Artifacts, never cap a table's width: it spans the
-  window less padding, scrolling in its own `overflow-x: auto` box only
-  when the window is too narrow.
+  window less padding and scrolls in its own `overflow-x: auto` box when
+  too narrow.
 
 ## Tools and workflow
 

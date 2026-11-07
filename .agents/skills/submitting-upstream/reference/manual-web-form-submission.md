@@ -24,9 +24,18 @@ asked for the API path specifically.
 
 ## Prepare the draft as separable fields
 
-Write the draft so each form field is a self-contained block. For a GitHub
-issue form, read the template first and use one block per `textarea` id, in
-the template's own order.
+Write the draft so each form field is a self-contained block, in the form's
+own order. Cover every field the user will meet: the title, checkboxes,
+dropdowns, and optional fields left empty, not only those that take a paste.
+For a GitHub issue form, read the template first and use one block per `body`
+element other than `markdown`.
+
+A field that takes a click rather than a paste, or stays empty, gets a block
+holding only a `#NOTE:` line saying what to do, such as `#NOTE: choose
+Navigation`, `#NOTE: tick "I'm willing to submit a PR"` or `#NOTE: leave
+empty`. Never fold one field's instruction into another field's note: on two
+issues filed with only the text fields announced, a checkbox mentioned in a
+neighbouring field's note came through unticked.
 
 Keep the whole draft in one scratch file, with each field under a top-level
 Markdown heading naming the form field:
@@ -35,6 +44,10 @@ Markdown heading naming the form field:
 # Title
 
 [Feature]: ...
+
+# Category
+
+#NOTE: choose Navigation
 
 # Problem or use case
 
@@ -54,7 +67,7 @@ import re, pathlib
 src = pathlib.Path('issue-draft.md').read_text()
 parts = re.split(r'(?m)^# (.+)$', src)
 for i in range(1, len(parts), 2):
-    slug = parts[i].strip().lower().replace(' ', '-')
+    slug = re.sub(r'[^a-z0-9]+', '-', parts[i].lower()).strip('-')
     pathlib.Path(f'{i // 2 + 1}-{slug}.txt').write_text(parts[i + 1].strip() + '\n')
 EOF
 ```
@@ -74,7 +87,8 @@ labels, so they are not pasted.
 
 2. Where the user needs a field-specific hint, such as a template-prefilled
    title that needs select-all, make the file's first line `#NOTE: <text>`.
-   The hint appears in the notification and is not copied.
+   The hint appears in the notification and is not copied. A hint covers
+   only its own field.
 
 3. Tell the user the sequence is about to start and what to watch for in the
    fields; the notifications only name the field.

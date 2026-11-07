@@ -1,6 +1,6 @@
 ---
 name: orca-cli-local
-description: Applies local lessons to every use of the Orca CLI (orca-ide, orca-dev). Use alongside the upstream orca-cli skill whenever the Orca CLI is needed, including before creating a branch worktree, when starting a fix or change in a repository registered in Orca, asking the user for feedback on a change before committing while running inside Orca, or reading review notes the user left on a file in Orca.
+description: Applies local lessons to every use of the Orca CLI (orca-ide, orca-dev). Use alongside the upstream orca-cli skill before the first orca-ide or orca-dev command in a session, including commands a brief from another agent spells out, and before creating a branch worktree, when starting a fix or change in a repository registered in Orca, asking the user for feedback on a change before committing while running inside Orca, or reading review notes the user left on a file in Orca.
 ---
 
 # Local orca-cli guidance

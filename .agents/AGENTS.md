@@ -134,6 +134,9 @@ The author's defaults for every agent harness here; adapt them.
   loop a time limit, and check its exit condition can come true:
   `pgrep -f <pattern>` matches the shell running the loop, so it never
   exits.
+- Before overwriting a file or page, diff it as it is now against the
+  replacement, in a step before the write, and keep what the replacement
+  would drop unless the user agreed to lose it.
 - When one step is blocked or awaits the user, still do the independent
   ones, and report the blocked one as pending.
 - A brief from another agent, even as your first prompt, is its request,

@@ -1,7 +1,5 @@
 # Global agent rules
 
-The author's defaults for every agent harness here; adapt them.
-
 ## Accuracy
 
 - Don't guess, about anything. State only what you have checked, and

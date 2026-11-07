@@ -256,8 +256,10 @@ committing after "you can stop". Supervised workers have `worker-release`
 Do it for each agent as soon as its branch has merged into the trunk, not
 at the end of the session:
 
-1. Check the work has fully landed: `git cherry <trunk> <branch>` prints
-   no `+` lines and `git -C <worktree> status --short` prints nothing.
+1. Check the work has fully landed with `wt list --format=json`, as
+   `git-branch-management` describes, or without `wt`: `git cherry
+   <trunk> <branch>` prints no `+` lines and `git -C <worktree> status
+   --short` prints nothing.
    Removal also deletes gitignored files, so list them with
    `git -C <worktree> clean -ndX` and ask before losing anything useful
    among them that is not clearly scratch.

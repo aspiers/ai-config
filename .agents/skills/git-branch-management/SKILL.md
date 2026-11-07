@@ -130,12 +130,21 @@ up to date. Combine with `--prune` to clear worktrees whose branches have
 landed upstream. Note that `wt sync` and `git machete traverse` overlap; use
 whichever the repository is already set up for rather than both at once.
 
+To find which worktrees can go, start with `wt list --format=json`,
+whichever tool created them, rather than looping over `git worktree
+list` by hand. Each entry's `main_state` is `integrated` or `empty` once
+its work has landed, even through a squash or rebase, and
+`working_tree` flags uncommitted and untracked files. It knows nothing
+of agents still running there: inside Orca, check those with
+`orca-ide terminal list`.
+
 Once a branch has merged into the trunk, remove its worktree and branch
 in the same step, after checking the worktree is clean, no agent is
 still working in it, and `git clean -ndX` lists no ignored file that
 is useful and not clearly scratch: `wt remove <branch>`, which keeps a
 branch holding unmerged work, or `git worktree remove <path>` then
-`git branch -d <branch>`. Inside Orca, follow `orca-cli-local` instead.
+`git branch -d <branch>`. Inside Orca, remove it as `orca-cli-local`
+describes instead, so Orca's sidebar stays in step.
 
 ## Choosing a base for new work
 

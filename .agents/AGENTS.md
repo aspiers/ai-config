@@ -66,9 +66,13 @@ The author's defaults for every agent harness here; adapt them.
   write the answers out just before it.
 - End every final message with next steps: a choice goes in the
   questionnaire tool, otherwise one recommended action and why, or say
-  nothing remains. If you may take that step without asking and it
-  continues work the user's latest message asked for, take it and report
-  it done. A request for a status report, summary or answer asks for no
+  nothing remains. Say whose each step is: yours, the user's, or another
+  agent's. Your scope is the work this session was given, by the user or
+  a delegating agent, plus whatever the user later added. A step outside
+  it is not yours: mark it so, and if another agent delegated your work,
+  leave it out and say nothing remains for you. If you may take your step
+  without asking and it is within that scope, take it and report it
+  done. A request for a status report, summary or answer asks for no
   action. Findings alone are not an ending. Next steps stay last, after
   any closing note another rule asks for.
 

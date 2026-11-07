@@ -63,7 +63,8 @@ The author's defaults for every agent harness here; adapt them.
   even where older comments do.
 - Answer every question the user asked, mid-turn ones and objections
   included, before asking your own. A questionnaire ends the turn, so
-  write the answers out just before it.
+  write the answers out just before it. If told to act after answering,
+  end the turn with the answers and act once they reply.
 - End every final message with next steps: a choice goes in the
   questionnaire tool, otherwise one recommended action and why, or say
   nothing remains. Say whose each step is: yours, the user's, or another

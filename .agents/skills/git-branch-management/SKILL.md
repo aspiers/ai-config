@@ -129,10 +129,11 @@ landed upstream. Note that `wt sync` and `git machete traverse` overlap; use
 whichever the repository is already set up for rather than both at once.
 
 Once a branch has merged into the trunk, remove its worktree and branch
-in the same step, after checking the worktree is clean and no agent is
-still working in it: `wt remove <branch>`, which keeps a branch holding
-unmerged work, or `git worktree remove <path>` then `git branch -d
-<branch>`. Inside Orca, follow `orca-cli-local` instead.
+in the same step, after checking the worktree is clean, no agent is
+still working in it, and `git clean -ndX` lists no ignored file that
+is useful and not clearly scratch: `wt remove <branch>`, which keeps a
+branch holding unmerged work, or `git worktree remove <path>` then
+`git branch -d <branch>`. Inside Orca, follow `orca-cli-local` instead.
 
 ## Choosing a base for new work
 

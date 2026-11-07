@@ -259,6 +259,9 @@ at the end of the session:
 
 1. Check the work has fully landed: `git cherry <trunk> <branch>` prints
    no `+` lines and `git -C <worktree> status --short` prints nothing.
+   Removal also deletes gitignored files, so list them with
+   `git -C <worktree> clean -ndX` and ask before losing anything useful
+   among them that is not clearly scratch.
 2. `terminal read` the agent. Go on only if it is idle at its input
    prompt and has reported nothing since you merged. If it is mid-turn,
    has started other work, or started agents of its own, leave the

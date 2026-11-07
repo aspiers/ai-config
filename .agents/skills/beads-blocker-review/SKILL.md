@@ -167,6 +167,10 @@ queue is done, as you would in any other turn.
    Name the released beads specifically. The user wants to know what their
    answers freed up, not just that the queue is empty.
 
+   Released or unclaimed agent beads are findings, not your next step,
+   unless picking them up is work this session was given. Say who picks
+   them up, such as the coordinator, or leave that to the user.
+
 ## Handling Interruption
 
 The user may bail out partway through, or answer with something that changes

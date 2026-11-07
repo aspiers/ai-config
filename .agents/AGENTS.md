@@ -111,7 +111,10 @@ The author's defaults for every agent harness here; adapt them.
 - Commit each tested, self-contained change as soon as it passes, unless
   the user or repository says otherwise, whatever the harness default.
   Stage only your own changes (`git-staging`); commit with `git-commit`.
-- Put temporary files in the repo's `tmp/`.
+- Put only scratch files in the repo's `tmp/`, which is gitignored and
+  goes with the worktree. Never assume a report or other output the user
+  may want again is scratch: keep it where the repository keeps its kind,
+  or ask.
 - `tee` the output of slow (over ~5 s) or repeatedly analysed commands
   into `tmp/` (`slow-command-running`); never pipe important output
   through `head`.

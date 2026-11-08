@@ -86,6 +86,12 @@ shell's directory, so resume after Sleep or a restart, the diff and git
 panels, and the agent's `active` selectors would all target the wrong
 checkout.
 
+The same goes for changing another repository, such as a fork you cloned
+for an upstream fix: its diff tabs, git panel and file tabs open in its
+own workspace, not beside your terminal. Ask the user whether to hand that
+part to an agent in a worktree of that repository before editing it from
+yours.
+
 A new worktree exists so that a new agent can work in it, even when the
 user only asked for the change and never mentioned a worktree, and even
 when you are already an agent in another worktree. Pass `--agent` and a

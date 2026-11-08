@@ -302,9 +302,20 @@ at the end of the session:
 When running inside Orca and you need the user's feedback on a change
 before committing, never put it in a Markdown file for them to review.
 Leave the edit uncommitted, and offer, as one option in your question, to
-open each changed file in its own tab with `file diff <path> --worktree
-<selector>`. Open the tabs only if the user picks that option. Showing the
-change in chat through the harness's own diff display is also fine.
+open each changed file in its own tab with `file diff <path>`. Open the
+tabs only if the user picks that option. Showing the change in chat
+through the harness's own diff display is also fine.
+
+`file diff` has no `--split`. It opens the tab in the workspace of the
+worktree that holds the file, so the tab lands beside your terminal only
+when the file is inside your own worktree. Run it from there without
+`--worktree`, as for pages (see "Showing a page").
+A file in another repository's checkout or another worktree opens in that
+workspace, out of the user's sight, and `--focus` pulls their window away
+from your terminal. Ask the user before opening a diff there, naming the
+workspace. On 2026-11-08 an agent opened a fork's diffs in the fork's
+workspace, then told the user, untested, that Orca couldn't put them
+beside its terminal.
 
 A diff tab shows every uncommitted change in that file, not only yours. If
 the file also has hunks you didn't write, say so when you offer the tab, and
@@ -320,7 +331,8 @@ open`, and no `git diff` output in a Markdown tab. Use Orca's diff view.
 `file diff` only shows uncommitted changes. To show one already committed,
 such as a worker's branch before merging, put the base version of the file
 in that branch's index, so the unstaged diff becomes the branch's change.
-Do this only while no agent is working in that worktree, since a commit
+The tab opens in that branch's workspace, so ask first, as above. Do this
+only while no agent is working in that worktree, since a commit
 there would revert the change:
 
 ```sh

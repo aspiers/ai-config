@@ -6,6 +6,7 @@ import json
 import os
 import re
 import shutil
+import socket
 import subprocess
 import sys
 import time
@@ -146,3 +147,35 @@ def log_line(client: str, message: str, path: Path | None) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
         with path.open("a", encoding="utf-8") as stream:
             stream.write(line + "\n")
+
+
+def runtime_call(method: str, params: dict[str, Any] | None = None) -> Any:
+    """Call an Orca runtime RPC method the CLI does not expose.
+
+    Speaks the CLI's own protocol (src/cli/runtime/transport.ts): one JSON
+    request line on the runtime's unix socket, one JSON reply line back.
+    shortcut: reads the packaged app's metadata only, so it misses dev builds;
+    drop each caller once Orca's CLI covers its method.
+    """
+    config_home = os.environ.get("XDG_CONFIG_HOME") or str(Path.home() / ".config")
+    metadata = json.loads((Path(config_home) / "orca" / "orca-runtime.json").read_text())
+    endpoint = next(t["endpoint"] for t in metadata["transports"] if t["kind"] == "unix")
+    request = {
+        "id": f"ai-config-{os.getpid()}",
+        "authToken": metadata["authToken"],
+        "method": method,
+        "params": params or {},
+    }
+    with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as connection:
+        connection.settimeout(30)
+        connection.connect(endpoint)
+        connection.sendall((json.dumps(request) + "\n").encode())
+        with connection.makefile("rb") as reply:
+            response = json.loads(reply.readline())
+    if not response.get("ok"):
+        error = response.get("error") or {}
+        raise RuntimeError(
+            f"orca runtime {method} failed: "
+            f"{error.get('code', 'unknown')}: {error.get('message', 'no message')}"
+        )
+    return response["result"]

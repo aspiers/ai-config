@@ -1,0 +1,71 @@
+#!/usr/bin/env python3
+"""List Orca project groups with their members, or move a project into one.
+
+Workaround: Orca's runtime has projectGroup.* RPC methods, but its CLI
+exposes none of them (stablyai/orca#8766), so `orca-ide repo add` leaves
+every new project ungrouped. Retire this once the CLI gains `project group`
+commands.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+from typing import Any
+
+from orca_cli import runtime_call
+
+
+def members_by_group(
+    groups: list[dict[str, Any]], repos: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
+    """Each group with its member paths, plus a final ungrouped entry."""
+    listing = [
+        {
+            "id": group["id"],
+            "name": group["name"],
+            "repos": sorted(r["path"] for r in repos if r.get("projectGroupId") == group["id"]),
+        }
+        for group in groups
+    ]
+    known = {group["id"] for group in groups}
+    ungrouped = sorted(r["path"] for r in repos if r.get("projectGroupId") not in known)
+    return [*listing, {"id": None, "name": None, "repos": ungrouped}]
+
+
+def resolve_group(groups: list[dict[str, Any]], wanted: str) -> str | None:
+    """Group id for an id or unique name; `none` ungroups."""
+    if wanted == "none":
+        return None
+    matches = [g["id"] for g in groups if wanted in (g["id"], g["name"])]
+    if len(matches) != 1:
+        found = "no" if not matches else "several"
+        raise SystemExit(f"orca-project-group: {found} groups match {wanted!r}")
+    return matches[0]
+
+
+def main(argv: list[str]) -> int:
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    commands = parser.add_subparsers(dest="command", required=True)
+    commands.add_parser("list", help="print groups and their member paths as JSON")
+    move = commands.add_parser("move", help="move a project into a group")
+    move.add_argument("repo", help="repo selector, e.g. path:<path> or id:<id>")
+    move.add_argument("group", help="group id or name, or `none` to ungroup")
+    args = parser.parse_args(argv)
+
+    groups = runtime_call("projectGroup.list")["groups"]
+    if args.command == "list":
+        repos = runtime_call("repo.list")["repos"]
+        print(json.dumps(members_by_group(groups, repos), indent=2))
+    else:
+        group_id = resolve_group(groups, args.group)
+        runtime_call("projectGroup.moveProject", {"repo": args.repo, "groupId": group_id})
+    return 0
+
+
+if __name__ == "__main__":
+    try:
+        sys.exit(main(sys.argv[1:]))
+    except RuntimeError as error:
+        sys.exit(f"orca-project-group: {error}")

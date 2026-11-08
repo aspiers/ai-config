@@ -1,6 +1,6 @@
 ---
 name: orca-cli-local
-description: Applies local lessons to every use of the Orca CLI (orca-ide, orca-dev). Use alongside the upstream orca-cli skill before the first orca-ide or orca-dev command in a session, including commands a brief from another agent spells out, and before creating a branch worktree, when starting a fix or change in a repository registered in Orca, asking the user for feedback on a change before committing while running inside Orca, showing the user a page, HTML file, screenshot or diff inside Orca, including a diff already committed on a branch, or reading review notes the user left on a file in Orca.
+description: Applies local lessons to every use of the Orca CLI (orca-ide, orca-dev). Use alongside the upstream orca-cli skill before the first orca-ide or orca-dev command in a session, including commands a brief from another agent spells out, and before creating a branch worktree, after registering a project with repo add or project setup, when starting a fix or change in a repository registered in Orca, asking the user for feedback on a change before committing while running inside Orca, showing the user a page, HTML file, screenshot or diff inside Orca, including a diff already committed on a branch, or reading review notes the user left on a file in Orca.
 ---
 
 # Local orca-cli guidance
@@ -442,6 +442,30 @@ side with captions, and open that instead of a tab per image. Listing
 their paths in a report doesn't count, even when a brief asked for paths:
 on 2026-11-07 a worker reported committed screenshot paths three times,
 and the user had to ask to see them.
+
+## Workaround: put every project you add in its group
+
+Temporary, until [`stablyai/orca#8766`][orca-8766] is fixed (seen in
+1.4.251). `repo add` and the `project setup-*` commands leave a new project
+outside every project group, and the CLI has no command to move it. Orca's
+runtime has one, and `orca-project-group` in this repository's `bin/` calls
+it. Straight after adding a project:
+
+1. Run `orca-project-group list`. It prints each group's name, id and
+   member paths as JSON, with ungrouped projects last.
+2. Pick the group that holds the new project's siblings: repositories
+   under the same parent directory, or of the same kind, such as other
+   upstream forks. If no group fits, or several do, ask the user, offering
+   the candidates.
+3. Run `orca-project-group move path:<path> <group name or id>`, then
+   `list` again to confirm.
+
+Read group membership only this way. `orca-ide repo list --json` leaves it
+out, and the profile's `orca-data.json` is an export that can be weeks
+old. On 2026-11-08 an agent read only the CLI's `--help`, told the user
+Orca couldn't place a project, and asked them to drag it into its group.
+
+[orca-8766]: https://github.com/stablyai/orca/issues/8766
 
 ## Workaround: worker tabs titled `worker-task_<id>`
 

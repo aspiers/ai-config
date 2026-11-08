@@ -1,6 +1,6 @@
 ---
 name: orca-cli-local
-description: Applies local lessons to every use of the Orca CLI (orca-ide, orca-dev). Use alongside the upstream orca-cli skill before the first orca-ide or orca-dev command in a session, including commands a brief from another agent spells out, and before creating a branch worktree, when starting a fix or change in a repository registered in Orca, asking the user for feedback on a change before committing while running inside Orca, showing the user a page, HTML file or screenshot inside Orca, or reading review notes the user left on a file in Orca.
+description: Applies local lessons to every use of the Orca CLI (orca-ide, orca-dev). Use alongside the upstream orca-cli skill before the first orca-ide or orca-dev command in a session, including commands a brief from another agent spells out, and before creating a branch worktree, when starting a fix or change in a repository registered in Orca, asking the user for feedback on a change before committing while running inside Orca, showing the user a page, HTML file, screenshot or diff inside Orca, including a diff already committed on a branch, or reading review notes the user left on a file in Orca.
 ---
 
 # Local orca-cli guidance
@@ -313,6 +313,27 @@ say which hunks are yours.
 A change to a Markdown file the user must review, such as an instruction,
 skill or doc, is the exception: open its diff tab without asking, before
 your question.
+
+Never show a diff as text: no `.diff` or `.patch` file opened with `file
+open`, and no `git diff` output in a Markdown tab. Use Orca's diff view.
+
+`file diff` only shows uncommitted changes. To show one already committed,
+such as a worker's branch before merging, put the base version of the file
+in that branch's index, so the unstaged diff becomes the branch's change.
+Do this only while no agent is working in that worktree, since a commit
+there would revert the change:
+
+```sh
+base=$(git -C <branch worktree> merge-base <trunk> HEAD)
+git -C <branch worktree> ls-tree "$base" -- <path> |
+  git -C <branch worktree> update-index --index-info
+orca-ide file diff <path> --worktree <selector>
+```
+
+Once the user has answered, undo it with `git -C <branch worktree> reset
+-q -- <path>`. This works for a file that exists at the base. It leaves
+`HEAD` and the working tree alone, unlike copying the branch's file into
+another checkout.
 
 A Markdown draft of text to publish, such as a PR body, goes in an Orca
 tab instead, as described next, and so does a report, spec or design

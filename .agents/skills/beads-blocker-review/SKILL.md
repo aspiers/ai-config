@@ -106,7 +106,9 @@ queue is done, as you would in any other turn.
 
 5. **Summarise the decision** in a few lines before asking: what the bead is,
    why it is waiting, and what turns on the answer. Always name a bead as
-   `<id> (<title>)`, never by bare ID.
+   `<id> (<title>)`, never by bare ID. When the `beads-links` skill is
+   available, link the ID too, so the user can open the bead before
+   answering; see that skill for the forms.
 
 6. **Ask using the questionnaire tool**, one bead per call:
 
@@ -164,8 +166,9 @@ queue is done, as you would in any other turn.
    **which beads are now unblocked and ready for agent work**; and any
    follow-up work the answers created.
 
-   Name the released beads specifically. The user wants to know what their
-   answers freed up, not just that the queue is empty.
+   Name the released beads specifically, linked as in step 5. The user
+   wants to know what their answers freed up, not just that the queue is
+   empty.
 
    Released or unclaimed agent beads are findings, not your next step,
    unless picking them up is work this session was given. Say who picks

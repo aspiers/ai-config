@@ -183,6 +183,9 @@ the ID is what commands and searches take as an argument:
 - `proj-123 (add a session status skill)`
 - `PR #4271 (fix race in worktree cleanup)`
 
+When the `beads-links` skill is available, also link each bead ID with a
+`beads://` link, as that skill describes, so the user can open it directly.
+
 This overlaps with the `/ids` command, which enforces the same rule for the
 rest of a conversation. Here it is a property of the summary itself.
 

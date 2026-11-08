@@ -269,6 +269,10 @@ has already been introduced in the immediate context, use its readable title
 rather than falling back to the bare ID. Bare IDs remain appropriate in
 machine-facing commands such as `bd show ai-wt0`.
 
+When the `beads-links` skill is available, also link the ID with a
+`beads://` link in text the user reads, so they can open the bead in one
+click. That skill gives the link forms and says where links work.
+
 ## Track Every Work Item
 
 All substantive project work must be represented by a bead. Do not perform

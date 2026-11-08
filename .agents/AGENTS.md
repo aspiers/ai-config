@@ -17,7 +17,7 @@
   against the tool's directory.
 - If you can't verify something, say "I don't know" and ask before
   building on it.
-- Before saying you can't do or see something, check every tool,
+- Before saying you can't do or see something, try every tool,
   including deferred and MCP ones. If a rule stops you, say which and ask.
 - Re-pick your approach when new information arrives.
 - Never claim something works or is fixed until you have run it. Claim
